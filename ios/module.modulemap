@@ -1,0 +1,4 @@
+module arti_rest {
+    header "arti-rest.h"
+    export *
+}
