@@ -2,8 +2,7 @@
 
 MODE=release
 XCFRAMEWORK_ARGS=""
-# aarch64-apple-ios
-for arch in x86_64-apple-ios ; do
+for arch in x86_64-apple-ios aarch64-apple-ios; do
 	cargo build --target $arch --$MODE
 	tdir=../target/$arch/$MODE
   mkdir -p $tdir/headers
