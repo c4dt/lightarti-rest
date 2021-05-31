@@ -1,0 +1,54 @@
+[package]
+name = "arti-rest"
+version = "0.1.0"
+authors = ["Linus Gasser <linus.gasser@epfl.ch>",
+"Laurent Girod <laurent.girod@epfl.ch>",
+"Christian Grigis <christian.grigis@epfl.ch>",
+"Valérian Rousset <valerian.rousset@epfl.ch>"]
+edition = "2018"
+
+[lib]
+name = "core"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+log = "0.4.6"
+log-panics = "2.0"
+
+# Packages for tor
+tor-client = {git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f"}
+tor-config = {git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f"}
+tor-dirmgr = {git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f"}
+tor-proto = {git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f"}
+tor-rtcompat = {git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f"}
+async-std = {features = ["attributes"]}
+serde = { version = "1.0.124", features = ["derive"] }
+tokio = {version = "1.0", features = ["full"]}
+tokio-util = {version = "0.6.7", features = ["full"]}
+futures = "0.3"
+
+config = "*"
+simple-logging = "*"
+anyhow = "*"
+tokio-rustls = "0.22"
+webpki-roots = "0.21"
+
+
+[target.'cfg(target_os="android")'.dependencies]
+jni = { version = "0.16", default-features = false }
+android_logger = "0.8"
+openssl-sys = {features = ["vendored"]}
+rusqlite = {features = ["bundled"]}
+
+[target.'cfg(target_os = "ios")'.dependencies]
+libc = "0.2"
+core-foundation = "0.6.2"
+
+[build-dependencies]
+env_logger = "0.6"
+
+[profile.release]
+lto = "fat"
+opt-level = "s"
+codegen-units = 1
+panic = "abort"
