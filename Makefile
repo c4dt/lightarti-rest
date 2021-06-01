@@ -9,5 +9,5 @@ ios/$(arxc): $(wildcard src/*)
 
 $(arxcz): ios/$(arxc)
 	cd ios && \
-	( cd $(arxc) && zip -r ../../$(arxcz) . ) && \
+	zip -r ../$(arxcz) $(arxc) && \
 	swift package compute-checksum ../$(arxcz)
