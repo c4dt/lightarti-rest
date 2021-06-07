@@ -1,9 +1,19 @@
 #!/bin/bash
 
+# This should theoretically also work with 'debug' and be much faster for
+# testing.
+# However, the creation of the xcframework fails, according to
+# https://github.com/rust-lang/rust/issues/79408...
 MODE=release
+
+MODEFLAG=
+if [ "$MODE" = "release" ]; then
+  MODEFLAG=--release
+fi
+
 XCFRAMEWORK_ARGS=""
 for arch in x86_64-apple-ios aarch64-apple-ios; do
-	cargo build --target $arch --$MODE
+	cargo build --target $arch $MODEFLAG
 	tdir=../target/$arch/$MODE
   mkdir -p $tdir/headers
 	cp arti-rest.h module.modulemap $tdir/headers

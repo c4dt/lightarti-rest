@@ -1,16 +1,11 @@
-use mpsc::Receiver;
-use std::{
-    sync::mpsc::{self, Sender},
-    thread,
-};
+use std::sync::mpsc::Sender;
 
-use jni::JavaVM;
 use jni::JNIEnv;
-use jni::objects::{GlobalRef, JClass, JObject, JString, JValue};
-use jni::sys::{jint, jobject, jstring};
+use jni::objects::{JClass, JString};
+use jni::sys::jstring;
 use log::info;
 
-use crate::{tls_get};
+use crate::arti::tls_get;
 
 
 #[no_mangle]

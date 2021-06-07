@@ -31,7 +31,7 @@ simple-logging = "2.0.2"
 anyhow = "1.0.40"
 tokio-rustls = "0.22"
 webpki-roots = "0.21"
-
+ring = "0.16.19"
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = { version = "0.16", default-features = false }

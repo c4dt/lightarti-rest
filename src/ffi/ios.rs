@@ -3,7 +3,7 @@ use core_foundation::{
     base::TCFType,
     string::{CFString, CFStringRef},
 };
-use crate::tls_get;
+use crate::arti::tls_get;
 
 #[no_mangle]
 pub unsafe extern "C" fn call_tls_get(domain_cc: *const c_char) -> CFStringRef {
