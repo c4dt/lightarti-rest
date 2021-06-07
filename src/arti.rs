@@ -33,7 +33,7 @@ include_str!("./authorities.toml"),
 /// This connection sends a GET request over TLS to the domain.
 /// It returns the result from the request, or an error.
 pub fn tls_get(domain: &str, cache_dir: Option<&str>) -> Result<String> {
-    info!("Starting TorClient 17");
+    info!("Starting TorClient");
     let dflt_config = tor_config::default_config_file();
     let mut cfg = config::Config::new();
     cfg.merge(config::File::from_str(
@@ -83,7 +83,7 @@ async fn get_result(tor: TorClient<impl Runtime>, domain: &str) -> Result<String
 }
 
 // On iOS, the get_dir_config works as supposed, so no need to do special treatment.
-#[cfg(target_os = "ios")]
+#[cfg(not(target_os = "ios"))]
 async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, _cache_dir: Option<&str>) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config()?;
     TorClient::bootstrap(runtime.clone(), dircfg).await
@@ -173,6 +173,5 @@ impl ArtiConfig {
 #[tokio::test]
 async fn clearnet_and_tor_gives_the_same_page() {
     tls_get("c4dt.org", Some("/tmp/tor-cache"))
-        .await
         .expect("get page via tor");
 }
