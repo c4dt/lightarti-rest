@@ -83,7 +83,7 @@ async fn get_result(tor: TorClient<impl Runtime>, domain: &str) -> Result<String
 }
 
 // On iOS, the get_dir_config works as supposed, so no need to do special treatment.
-#[cfg(not(target_os = "ios"))]
+#[cfg(not(target_os = "android"))]
 async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, _cache_dir: Option<&str>) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config()?;
     TorClient::bootstrap(runtime.clone(), dircfg).await
