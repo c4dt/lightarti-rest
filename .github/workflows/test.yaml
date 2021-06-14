@@ -21,4 +21,5 @@ jobs:
             ${{ runner.os }}-build-android
 
       - name: Run tests
-        run: cargo test
+        # Else the arti-sqlite might fail on concurrent access to the database
+        run: cargo test -j 1

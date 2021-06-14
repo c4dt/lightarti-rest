@@ -36,6 +36,7 @@ jobs:
         run: |
           # I have no idea why this is not picked up automatically...
           mkdir $HOME/bin
+          ln -s $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar $HOME/bin/aarch64-linux-android-ar
           ln -s $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang $HOME/bin/aarch64-linux-android-clang
           export PATH=$PATH:$HOME/bin:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
           export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
