@@ -8,14 +8,16 @@ use tracing::{debug, info, trace};
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
-use tor_client::TorClient;
 use tor_config::CfgPath;
 use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig};
+
 #[cfg(not(target_os = "android"))]
 use tor_dirmgr::{NetDirConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
 
+mod client;
 mod conv;
+mod dirmgr;
 
 /// Some structures that were defined in the arti main source and that I took over
 /// without thinking...
@@ -119,7 +121,8 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&
     let netdircfg = dircfg.finalize().expect("Failed to build netdircfg.");
 
     debug!("Connect to tor");
-    TorClient::bootstrap(runtime, netdircfg).await
+    let docdir = "./";
+    TorClient::bootstrap(runtime, netdircfg, &docdir).await
 }
 
 /// Configuration for where information should be stored on disk.
