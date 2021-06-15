@@ -9,7 +9,7 @@ edition = "2018"
 
 [lib]
 name = "core"
-crate-type = ["staticlib"]
+crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 log = "0.4.6"

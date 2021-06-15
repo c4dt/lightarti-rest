@@ -33,8 +33,6 @@ include_str!("./authorities.toml"),
 /// This connection sends a GET request over TLS to the domain.
 /// It returns the result from the request, or an error.
 pub fn tls_get(domain: &str, cache_dir: Option<&str>) -> Result<String> {
-    simple_logging::log_to_stderr(LevelFilter::Debug);
-
     info!("Starting TorClient 17");
     let dflt_config = tor_config::default_config_file();
     let mut cfg = config::Config::new();

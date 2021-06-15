@@ -1,5 +1,4 @@
-use std::sync::mpsc::Sender;
-
+use jni::JavaVM;
 use jni::JNIEnv;
 use jni::objects::{JClass, JString};
 use jni::sys::jstring;
@@ -8,8 +7,25 @@ use log::info;
 use crate::arti::tls_get;
 
 
+const ANDROID_LOG_TAG: &str = "ArtiLib";
+
 #[no_mangle]
-pub unsafe extern "system" fn Java_com_schuetz_rustandroidios_JniApi_initLogger(
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_hello(
+    env: JNIEnv,
+    _: JClass,
+    who: JString,
+) -> jstring {
+    let str: String = env.get_string(who)
+        .expect("Couldn't create rust string").into();
+
+    let output = env.new_string(format!("Hello {}!", str))
+        .expect("Couldn't create java string");
+
+    output.into_inner()
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_initLogger(
     _: JNIEnv,
     _: JClass,
 ) {
@@ -20,7 +36,7 @@ pub unsafe extern "system" fn Java_com_schuetz_rustandroidios_JniApi_initLogger(
     android_logger::init_once(
         android_logger::Config::default()
             .with_min_level(log::Level::Debug)
-            .with_tag("Hello"),
+            .with_tag(ANDROID_LOG_TAG),
     );
     // Log panics rather than printing them.
     // Without this, Logcat doesn't show panic message.
@@ -29,7 +45,7 @@ pub unsafe extern "system" fn Java_com_schuetz_rustandroidios_JniApi_initLogger(
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_com_schuetz_rustandroidios_JniApi_TLS_get(
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_tlsGet(
     env: JNIEnv,
     _: JClass,
     cache_dir_j: JString,
