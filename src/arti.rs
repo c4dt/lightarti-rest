@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 /// This is a simple wrapper around arti to offer a synchronous
 /// REST interface to mobile libraries.
-/// In the current version, only a GET to the root of a domain is supported.
 
-use anyhow::Result;
-use log::{debug, info, LevelFilter, trace};
+use anyhow::{Result, anyhow};
+use log::{debug, info, trace};
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, TlsConnector, webpki::DNSNameRef};
@@ -13,12 +12,7 @@ use tor_client::TorClient;
 use tor_config::CfgPath;
 use tor_dirmgr::{DownloadScheduleConfig, NetDirConfig, NetworkConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
-
-/// This is a simple wrapper around arti to offer a synchronous
-/// REST interface to mobile libraries.
-/// In the current version, only a GET to the root of a domain is supported.
-
-/// Just do nothing for the moment
+use crate::DirectoryCache;
 
 mod conv;
 
@@ -30,10 +24,10 @@ include_str!("./arti_defaults.toml"),
 include_str!("./authorities.toml"),
 );
 
-/// This connection sends a GET request over TLS to the domain.
+/// This connection sends a generic request over TLS to the host.
 /// It returns the result from the request, or an error.
-pub fn tls_get(domain: &str, cache_dir: Option<&str>) -> Result<String> {
-    info!("Starting TorClient 17");
+pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result<String> {
+    info!("Starting TorClient");
     let dflt_config = tor_config::default_config_file();
     let mut cfg = config::Config::new();
     cfg.merge(config::File::from_str(
@@ -50,40 +44,48 @@ pub fn tls_get(domain: &str, cache_dir: Option<&str>) -> Result<String> {
     runtime.block_on(
         async {
             debug!("Getting tor connection");
-            let tor = get_tor(runtime.clone(), config, cache_dir).await?;
+            let cc = dir_cache.tmp_dir.as_ref().map(|s| &**s);
+            let tor = get_tor(runtime.clone(), config, cc).await?;
 
             debug!("Setting up tls connection and sending GET");
-            get_result(tor, domain).await
+            get_result(tor, host, request).await
         })
 }
 
 /// Sends a GET request over a TLS connection and returns the result.
-async fn get_result(tor: TorClient<impl Runtime>, domain: &str) -> Result<String> {
-    let stream: conv::TorStream = tor.connect(domain, 443, None).await?.into();
-
+async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
     // Configure a TLS client to connect to endpoint
     let mut config = ClientConfig::new();
     config.root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
     let config = TlsConnector::from(Arc::new(config));
-    let dnsname = DNSNameRef::try_from_ascii_str(domain).unwrap();
+    let dnsname = DNSNameRef::try_from_ascii_str(host).unwrap();
 
     debug!("Connecting to the tls stream");
-    let mut tls_stream = config.connect(dnsname, stream).await?;
-    tls_stream
-        .write_all(b"GET / HTTP/1.0\r\n\r\n")
-        .await
-        .unwrap();
-    let mut res = vec![];
-    tls_stream.read_to_end(&mut res).await.unwrap();
-    let result = String::from_utf8_lossy(&res).to_string();
+    for t in 0..2u32 {
+        debug!("Trying to connect: {}", t);
+        let stream: conv::TorStream = tor.connect(host, 443, None).await?.into();
+        let mut tls_stream = config.connect(dnsname, stream).await?;
+        tls_stream
+            .write_all(request.as_ref())
+            .await
+            .unwrap();
+        let mut res = vec![];
 
-    debug!("Received {} bytes from stream", result.len());
-    trace!("Received stream: {}", result);
-    Ok(result)
+        if let Ok(_) = tls_stream.read_to_end(&mut res).await {
+            let result = String::from_utf8_lossy(&res).to_string();
+
+            debug!("Received {} bytes from stream", result.len());
+            trace!("Received stream: {}", result);
+            return Ok(result);
+        }
+        info!("Trying again");
+    }
+
+    Err(anyhow!("Couldn't get response"))
 }
 
 // On iOS, the get_dir_config works as supposed, so no need to do special treatment.
-#[cfg(target_os = "ios")]
+#[cfg(not(target_os = "android"))]
 async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, _cache_dir: Option<&str>) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config()?;
     TorClient::bootstrap(runtime.clone(), dircfg).await
@@ -114,9 +116,6 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&
     dircfg.set_cache_path(&cache_path);
 
     let netdircfg = dircfg.finalize().expect("Failed to build netdircfg.");
-
-    //debug!("Getting dircfg");
-    //let dircfg = config.get_dir_config()?;
 
     debug!("Connect to tor");
     TorClient::bootstrap(runtime, netdircfg).await
@@ -170,9 +169,16 @@ impl ArtiConfig {
     }
 }
 
-#[tokio::test]
-async fn clearnet_and_tor_gives_the_same_page() {
-    tls_get("c4dt.org", Some("/tmp/tor-cache"))
-        .await
+#[test]
+fn clearnet_and_tor_gives_the_same_page() {
+    use log::LevelFilter;
+
+    simple_logging::log_to_stderr(LevelFilter::Debug);
+    tls_send("www.c4dt.org", "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
+             &DirectoryCache {
+                 tmp_dir: Some("/tmp/tor-cache".into()),
+                 nodes: None,
+                 relays: None,
+             })
         .expect("get page via tor");
 }

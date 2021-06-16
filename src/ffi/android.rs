@@ -1,10 +1,9 @@
-use jni::JavaVM;
 use jni::JNIEnv;
 use jni::objects::{JClass, JString};
 use jni::sys::jstring;
 use log::info;
 
-use crate::arti::tls_get;
+use crate::{Request, DirectoryCache};
 
 
 const ANDROID_LOG_TAG: &str = "ArtiLib";
@@ -53,8 +52,18 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_tlsGet(
 ) -> jstring {
     let cache_dir: String = env.get_string(cache_dir_j).expect("Couldn't create rust string").into();
     let domain: String = env.get_string(domain_j).expect("Couldn't create rust string").into();
-    let output = match tls_get(&domain, Some(&cache_dir)) {
-        Ok(s) => format!("Result is: {}", s),
+    let req = &Request{
+        method: "GET".to_string(),
+        url: format!("https://{}/index.html", domain),
+        headers: Default::default(),
+        body: None
+    };
+    let output = match req.send(&DirectoryCache{
+        tmp_dir: Some(cache_dir),
+        nodes: None,
+        relays: None
+    }) {
+        Ok(s) => format!("Result is: {:?}", s),
         Err(e) => format!("Error while getting result: {}", e),
     };
     env.new_string(output).expect("Failed to build java string").into_inner()
