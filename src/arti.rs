@@ -170,6 +170,8 @@ impl ArtiConfig {
 
 #[cfg(test)]
 mod tests {
+    use tempdir::TempDir;
+
     use crate::tests;
 
     use super::*;
@@ -178,11 +180,13 @@ mod tests {
     fn clearnet_and_tor_gives_the_same_page() {
         tests::setup_tracing();
 
+        let tempdir = TempDir::new("tor-cache").expect("create temp dir");
+
         tls_send(
             "www.c4dt.org",
             "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
             &DirectoryCache {
-                tmp_dir: Some("/tmp/tor-cache".into()),
+                tmp_dir: tempdir.path().to_str().map(String::from),
                 nodes: None,
                 relays: None,
             },

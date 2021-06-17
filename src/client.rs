@@ -4,7 +4,7 @@ use anyhow::{bail, Context, Result};
 use http::{Request, Response};
 use tracing::trace;
 
-use super::{arti::tls_send, DirectoryCache};
+use crate::{arti::tls_send, DirectoryCache};
 
 pub struct Client {
     dir_cache: DirectoryCache,
@@ -96,12 +96,15 @@ fn deserialize_response(mut raw_resp: Vec<u8>) -> Result<Response<Vec<u8>>> {
 
 #[cfg(test)]
 mod tests {
+    use tempdir::TempDir;
+
     use super::*;
 
     #[test]
     fn test_get() {
+        let tempdir = TempDir::new("tor-cache").expect("create temp dir");
         let resp = Client::new(DirectoryCache {
-            tmp_dir: Some("/tmp/tor-cache/test_get".into()),
+            tmp_dir: tempdir.path().to_str().map(String::from),
             nodes: None,
             relays: None,
         })
