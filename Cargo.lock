@@ -131,16 +131,11 @@ dependencies = [
  "tokio-rustls",
  "tokio-util",
  "tor-chanmgr",
- "tor-checkable",
  "tor-circmgr",
- "tor-client",
  "tor-config",
- "tor-dirmgr",
+ "tor-customdirmgr",
  "tor-llcrypto",
- "tor-netdir",
- "tor-netdoc",
  "tor-proto",
- "tor-retry",
  "tor-rtcompat",
  "tracing",
  "tracing-fmt",
@@ -806,16 +801,6 @@ checksum = "5fc25a87fa4fd2094bffb06925852034d90a17f0d1e05197d4956d3555752191"
 dependencies = [
  "matches",
  "percent-encoding",
-]
-
-[[package]]
-name = "fslock"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b14c83e47c73f7d62d907ae24a1a98e9132df3c33eb6c54fcf4bce0dbc41d5af"
-dependencies = [
- "libc",
- "winapi",
 ]
 
 [[package]]
@@ -2478,25 +2463,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tor-client"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "futures",
- "log",
- "thiserror",
- "tor-chanmgr",
- "tor-circmgr",
- "tor-dirclient",
- "tor-dirmgr",
- "tor-linkspec",
- "tor-netdir",
- "tor-netdoc",
- "tor-proto",
- "tor-rtcompat",
-]
-
-[[package]]
 name = "tor-config"
 version = "0.0.0"
 dependencies = [
@@ -2521,6 +2487,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "tor-customdirmgr"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64",
+ "chrono",
+ "digest",
+ "directories",
+ "event-listener",
+ "futures",
+ "hex",
+ "humantime-serde",
+ "log",
+ "memmap",
+ "rand 0.8.4",
+ "rusqlite",
+ "serde 1.0.126",
+ "thiserror",
+ "tor-chanmgr",
+ "tor-checkable",
+ "tor-circmgr",
+ "tor-consdiff",
+ "tor-dirclient",
+ "tor-llcrypto",
+ "tor-netdir",
+ "tor-netdoc",
+ "tor-retry",
+ "tor-rtcompat",
+]
+
+[[package]]
 name = "tor-dirclient"
 version = "0.0.0"
 dependencies = [
@@ -2541,39 +2539,6 @@ dependencies = [
  "tor-netdir",
  "tor-netdoc",
  "tor-proto",
- "tor-rtcompat",
-]
-
-[[package]]
-name = "tor-dirmgr"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64",
- "chrono",
- "digest",
- "directories",
- "event-listener",
- "fslock",
- "futures",
- "hex",
- "humantime-serde",
- "log",
- "memmap",
- "rand 0.8.4",
- "rusqlite",
- "serde 1.0.126",
- "thiserror",
- "tor-chanmgr",
- "tor-checkable",
- "tor-circmgr",
- "tor-consdiff",
- "tor-dirclient",
- "tor-llcrypto",
- "tor-netdir",
- "tor-netdoc",
- "tor-retry",
  "tor-rtcompat",
 ]
 

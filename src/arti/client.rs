@@ -3,18 +3,21 @@
 //! To construct a client, run the `TorClient::bootstrap()` method.
 //! Once the client is bootstrapped, you can make connections over the Tor
 //! network using `TorClient::connect()`.
+
+// Code mostly copied from Arti.
+
 use tor_circmgr::TargetPort;
 use tor_chanmgr;
-use tor_dirmgr::NetDirConfig;
+use tor_customdirmgr::NetDirConfig;
 use tor_proto::circuit::IpVersionPreference;
 use tor_proto::stream::DataStream;
 use tor_rtcompat::{Runtime, SleepProviderExt};
-
 use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Context, Result};
 use log::info;
+
 
 /// An active client connection to the Tor network.
 ///
@@ -31,7 +34,7 @@ pub struct TorClient<R: Runtime> {
     /// them on-demand.
     circmgr: Arc<tor_circmgr::CircMgr<R>>,
     /// Directory manager for keeping our directory material up to date.
-    dirmgr: Arc<super::dirmgr::DirMgr<R>>,
+    dirmgr: Arc<tor_customdirmgr::DirMgr>,
 }
 
 /// Preferences for how to route a stream over the Tor network.
@@ -83,11 +86,9 @@ impl<R: Runtime> TorClient<R> {
             runtime.clone(),
             Arc::clone(&chanmgr),
         ));
-        let dirmgr = super::dirmgr::DirMgr::bootstrap_from_config(
+        let dirmgr = tor_customdirmgr::DirMgr::bootstrap_from_config(
             dircfg,
             docdir,
-            runtime.clone(),
-            Arc::clone(&circmgr),
         )
         .await?;
 

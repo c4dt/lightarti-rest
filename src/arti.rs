@@ -9,15 +9,15 @@ use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tor_config::CfgPath;
-use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig};
+use tor_customdirmgr::{DownloadScheduleConfig, NetworkConfig};
 
 #[cfg(not(target_os = "android"))]
-use tor_dirmgr::{NetDirConfig};
+use tor_customdirmgr::{NetDirConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
+use crate::arti::client::TorClient;
 
 mod client;
 mod conv;
-mod dirmgr;
 
 /// Some structures that were defined in the arti main source and that I took over
 /// without thinking...
@@ -89,9 +89,13 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
 
 // On iOS, the get_dir_config works as supposed, so no need to do special treatment.
 #[cfg(not(target_os = "android"))]
-async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, _cache_dir: Option<&str>) -> Result<TorClient<T>> {
+async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&str>) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config()?;
-    TorClient::bootstrap(runtime.clone(), dircfg).await
+    let docdir = match cache_dir {
+        Some(dir) => dir,
+        _ => "./"
+    };
+    TorClient::bootstrap(runtime.clone(), dircfg, &docdir).await
 }
 
 // For Android, the cache path needs to be set, so the whole config needs to be initialized.
@@ -101,7 +105,7 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&
     use std::path::Path;
 
     debug!("New dircfg");
-    let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+    let mut dircfg = NetDirConfigBuilder::new();
 
     debug!("Clone network config");
     let network_clone = config.network.clone();
@@ -121,7 +125,10 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&
     let netdircfg = dircfg.finalize().expect("Failed to build netdircfg.");
 
     debug!("Connect to tor");
-    let docdir = "./";
+    let docdir = match cache_dir {
+        Some(dir) => dir,
+        _ => "./"
+    };
     TorClient::bootstrap(runtime, netdircfg, &docdir).await
 }
 
@@ -166,7 +173,7 @@ pub struct ArtiConfig {
 #[cfg(not(target_os = "android"))]
 impl ArtiConfig {
     fn get_dir_config(&self) -> Result<NetDirConfig> {
-        let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+        let mut dircfg = NetDirConfigBuilder::new();
         dircfg.set_network_config(self.network.clone());
         dircfg.set_timing_config(self.download_schedule.clone());
         dircfg.set_cache_path(&self.storage.cache_dir.path()?);
