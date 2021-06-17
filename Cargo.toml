@@ -50,6 +50,9 @@ core-foundation = "0.6.2"
 [build-dependencies]
 env_logger = "0.6"
 
+[dev-dependencies]
+tempdir = "0.3"
+
 [profile.release]
 lto = "fat"
 opt-level = "s"
