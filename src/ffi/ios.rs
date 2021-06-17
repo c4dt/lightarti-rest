@@ -1,27 +1,34 @@
-use libc::c_char;
 use core_foundation::{
     base::TCFType,
     string::{CFString, CFStringRef},
 };
-use crate::{Request, DirectoryCache};
+use http::Request;
+use libc::c_char;
 use log::LevelFilter;
+
+use crate::{client::Client, DirectoryCache};
 
 #[no_mangle]
 pub unsafe extern "C" fn call_tls_get(domain_cc: *const c_char) -> CFStringRef {
     simple_logging::log_to_stderr(LevelFilter::Debug);
     let domain = cstring_to_str(&domain_cc);
-    let req = &Request{
-        method: "GET".to_string(),
-        url: format!("https://{}/index.html", domain),
-        headers: Default::default(),
-        body: None
-    };
-    match req.send(&DirectoryCache{
+
+    let client = Client::new(DirectoryCache {
         tmp_dir: None,
         nodes: None,
-        relays: None
-    }){
-        Ok(s) => to_cf_str(format!("Result is: {:?}", s.body.unwrap())),
+        relays: None,
+    });
+
+    let req = Request::get(format!("https://{}", domain))
+        .header("Host", domain)
+        .body(vec![])
+        .expect("construct request");
+
+    match client.send(req) {
+        Ok(s) => to_cf_str(format!(
+            "Result is: {:?}",
+            s.map(|raw| String::from_utf8(raw).expect("decode response as utf8"))
+        )),
         Err(e) => to_cf_str(format!("Error while getting result: {}", e)),
     }
 }
