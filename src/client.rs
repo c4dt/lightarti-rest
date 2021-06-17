@@ -1,9 +1,8 @@
 use std::io::Write;
 
 use anyhow::{bail, Context, Result};
-use log::trace;
-
 use http::{Request, Response};
+use tracing::trace;
 
 use super::{arti::tls_send, DirectoryCache};
 
@@ -101,10 +100,8 @@ mod tests {
 
     #[test]
     fn test_get() {
-        simple_logging::log_to(std::io::stdout(), log::LevelFilter::Debug);
-
         let resp = Client::new(DirectoryCache {
-            tmp_dir: None,
+            tmp_dir: Some("/tmp/tor-cache/test_get".into()),
             nodes: None,
             relays: None,
         })

@@ -4,13 +4,19 @@ use core_foundation::{
 };
 use http::Request;
 use libc::c_char;
-use log::LevelFilter;
 
 use crate::{client::Client, DirectoryCache};
 
+fn setup_logger() {
+    let subscriber = tracing_fmt::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_writer(std::io::stderr)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn call_tls_get(domain_cc: *const c_char) -> CFStringRef {
-    simple_logging::log_to_stderr(LevelFilter::Debug);
     let domain = cstring_to_str(&domain_cc);
 
     let client = Client::new(DirectoryCache {

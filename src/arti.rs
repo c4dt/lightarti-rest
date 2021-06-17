@@ -1,18 +1,17 @@
 use std::sync::Arc;
 
+use crate::DirectoryCache;
 /// This is a simple wrapper around arti to offer a synchronous
 /// REST interface to mobile libraries.
-
-use anyhow::{Result, anyhow};
-use log::{debug, info, trace};
+use anyhow::{anyhow, Result};
+use tracing::{debug, info, trace};
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio_rustls::{rustls::ClientConfig, TlsConnector, webpki::DNSNameRef};
+use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tor_client::TorClient;
 use tor_config::CfgPath;
 use tor_dirmgr::{DownloadScheduleConfig, NetDirConfig, NetworkConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
-use crate::DirectoryCache;
 
 mod conv;
 
@@ -169,16 +168,25 @@ impl ArtiConfig {
     }
 }
 
-#[test]
-fn clearnet_and_tor_gives_the_same_page() {
-    use log::LevelFilter;
+#[cfg(test)]
+mod tests {
+    use crate::tests;
 
-    simple_logging::log_to_stderr(LevelFilter::Debug);
-    tls_send("www.c4dt.org", "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
-             &DirectoryCache {
-                 tmp_dir: Some("/tmp/tor-cache".into()),
-                 nodes: None,
-                 relays: None,
-             })
+    use super::*;
+
+    #[test]
+    fn clearnet_and_tor_gives_the_same_page() {
+        tests::setup_tracing();
+
+        tls_send(
+            "www.c4dt.org",
+            "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
+            &DirectoryCache {
+                tmp_dir: Some("/tmp/tor-cache".into()),
+                nodes: None,
+                relays: None,
+            },
+        )
         .expect("get page via tor");
+    }
 }

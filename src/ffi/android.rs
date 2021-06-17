@@ -1,10 +1,10 @@
+use http::Request;
 use jni::objects::{JClass, JString};
 use jni::sys::jstring;
 use jni::JNIEnv;
-use log::info;
+use tracing::info;
 
 use crate::{client::Client, DirectoryCache};
-use http::Request;
 
 const ANDROID_LOG_TAG: &str = "ArtiLib";
 
@@ -34,7 +34,6 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_initLogger(_: JNI
     // This allows to process the messages arbitrarily in the app.
     android_logger::init_once(
         android_logger::Config::default()
-            .with_min_level(log::Level::Debug)
             .with_tag(ANDROID_LOG_TAG),
     );
     // Log panics rather than printing them.

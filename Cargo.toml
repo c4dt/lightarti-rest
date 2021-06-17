@@ -12,8 +12,10 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-log = "0.4.6"
 log-panics = "2.0"
+# TODO features = "log" might be needed by android
+tracing = "0.1"
+tracing-fmt = "0.1"
 
 # Packages for tor
 tor-client = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
@@ -29,7 +31,6 @@ futures = "0.3"
 http = "0.2"
 httparse = "1"
 config = "0.11.0"
-simple-logging = "2.0.2"
 anyhow = "1.0.40"
 tokio-rustls = "0.22"
 webpki-roots = "0.21"
