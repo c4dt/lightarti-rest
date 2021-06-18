@@ -2,7 +2,8 @@ use http::Request;
 use jni::objects::{JClass, JString};
 use jni::sys::jstring;
 use jni::JNIEnv;
-use tracing::info;
+use log::Level;
+use log::info;
 
 use crate::{client::Client, DirectoryCache};
 
@@ -34,6 +35,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_initLogger(_: JNI
     // This allows to process the messages arbitrarily in the app.
     android_logger::init_once(
         android_logger::Config::default()
+            .with_min_level(Level::Trace)
             .with_tag(ANDROID_LOG_TAG),
     );
     // Log panics rather than printing them.
