@@ -1,8 +1,11 @@
 pub fn setup_tracing() {
-    let subscriber = tracing_fmt::FmtSubscriber::builder()
-        .with_max_level(tracing::Level::DEBUG)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
+    // dropping error as many tests can setup_tracing
 
-    tracing_log::LogTracer::init().expect("to register tracing logger")
+    let _ = tracing::subscriber::set_global_default(
+        tracing_fmt::FmtSubscriber::builder()
+            .with_max_level(tracing::Level::DEBUG)
+            .finish(),
+    );
+
+    let _ = tracing_log::LogTracer::init();
 }
