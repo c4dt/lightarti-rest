@@ -10,7 +10,9 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tor_client::TorClient;
 use tor_config::CfgPath;
-use tor_dirmgr::{DownloadScheduleConfig, NetDirConfig, NetworkConfig};
+use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig};
+#[cfg(not(target_os = "android"))]
+use tor_dirmgr::{NetDirConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
 
 mod conv;
@@ -158,6 +160,7 @@ pub struct ArtiConfig {
     download_schedule: DownloadScheduleConfig,
 }
 
+#[cfg(not(target_os = "android"))]
 impl ArtiConfig {
     fn get_dir_config(&self) -> Result<NetDirConfig> {
         let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
