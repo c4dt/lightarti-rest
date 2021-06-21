@@ -3,4 +3,6 @@ pub fn setup_tracing() {
         .with_max_level(tracing::Level::DEBUG)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
+
+    tracing_log::LogTracer::init().expect("to register tracing logger")
 }

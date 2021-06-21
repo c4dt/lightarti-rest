@@ -15,6 +15,7 @@ crate-type = ["cdylib", "staticlib"]
 log-panics = "2.0"
 tracing = "0.1"
 tracing-fmt = "0.1"
+tracing-log = "0.1"
 
 # Packages for tor
 tor-client = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
