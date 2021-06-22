@@ -19,6 +19,10 @@ impl Client {
     pub fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>> {
         trace!("request: {:?}", req);
 
+        if req.version() != http::Version::HTTP_10 {
+            bail!("only supports HTTP version 1.0")
+        }
+
         let uri = req.uri().clone();
         let host = uri.host().context("no host found")?;
 
@@ -122,6 +126,7 @@ mod tests {
         .send(
             Request::get("https://www.c4dt.org")
                 .header("Host", "www.c4dt.org")
+                .version(http::Version::HTTP_10)
                 .body(vec![])
                 .expect("create get request"),
         )
