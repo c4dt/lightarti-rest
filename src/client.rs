@@ -40,28 +40,37 @@ impl Client {
 }
 
 fn serialize_request(req: Request<Vec<u8>>) -> Result<Vec<u8>> {
+    const EOL: &str = "\n";
+
     let (parts, mut body) = req.into_parts();
 
     let mut ret = Vec::new();
 
     write!(
         &mut ret,
-        "{} {} {:?}\r\n",
-        parts.method, parts.uri, parts.version,
+        "{} {} {:?}{}",
+        parts.method,
+        parts
+            .uri
+            .path_and_query()
+            .context("uri without path or query")?,
+        parts.version,
+        EOL,
     )
     .context("write status line")?;
 
     for (key, value) in parts.headers {
         write!(
             &mut ret,
-            "{}: {}\r\n",
+            "{}: {}{}",
             key.context("missing header name")?,
             value.to_str().context("serialize header value as string")?,
+            EOL,
         )
         .context("write header")?;
     }
 
-    write!(&mut ret, "\r\n").context("write last EOL")?;
+    write!(&mut ret, "{}", EOL).context("write last EOL")?;
 
     ret.append(&mut body);
 
