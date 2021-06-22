@@ -92,6 +92,7 @@ async fn get_tor<T: Runtime>(
     _cache_dir: Option<&str>,
 ) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config().context("get dir config")?;
+    debug!("dircfg: {:?}", dircfg);
     TorClient::bootstrap(runtime, dircfg)
         .await
         .context("bootstrap tor client")
@@ -174,7 +175,9 @@ impl ArtiConfig {
         let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
         dircfg.set_network_config(self.network.clone());
         dircfg.set_timing_config(self.download_schedule.clone());
-        dircfg.set_cache_path(&self.storage.cache_dir.path().context("cache_dir as path")?);
+        dircfg
+            .use_default_cache_path()
+            .context("default cache path")?;
         dircfg.finalize().context("finalize")
     }
 }
