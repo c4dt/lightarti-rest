@@ -129,6 +129,7 @@ dependencies = [
  "tor-rtcompat",
  "tracing",
  "tracing-fmt",
+ "tracing-log",
  "url",
  "webpki-roots",
 ]

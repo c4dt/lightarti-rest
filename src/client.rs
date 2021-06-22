@@ -19,6 +19,10 @@ impl Client {
     pub fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>> {
         trace!("request: {:?}", req);
 
+        if req.version() != http::Version::HTTP_10 {
+            bail!("only supports HTTP version 1.0")
+        }
+
         let uri = req.uri().clone();
         let host = uri.host().context("no host found")?;
 
@@ -40,28 +44,37 @@ impl Client {
 }
 
 fn serialize_request(req: Request<Vec<u8>>) -> Result<Vec<u8>> {
+    const EOL: &str = "\n";
+
     let (parts, mut body) = req.into_parts();
 
     let mut ret = Vec::new();
 
     write!(
         &mut ret,
-        "{} {} {:?}\r\n",
-        parts.method, parts.uri, parts.version,
+        "{} {} {:?}{}",
+        parts.method,
+        parts
+            .uri
+            .path_and_query()
+            .context("uri without path or query")?,
+        parts.version,
+        EOL,
     )
     .context("write status line")?;
 
     for (key, value) in parts.headers {
         write!(
             &mut ret,
-            "{}: {}\r\n",
+            "{}: {}{}",
             key.context("missing header name")?,
             value.to_str().context("serialize header value as string")?,
+            EOL,
         )
         .context("write header")?;
     }
 
-    write!(&mut ret, "\r\n").context("write last EOL")?;
+    write!(&mut ret, "{}", EOL).context("write last EOL")?;
 
     ret.append(&mut body);
 
@@ -102,6 +115,8 @@ mod tests {
 
     #[test]
     fn test_get() {
+        crate::tests::setup_tracing();
+
         let tempdir = TempDir::new("tor-cache").expect("create temp dir");
         let resp = Client::new(DirectoryCache {
             tmp_dir: tempdir.path().to_str().map(String::from),
@@ -111,6 +126,7 @@ mod tests {
         .send(
             Request::get("https://www.c4dt.org")
                 .header("Host", "www.c4dt.org")
+                .version(http::Version::HTTP_10)
                 .body(vec![])
                 .expect("create get request"),
         )
