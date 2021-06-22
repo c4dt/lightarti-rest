@@ -49,7 +49,7 @@ pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result
             .context("get tor")?;
 
         debug!("Setting up tls connection and sending GET");
-        get_result(tor, host, request).await
+        get_result(tor, host, request).await.context("get result")
     })
 }
 
@@ -92,7 +92,7 @@ async fn get_tor<T: Runtime>(
     _cache_dir: Option<&str>,
 ) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config().context("get dir config")?;
-    TorClient::bootstrap(runtime.clone(), dircfg)
+    TorClient::bootstrap(runtime, dircfg)
         .await
         .context("bootstrap tor client")
 }
