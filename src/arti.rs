@@ -29,7 +29,6 @@ const ARTI_DEFAULTS: &str = concat!(
 /// It returns the result from the request, or an error.
 pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result<String> {
     info!("Starting TorClient");
-    let dflt_config = tor_config::default_config_file();
     let mut cfg = config::Config::new();
     cfg.merge(config::File::from_str(
         ARTI_DEFAULTS,
@@ -38,7 +37,7 @@ pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result
 
     debug!("Load config");
     let empty: Vec<String> = vec![];
-    tor_config::load(&mut cfg, dflt_config, &empty, &empty)?;
+    tor_config::load(&mut cfg, tor_config::default_config_file(), &empty, &empty)?;
     let config: ArtiConfig = cfg.try_into()?;
 
     let runtime = tor_rtcompat::create_runtime()?;
@@ -89,11 +88,16 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
 async fn get_tor<T: Runtime>(
     runtime: T,
     config: ArtiConfig,
-    _cache_dir: Option<&str>,
+    cache_dir: Option<&str>,
 ) -> Result<TorClient<T>> {
-    let dircfg = config.get_dir_config().context("get dir config")?;
-    debug!("dircfg: {:?}", dircfg);
-    TorClient::bootstrap(runtime, dircfg)
+    let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+    dircfg
+        .use_default_cache_path()
+        .context("default cache path")?;
+    let netdir = dircfg.finalize().context("finalize")?;
+
+    debug!("dircfg done");
+    TorClient::bootstrap(runtime, netdir)
         .await
         .context("bootstrap tor client")
 }
