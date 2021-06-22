@@ -26,6 +26,7 @@ pub unsafe extern "C" fn call_tls_get(domain_cc: *const c_char) -> CFStringRef {
     });
 
     let req = Request::get(format!("https://{}", domain))
+        .version(http::Version::HTTP_10)
         .header("Host", domain)
         .body(vec![])
         .expect("construct request");

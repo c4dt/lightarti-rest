@@ -2,7 +2,7 @@ use http::Request;
 use jni::objects::{JClass, JString};
 use jni::sys::jstring;
 use jni::JNIEnv;
-use tracing::{log::Level, info};
+use tracing::{info, log::Level};
 
 use crate::{client::Client, DirectoryCache};
 
@@ -60,6 +60,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_tlsGet(
         .into();
 
     let req = Request::get(format!("https://{}", domain))
+        .version(http::Version::HTTP_10)
         .header("Host", domain)
         .body(vec![])
         .expect("create request");
