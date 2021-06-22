@@ -21,6 +21,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-android
 
-      - name: Run tests
-        # Else the arti-sqlite might fail on concurrent access to the database
-        run: cargo test -j 1
+      - uses: actions-rs/cargo@v1
+        name: cargo test
+        with:
+          command: test
