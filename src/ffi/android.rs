@@ -2,8 +2,7 @@ use http::Request;
 use jni::objects::{JClass, JString};
 use jni::sys::jstring;
 use jni::JNIEnv;
-use log::Level;
-use log::info;
+use tracing::{log::Level, info};
 
 use crate::{client::Client, DirectoryCache};
 

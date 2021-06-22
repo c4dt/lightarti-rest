@@ -113,7 +113,6 @@ dependencies = [
  "httparse",
  "jni",
  "libc",
- "log",
  "log-panics",
  "openssl-sys",
  "ring",
@@ -2731,6 +2730,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09adeb8c97449311ccd28a427f96fb563e7fd31aabf994189879d9da2394b89d"
 dependencies = [
  "cfg-if",
+ "log",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",
