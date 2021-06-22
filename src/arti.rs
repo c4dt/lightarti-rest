@@ -4,16 +4,16 @@ use crate::DirectoryCache;
 /// This is a simple wrapper around arti to offer a synchronous
 /// REST interface to mobile libraries.
 use anyhow::{anyhow, Result};
-use tracing::{debug, info, trace};
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tor_client::TorClient;
 use tor_config::CfgPath;
-use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig};
 #[cfg(not(target_os = "android"))]
-use tor_dirmgr::{NetDirConfig};
+use tor_dirmgr::NetDirConfig;
+use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
+use tracing::{debug, info, trace};
 
 mod conv;
 
@@ -21,8 +21,8 @@ mod conv;
 /// without thinking...
 
 const ARTI_DEFAULTS: &str = concat!(
-include_str!("./arti_defaults.toml"),
-include_str!("./authorities.toml"),
+    include_str!("./arti_defaults.toml"),
+    include_str!("./authorities.toml"),
 );
 
 /// This connection sends a generic request over TLS to the host.
@@ -42,22 +42,23 @@ pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result
     let config: ArtiConfig = cfg.try_into()?;
 
     let runtime = tor_rtcompat::create_runtime()?;
-    runtime.block_on(
-        async {
-            debug!("Getting tor connection");
-            let cc = dir_cache.tmp_dir.as_ref().map(|s| &**s);
-            let tor = get_tor(runtime.clone(), config, cc).await?;
+    runtime.block_on(async {
+        debug!("Getting tor connection");
+        let cc = dir_cache.tmp_dir.as_ref().map(|s| &**s);
+        let tor = get_tor(runtime.clone(), config, cc).await?;
 
-            debug!("Setting up tls connection and sending GET");
-            get_result(tor, host, request).await
-        })
+        debug!("Setting up tls connection and sending GET");
+        get_result(tor, host, request).await
+    })
 }
 
 /// Sends a GET request over a TLS connection and returns the result.
 async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
     // Configure a TLS client to connect to endpoint
     let mut config = ClientConfig::new();
-    config.root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
+    config
+        .root_store
+        .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
     let config = TlsConnector::from(Arc::new(config));
     let dnsname = DNSNameRef::try_from_ascii_str(host).unwrap();
 
@@ -66,10 +67,7 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
         debug!("Trying to connect: {}", t);
         let stream: conv::TorStream = tor.connect(host, 443, None).await?.into();
         let mut tls_stream = config.connect(dnsname, stream).await?;
-        tls_stream
-            .write_all(request.as_ref())
-            .await
-            .unwrap();
+        tls_stream.write_all(request.as_ref()).await.unwrap();
         let mut res = vec![];
 
         if let Ok(_) = tls_stream.read_to_end(&mut res).await {
@@ -87,7 +85,11 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
 
 // On iOS, the get_dir_config works as supposed, so no need to do special treatment.
 #[cfg(not(target_os = "android"))]
-async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, _cache_dir: Option<&str>) -> Result<TorClient<T>> {
+async fn get_tor<T: Runtime>(
+    runtime: T,
+    config: ArtiConfig,
+    _cache_dir: Option<&str>,
+) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config()?;
     TorClient::bootstrap(runtime.clone(), dircfg).await
 }
@@ -95,7 +97,11 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, _cache_dir: Option<
 // For Android, the cache path needs to be set, so the whole config needs to be initialized.
 // This could of course be cleaned up...
 #[cfg(target_os = "android")]
-async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&str>) -> Result<TorClient<T>> {
+async fn get_tor<T: Runtime>(
+    runtime: T,
+    config: ArtiConfig,
+    cache_dir: Option<&str>,
+) -> Result<TorClient<T>> {
     use std::path::Path;
 
     debug!("New dircfg");
@@ -134,7 +140,6 @@ pub struct StorageConfig {
     #[allow(unused)]
     state_dir: CfgPath,
 }
-
 
 /// Structure to hold our configuration options, whether from a
 /// configuration file or the command line.
