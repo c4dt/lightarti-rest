@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::DirectoryCache;
 /// This is a simple wrapper around arti to offer a synchronous
 /// REST interface to mobile libraries.
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
@@ -44,8 +44,9 @@ pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result
     let runtime = tor_rtcompat::create_runtime()?;
     runtime.block_on(async {
         debug!("Getting tor connection");
-        let cc = dir_cache.tmp_dir.as_ref().map(|s| &**s);
-        let tor = get_tor(runtime.clone(), config, cc).await?;
+        let tor = get_tor(runtime.clone(), config, dir_cache.tmp_dir.as_deref())
+            .await
+            .context("get tor")?;
 
         debug!("Setting up tls connection and sending GET");
         get_result(tor, host, request).await
@@ -70,7 +71,7 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
         tls_stream.write_all(request.as_ref()).await.unwrap();
         let mut res = vec![];
 
-        if let Ok(_) = tls_stream.read_to_end(&mut res).await {
+        if tls_stream.read_to_end(&mut res).await.is_ok() {
             let result = String::from_utf8_lossy(&res).to_string();
 
             debug!("Received {} bytes from stream", result.len());
@@ -90,8 +91,10 @@ async fn get_tor<T: Runtime>(
     config: ArtiConfig,
     _cache_dir: Option<&str>,
 ) -> Result<TorClient<T>> {
-    let dircfg = config.get_dir_config()?;
-    TorClient::bootstrap(runtime.clone(), dircfg).await
+    let dircfg = config.get_dir_config().context("get dir config")?;
+    TorClient::bootstrap(runtime.clone(), dircfg)
+        .await
+        .context("bootstrap tor client")
 }
 
 // For Android, the cache path needs to be set, so the whole config needs to be initialized.
@@ -171,8 +174,8 @@ impl ArtiConfig {
         let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
         dircfg.set_network_config(self.network.clone());
         dircfg.set_timing_config(self.download_schedule.clone());
-        dircfg.set_cache_path(&self.storage.cache_dir.path()?);
-        dircfg.finalize()
+        dircfg.set_cache_path(&self.storage.cache_dir.path().context("cache_dir as path")?);
+        dircfg.finalize().context("finalize")
     }
 }
 
