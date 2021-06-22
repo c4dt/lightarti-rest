@@ -19,10 +19,14 @@ jobs:
           ndk-version: r21e
           add-to-path: false
 
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: aarch64-linux-android
+
       - name: Add android to target
-        run: |
-          rustup target add aarch64-linux-android
-          cargo install cargo-ndk
+        run: cargo install cargo-ndk
 
       - name: Build android version
         run: |
@@ -47,8 +51,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@v1
 
-      - name: Add ios to target
-        run: rustup target add x86_64-apple-ios
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-apple-ios
 
       - name: Build ios version
         run: cargo build --target x86_64-apple-ios
