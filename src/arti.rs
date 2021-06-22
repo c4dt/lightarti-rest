@@ -90,10 +90,11 @@ async fn get_tor<T: Runtime>(
     config: ArtiConfig,
     cache_dir: Option<&str>,
 ) -> Result<TorClient<T>> {
+    let cache_path = std::path::Path::new(cache_dir.unwrap());
+    debug!(?cache_path);
+
     let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
-    dircfg
-        .use_default_cache_path()
-        .context("default cache path")?;
+    dircfg.set_cache_path(std::path::Path::new(cache_dir.unwrap()));
     let netdir = dircfg.finalize().context("finalize")?;
 
     debug!("dircfg done");
