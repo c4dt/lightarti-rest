@@ -25,6 +25,7 @@ use tor_netdir::{MdReceiver, NetDir, PartialNetDir};
 use tor_netdoc::doc::netstatus::Lifetime;
 
 use crate::{
+    authority::default_authorities,
     docmeta::ConsensusMeta,
     shared_ref::SharedMutArc,
     CacheUsage, DirState, DocId, Error, NetDirConfig,
@@ -47,7 +48,7 @@ use tor_netdoc::{
 
 
 /// Certificates of the authorities.
-static OUR_CERTIFICATES: [&str; 9] = include!("certificates.in");
+static OUR_CERTIFICATE: &str = include_str!("certificate.in");
 
 
 /// An object where we can put a usable netdir.
@@ -100,16 +101,10 @@ impl<DM: WriteNetDir> GetConsensusState<DM> {
     /// Create a new GetConsensusState from a weak reference to a
     /// directory manager and a `cache_usage` flag.
     pub(crate) fn new(writedir: Weak<DM>, cache_usage: CacheUsage) -> Result<Self> {
-        let authority_ids: Vec<_> = if let Some(writedir) = Weak::upgrade(&writedir) {
-            writedir
-                .config()
-                .authorities()
-                .iter()
-                .map(|auth| *auth.v3ident())
-                .collect()
-        } else {
-            return Err(Error::ManagerDropped.into());
-        };
+        let authority_ids: Vec<_> = default_authorities()
+            .iter()
+            .map(|auth| *auth.v3ident())
+            .collect();
         Ok(GetConsensusState {
             cache_usage,
             next: None,
@@ -274,13 +269,11 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
     fn add_from_cache(&mut self, _docdir: &str) -> Result<bool> {
         let mut changed = false;
         // static data for certificates
-        for static_cert in OUR_CERTIFICATES.iter() {
-            let parsed = AuthCert::parse(static_cert)?.check_signature()?;
-            if let Ok(cert) = parsed.check_valid_now() {
-                self.missing_certs.remove(cert.key_ids());
-                self.certs.push(cert);
-                changed = true;
-            }
+        let parsed = AuthCert::parse(OUR_CERTIFICATE)?.check_signature()?;
+        if let Ok(cert) = parsed.check_valid_now() {
+            self.missing_certs.remove(cert.key_ids());
+            self.certs.push(cert);
+            changed = true;
         }
         Ok(changed)
     }
