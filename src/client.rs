@@ -102,6 +102,8 @@ mod tests {
 
     #[test]
     fn test_get() {
+        crate::tests::setup_tracing();
+
         let tempdir = TempDir::new("tor-cache").expect("create temp dir");
         let resp = Client::new(DirectoryCache {
             tmp_dir: tempdir.path().to_str().map(String::from),
