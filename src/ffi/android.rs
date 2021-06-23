@@ -9,7 +9,7 @@ use crate::{client::Client, DirectoryCache};
 const ANDROID_LOG_TAG: &str = "ArtiLib";
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_hello(
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
     env: JNIEnv,
     _: JClass,
     who: JString,
@@ -27,7 +27,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_hello(
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_initLogger(_: JNIEnv, _: JClass) {
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: JNIEnv, _: JClass) {
     // Important: Logcat doesn't contain stdout / stderr so we need a custom logger.
     // An alternative solution to android_logger, is to register a callback
     // (Using the same functionality as registerCallback) to send the logs.
@@ -44,7 +44,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_initLogger(_: JNI
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_tlsGet(
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_tlsGet(
     env: JNIEnv,
     _: JClass,
     cache_dir_j: JString,
@@ -85,7 +85,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_tlsGet(
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_JniApi_tlsPost(
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     env: JNIEnv,
     _: JClass,
     cache_dir_j: JString,
