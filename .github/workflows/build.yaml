@@ -13,12 +13,6 @@ jobs:
 
       - uses: Swatinem/rust-cache@v1
 
-      - uses: nttld/setup-ndk@v1
-        id: setup-ndk
-        with:
-          ndk-version: r21e
-          add-to-path: false
-
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -34,8 +28,6 @@ jobs:
         with:
           command: ndk
           args: --target aarch64-linux-android build
-        env:
-          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
   build-ios:
     runs-on: macos-latest
