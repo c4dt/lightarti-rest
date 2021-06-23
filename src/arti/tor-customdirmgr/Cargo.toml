@@ -16,16 +16,16 @@ mmap = [ "memmap" ]
 
 [dependencies]
 # For now, we skip consensus validation with a modified arti
-tor-chanmgr = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations", default-features=false }
-tor-checkable = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-circmgr = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-consdiff = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-dirclient = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-netdir = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-netdoc = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-llcrypto = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-retry = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-rtcompat = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-chanmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f", default-features=false }
+tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-consdiff = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-dirclient = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-netdir = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-netdoc = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-retry = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 
 anyhow = "1.0.38"
 async-trait = "0.1.48"
