@@ -63,11 +63,11 @@ fn serialize_request(req: Request<Vec<u8>>) -> Result<Vec<u8>> {
     )
     .context("write status line")?;
 
-    for (key, value) in parts.headers {
+    for (key, value) in &parts.headers {
         write!(
             &mut ret,
             "{}: {}{}",
-            key.context("missing header name")?,
+            key,
             value.to_str().context("serialize header value as string")?,
             EOL,
         )
