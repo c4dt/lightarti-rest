@@ -52,6 +52,7 @@ webpki-roots = "0.21"
 rand = "0.8.3"
 ring = "0.16.19"
 url = "2.2.2"
+log = "0.4.14"
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = { version = "0.16", default-features = false }
