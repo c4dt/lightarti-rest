@@ -16,16 +16,16 @@ mmap = [ "memmap" ]
 
 [dependencies]
 # For now, we skip consensus validation with a modified arti
-tor-chanmgr = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations", default-features=false }
-tor-checkable = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-circmgr = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-consdiff = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-dirclient = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-netdir = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-netdoc = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-llcrypto = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-retry = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
-tor-rtcompat = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-chanmgr = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations", default-features=false }
+tor-checkable = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-circmgr = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-consdiff = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-dirclient = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-netdir = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-netdoc = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-llcrypto = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-retry = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-rtcompat = { git = "https://github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
 
 anyhow = "1.0.38"
 async-trait = "0.1.48"
