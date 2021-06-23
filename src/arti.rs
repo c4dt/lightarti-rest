@@ -184,6 +184,8 @@ impl ArtiConfig {
 #[cfg(test)]
 mod tests {
     use tempdir::TempDir;
+    use std::fs::File;
+    use std::io::Write;
 
     use crate::tests;
 
@@ -194,6 +196,17 @@ mod tests {
         tests::setup_tracing();
 
         let tempdir = TempDir::new("tor-cache").expect("create temp dir");
+
+        let consensus = include_str!("test-data/consensus.txt");
+        let microdescriptors = include_str!("test-data/microdescriptors.txt");
+
+        let consensus_path = tempdir.path().join("consensus.txt");
+        let mut consensus_file = File::create(consensus_path).expect("create temp consensus file");
+        write!(consensus_file, "{}", consensus).expect("write temp consensus file");
+
+        let microdescriptors_path = tempdir.path().join("microdescriptors.txt");
+        let mut microdescriptors_file = File::create(microdescriptors_path).expect("create temp microdescriptors file");
+        write!(microdescriptors_file, "{}", microdescriptors).expect("write temp microdescriptors file");
 
         tls_send(
             "www.c4dt.org",
