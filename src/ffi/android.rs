@@ -44,51 +44,11 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: 
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_tlsGet(
-    env: JNIEnv,
-    _: JClass,
-    cache_dir_j: JString,
-    domain_j: JString,
-) -> jstring {
-    let cache_dir: String = env
-        .get_string(cache_dir_j)
-        .expect("Couldn't create rust string")
-        .into();
-    let domain: String = env
-        .get_string(domain_j)
-        .expect("Couldn't create rust string")
-        .into();
-
-    let req = Request::get(format!("https://{}", domain))
-        .version(http::Version::HTTP_10)
-        .header("Host", domain)
-        .body(vec![])
-        .expect("create request");
-
-    let client = Client::new(DirectoryCache {
-        tmp_dir: Some(cache_dir),
-        nodes: None,
-        relays: None,
-    });
-
-    let output = match client.send(req) {
-        Ok(s) => format!(
-            "Result is: {:?}",
-            s.map(|raw| String::from_utf8(raw).expect("decode body as utf8"))
-        ),
-        Err(e) => format!("Error while getting result: {}", e),
-    };
-
-    env.new_string(output)
-        .expect("build java string")
-        .into_inner()
-}
-
-#[no_mangle]
 pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     env: JNIEnv,
     _: JClass,
     cache_dir_j: JString,
+    method_j: JString,
     url_j: JString,
     headers_j: JObject,
     body_j: jbyteArray
@@ -96,6 +56,10 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     let cache_dir: String = env
         .get_string(cache_dir_j)
         .expect("create rust string for `cache_dir_j`")
+        .into();
+    let method: String = env
+        .get_string(method_j)
+        .expect("create rust string for `method_j`")
         .into();
     let url: String = env
         .get_string(url_j)
@@ -105,8 +69,14 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
         .convert_byte_array(body_j)
         .expect("create byte array");
 
-    let mut req_builder = Request::post(format!("{}", url))
-        .version(Version::HTTP_10);
+    let mut req_builder = match method.as_str() {
+        "POST" => Request::post(format!("{}", url)),
+        "GET" => Request::get(format!("{}", url)),
+        _ =>  {
+            let _ = env.throw(format!("HTTP method not supported: {:?}", method));
+            return JObject::null().into_inner();
+        }
+    }.version(Version::HTTP_10);
 
     let headers_jmap: JMap = env
         .get_map(headers_j)
@@ -139,7 +109,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     }
 
     let request = req_builder.body(body).expect("create request");
-    info!("Request: {:?}", request);
+    trace!("Request: {:?}", request);
 
     let client = Client::new(DirectoryCache {
         tmp_dir: Some(cache_dir),
@@ -150,11 +120,11 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     let response = match client.send(request) {
         Ok(s) => s,
         Err(e) => {
-            let _ = env.throw(format!("Error while getting result: {}", e));
+            let _ = env.throw(format!("Error while processing request: {}", e));
             return JObject::null().into_inner();
         },
     };
-    info!("Response: {:?}", response);
+    trace!("Response: {:?}", response);
 
     let status: jint = response.status().as_u16().into();
 
