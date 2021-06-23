@@ -73,7 +73,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
         "POST" => Request::post(format!("{}", url)),
         "GET" => Request::get(format!("{}", url)),
         _ =>  {
-            let _ = env.throw(format!("HTTP method not supported: {:?}", method));
+            let _ = env.throw(("org/c4dt/artiwrapper/TorLibException", format!("HTTP method not supported: {:?}", method)));
             return JObject::null().into_inner();
         }
     }.version(Version::HTTP_10);
@@ -120,7 +120,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     let response = match client.send(request) {
         Ok(s) => s,
         Err(e) => {
-            let _ = env.throw(format!("Error while processing request: {}", e));
+            let _ = env.throw(("org/c4dt/artiwrapper/TorLibException", format!("Error while processing request: {}", e)));
             return JObject::null().into_inner();
         },
     };
