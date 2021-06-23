@@ -120,6 +120,7 @@ dependencies = [
  "httparse",
  "jni",
  "libc",
+ "log",
  "log-panics",
  "openssl-sys",
  "rand 0.8.4",
@@ -437,6 +438,7 @@ checksum = "631ae5198c9be5e753e5cc215e1bd73c2b466a3565173db433f52bb9d3e66dba"
 [[package]]
 name = "caret"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 
 [[package]]
 name = "cc"
@@ -2377,6 +2379,7 @@ dependencies = [
 [[package]]
 name = "tor-bytes"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "arrayref",
  "bytes",
@@ -2390,6 +2393,7 @@ dependencies = [
 [[package]]
 name = "tor-cell"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "arrayref",
  "bitflags",
@@ -2407,6 +2411,7 @@ dependencies = [
 [[package]]
 name = "tor-cert"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "caret",
  "digest",
@@ -2419,6 +2424,7 @@ dependencies = [
 [[package]]
 name = "tor-chanmgr"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "async-trait",
  "event-listener",
@@ -2435,6 +2441,7 @@ dependencies = [
 [[package]]
 name = "tor-checkable"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "signature",
  "thiserror",
@@ -2444,6 +2451,7 @@ dependencies = [
 [[package]]
 name = "tor-circmgr"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2465,6 +2473,7 @@ dependencies = [
 [[package]]
 name = "tor-config"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "config",
  "directories",
@@ -2479,6 +2488,7 @@ dependencies = [
 [[package]]
 name = "tor-consdiff"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "digest",
  "hex",
@@ -2521,6 +2531,7 @@ dependencies = [
 [[package]]
 name = "tor-dirclient"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -2545,6 +2556,7 @@ dependencies = [
 [[package]]
 name = "tor-linkspec"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "tor-bytes",
  "tor-llcrypto",
@@ -2554,6 +2566,7 @@ dependencies = [
 [[package]]
 name = "tor-llcrypto"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "aes-ctr",
  "arrayref",
@@ -2562,7 +2575,6 @@ dependencies = [
  "digest",
  "ed25519-dalek",
  "hex",
- "log",
  "rand_core 0.5.1",
  "rand_core 0.6.3",
  "rsa",
@@ -2581,6 +2593,7 @@ dependencies = [
 [[package]]
 name = "tor-netdir"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "base64",
  "caret",
@@ -2602,13 +2615,13 @@ dependencies = [
 [[package]]
 name = "tor-netdoc"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "base64",
  "bitflags",
  "chrono",
  "digest",
  "hex",
- "log",
  "once_cell",
  "phf",
  "serde 1.0.126",
@@ -2625,6 +2638,7 @@ dependencies = [
 [[package]]
 name = "tor-proto"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "arrayref",
  "asynchronous-codec",
@@ -2656,6 +2670,7 @@ dependencies = [
 [[package]]
 name = "tor-protover"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "caret",
  "thiserror",
@@ -2664,6 +2679,7 @@ dependencies = [
 [[package]]
 name = "tor-retry"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "anyhow",
 ]
@@ -2671,6 +2687,7 @@ dependencies = [
 [[package]]
 name = "tor-rtcompat"
 version = "0.0.0"
+source = "git+ssh://git@github.com/spring-epfl/arti-tweaks.git?branch=adaptations#e8cf1a5b06d605740be24a92698110c867decb6c"
 dependencies = [
  "async-trait",
  "async_executors",

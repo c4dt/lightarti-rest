@@ -26,13 +26,12 @@ tracing-log = "0.1"
 #tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 
 # Currently, we use a modified versionof Arti with a dummy consensus validation.
-tor-config = { path="../arti/tor-config", version= "*" }
-tor-chanmgr = { path="../arti/tor-chanmgr", version= "*", default-features=false }
-tor-circmgr = { path="../arti/tor-circmgr", version= "*" }
-tor-llcrypto = { path="../arti/tor-llcrypto", version= "*" }
-tor-proto = { path="../arti/tor-proto", version= "*" }
-tor-rtcompat = { path="../arti/tor-rtcompat", version= "*" }
-
+tor-config = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-chanmgr = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations", default-features=false }
+tor-circmgr = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-llcrypto = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-proto = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
+tor-rtcompat = { git = "ssh://git@github.com/spring-epfl/arti-tweaks.git", branch = "adaptations" }
 
 tor-customdirmgr = { path = "./src/arti/tor-customdirmgr" }
 
