@@ -87,9 +87,24 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
 
 // On iOS, the get_dir_config works as supposed, so no need to do special treatment.
 #[cfg(not(target_os = "android"))]
-async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, _cache_dir: Option<&str>) -> Result<TorClient<T>> {
-    let dircfg = config.get_dir_config()?;
-    TorClient::bootstrap(runtime.clone(), dircfg).await
+async fn get_tor<T: Runtime>(
+    runtime: T,
+    config: ArtiConfig,
+    cache_dir: Option<&str>,
+) -> Result<TorClient<T>> {
+    use anyhow::Context;
+
+    let cache_path = std::path::Path::new(cache_dir.unwrap());
+    debug!(?cache_path);
+
+    let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+    dircfg.set_cache_path(cache_path);
+
+    TorClient::bootstrap(
+        runtime.clone(),
+        dircfg.finalize().context("netdir finalize")?,
+    )
+    .await
 }
 
 // For Android, the cache path needs to be set, so the whole config needs to be initialized.
