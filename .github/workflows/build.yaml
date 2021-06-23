@@ -25,18 +25,15 @@ jobs:
           toolchain: stable
           target: aarch64-linux-android
 
-      - name: Add android to target
-        run: cargo install cargo-ndk
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-ndk
 
-      - name: Build android version
-        run: |
-          # I have no idea why this is not picked up automatically...
-          mkdir $HOME/bin
-          ln -s $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar $HOME/bin/aarch64-linux-android-ar
-          ln -s $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang $HOME/bin/aarch64-linux-android-clang
-          export PATH=$PATH:$HOME/bin:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
-          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
-          cargo build --target aarch64-linux-android
+      - uses: actions-rs/cargo@v1
+        with:
+          command: ndk
+          args: --target aarch64-linux-android build
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
@@ -57,5 +54,7 @@ jobs:
           toolchain: stable
           target: x86_64-apple-ios
 
-      - name: Build ios version
-        run: cargo build --target x86_64-apple-ios
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target x86_64-apple-ios
