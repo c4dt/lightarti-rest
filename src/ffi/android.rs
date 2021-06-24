@@ -3,6 +3,7 @@ use jni::objects::{JClass, JString, JObject, JList, JMap, JValue};
 use jni::sys::{jstring, jbyteArray, jint, jobject};
 use jni::JNIEnv;
 use tracing::{info, trace, log::Level};
+use anyhow::{bail, Context, Result};
 
 use crate::{client::Client, DirectoryCache};
 
@@ -43,64 +44,62 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: 
     info!("init log system - done");
 }
 
-#[no_mangle]
-pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
+fn make_request(
     env: JNIEnv,
-    _: JClass,
     cache_dir_j: JString,
     method_j: JString,
     url_j: JString,
     headers_j: JObject,
-    body_j: jbyteArray
-) -> jobject {
+    body_j: jbyteArray,
+) -> Result<(String, http::Request<Vec<u8>>)> {
     let cache_dir: String = env
         .get_string(cache_dir_j)
-        .expect("create rust string for `cache_dir_j`")
+        .context("create rust string for `cache_dir_j`")?
         .into();
+
     let method: String = env
         .get_string(method_j)
-        .expect("create rust string for `method_j`")
+        .context("create rust string for `method_j`")?
         .into();
+
     let url: String = env
         .get_string(url_j)
-        .expect("create rust string for `url_j`")
+        .context("create rust string for `url_j`")?
         .into();
+
     let body: Vec<u8> = env
         .convert_byte_array(body_j)
-        .expect("create byte array");
+        .context("create byte array")?;
 
     let mut req_builder = match method.as_str() {
         "POST" => Request::post(format!("{}", url)),
         "GET" => Request::get(format!("{}", url)),
-        _ =>  {
-            let _ = env.throw(("org/c4dt/artiwrapper/TorLibException", format!("HTTP method not supported: {:?}", method)));
-            return JObject::null().into_inner();
-        }
+         _ => bail!("HTTP method not supported: {:?}", method)
     }.version(Version::HTTP_10);
 
     let headers_jmap: JMap = env
         .get_map(headers_j)
-        .expect("create JMap");
+        .context("create JMap")?;
 
     for (key, value_list) in headers_jmap
         .iter()
-        .expect("create JMap iterator") {
+        .context("create JMap iterator")? {
         let header_name: String = env
             .get_string(JString::from(key))
-            .expect("create rust string for header name")
+            .context("create rust string for header name")?
             .into();
         trace!("Request header_name: {:?}", header_name);
 
         let header_value_list: JList = env
             .get_list(value_list)
-            .expect("create JList");
+            .context("create JList")?;
 
         for value in header_value_list
             .iter()
-            .expect("create JList iterator") {
+            .context("create JList iterator")? {
             let header_value: String = env
                 .get_string(JString::from(value))
-                .expect("create rust string for header value")
+                .context("create rust string for header value")?
                 .into();
             trace!("    Request header_value: {:?}", header_value);
 
@@ -108,24 +107,12 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
         }
     }
 
-    let request = req_builder.body(body).expect("create request");
-    trace!("Request: {:?}", request);
+    let request = req_builder.body(body).context("create request")?;
 
-    let client = Client::new(DirectoryCache {
-        tmp_dir: Some(cache_dir),
-        nodes: None,
-        relays: None,
-    });
+    Ok((cache_dir, request))
+}
 
-    let response = match client.send(request) {
-        Ok(s) => s,
-        Err(e) => {
-            let _ = env.throw(("org/c4dt/artiwrapper/TorLibException", format!("Error while processing request: {}", e)));
-            return JObject::null().into_inner();
-        },
-    };
-    trace!("Response: {:?}", response);
-
+fn format_response(env: JNIEnv, response: http::Response<Vec<u8>>) -> Result<JObject> {
     let status: jint = response.status().as_u16().into();
 
     let version = env
@@ -137,15 +124,15 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
             http::Version::HTTP_3 => "HTTP/3",
             _ => "Unknown",
         })
-        .expect("build http string version");
+        .context("build http string version")?;
 
     let headers = env.new_object(
         env
             .find_class("java/util/HashMap")
-            .expect("find java.util.HashMap"),
+            .context("find java.util.HashMap")?,
         "()V",
         &[],
-        ).expect("create HashMap");
+        ).context("create HashMap")?;
 
     for (key, value) in response.headers() {
         trace!("Response header: {:?} → {:?}", key, value);
@@ -153,10 +140,10 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
         let mut entry = env.new_object(
             env
             .find_class("java/util/ArrayList")
-            .expect("find java.util.ArrayList"),
+            .context("find java.util.ArrayList")?,
             "()V",
             &[],
-            ).expect("create ArrayList");
+            ).context("create ArrayList")?;
 
         match env.call_method(
             headers,
@@ -164,12 +151,12 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
             &[
             env.new_string(key.as_str())
-                .expect("create JString for key")
+                .context("create JString for key")?
                 .into(),
             entry.into(),
             ],
             )
-            .expect("call HashMap.put()") {
+            .context("call HashMap.put()")? {
                 JValue::Object(o) => {
                     if o.into_inner() != std::ptr::null_mut() {
                         trace!("Entry already existed -- appending");
@@ -186,22 +173,22 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
             &[
                 env.new_string(
                     value.to_str()
-                    .expect("convert header value to string")
+                    .context("convert header value to string")?
                     )
-                .expect("create JString for value").into()
+                .context("create JString for value")?.into()
             ]
             )
-            .expect("call List.add()");
+            .context("call List.add()")?;
     }
 
     let body = env
         .byte_array_from_slice(response.body())
-        .expect("create byte array");
+        .context("create byte array")?;
 
-    env.new_object(
+    Ok(env.new_object(
         env
             .find_class("org/c4dt/artiwrapper/HttpResponse")
-            .expect("find HttpResult class"),
+            .context("find HttpResult class")?,
         "(ILjava/lang/String;Ljava/util/Map;[B)V",
         &[
             status.into(),
@@ -210,6 +197,53 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
             body.into(),
         ]
         )
-        .expect("create HttpResult")
-        .into_inner()
+        .context("create HttpResult")?)
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
+    env: JNIEnv,
+    _: JClass,
+    cache_dir_j: JString,
+    method_j: JString,
+    url_j: JString,
+    headers_j: JObject,
+    body_j: jbyteArray
+) -> jobject {
+    let (cache_dir, request) = match make_request(env, cache_dir_j, method_j, url_j, headers_j, body_j) {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = env.throw(("org/c4dt/artiwrapper/TorLibException",
+                               format!("make request: {:?}", e)));
+            return JObject::null().into_inner();
+        }
+    };
+    trace!("Request: {:?}", request);
+
+    let client = Client::new(DirectoryCache {
+        tmp_dir: Some(cache_dir),
+        nodes: None,
+        relays: None,
+    });
+
+    let response = match client.send(request) {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = env.throw(("org/c4dt/artiwrapper/TorLibException",
+                               format!("send request: {:?}", e)));
+            return JObject::null().into_inner();
+        },
+    };
+    trace!("Response: {:?}", response);
+
+    let fmt_response = match format_response(env, response) {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = env.throw(("org/c4dt/artiwrapper/TorLibException",
+                               format!("format response: {:?}", e)));
+            return JObject::null().into_inner();
+        },
+    };
+
+    fmt_response.into_inner()
 }
