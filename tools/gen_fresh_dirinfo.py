@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Copyright 2021 Laurent Girod (EPFL SPRING Lab)
+
 """
 Script to produce data to pass to Arti.
 """
@@ -46,7 +48,7 @@ from stem.descriptor.remote import (
 from stem.descriptor.router_status_entry import RouterStatusEntryMicroV3
 
 
-# Time format used in teh consensus.
+# Time format used in the consensus.
 CONSENSUS_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Router flags in which we are interested.
@@ -57,7 +59,7 @@ FLAG_GUARD = "Guard"
 FLAG_STABLE = "Stable"
 
 # Format of an authority entry in the consensus (with a dummy vote digest).
-AUTHORITY_FMT = """dir-source {nickname} {fingerprint} {addresses} {ports}
+AUTHORITY_FMT = """dir-source {nickname} {fingerprint} {hostname} {ip_address} {dirport} {orport}
 contact {contact}
 vote-digest 0000000000000000000000000000000000000000
 """
@@ -235,76 +237,52 @@ def consensus_validate_signatures(
 def select_routers(
         consensus: NetworkStatusDocumentV3,
         number_routers: int,
-        exit_ratio: float,
-        guard_ratio: float = 0.5,
+        exit_ratio: float
     ) -> List[RouterStatusEntryMicroV3]:
     """
     Select the routers with the highest available bandwidth matching the criteria.
 
     :param consensus: The consensus containing the routers descriptions
-    :param guard_ratio: the minimal ratio of guards routers that we want
     :param exit_ratio: the minimal ratio of exit routers that we want
     :param n_routers: the final number of routers that we would like
     :raises ValueError: One of the parameter given in argument has an invalid value.
     :return: list of router entries matching the criteria of the selection
     """
-    if guard_ratio < 0 or guard_ratio > 1:
-        raise ValueError("Invalid ratio")
-
     if exit_ratio < 0 or exit_ratio > 1:
         raise ValueError("Invalid ratio")
 
     if number_routers > len(consensus.routers):
         raise ValueError("Not enough routers in consensus")
 
-    n_guards = ceil(number_routers * guard_ratio)
-    n_exits = ceil(number_routers * exit_ratio)
-
     # Sort routers by type.
-    potential_guards: List[RouterStatusEntryMicroV3] = list()
+    potential_routers: List[RouterStatusEntryMicroV3] = list()
     potential_exits: List[RouterStatusEntryMicroV3] = list()
-    potential_middles: List[RouterStatusEntryMicroV3] = list()
 
     for router in consensus.routers.values():
         flags = set(router.flags)
         # We only consider stable routers
         # Which also have the guard flag to ensure a higher stability.
         if FLAG_STABLE in flags and FLAG_FAST in flags and FLAG_GUARD in flags:
-            if FLAG_GUARD in flags:
-                potential_guards.append(router)
             if FLAG_EXIT in flags and FLAG_BAD_EXIT not in flags:
                 potential_exits.append(router)
+            else:
+                # Try to avoid loading exit nodes for guard or middle nodes.
+                potential_routers.append(router)
 
-            # We try to avoid using exit routers as potential middle nodes.
-            if FLAG_EXIT not in flags:
-                potential_middles.append(router)
-
-    if n_guards > len(potential_guards):
-        LOGGER.warning("Insufficient number of guard routers in the consensus.")
-
-    if n_exits > len(potential_exits):
+    number_exits = ceil(number_routers * exit_ratio)
+    if number_exits > len(potential_exits):
         LOGGER.warning("Insufficient number of exit routers in the consensus.")
 
-    # We select the guards with the largest measured bandwidth.
-    # Note that they can also act as exit nodes.
-    guards = nlargest(n_guards, potential_guards, key=lambda r: r.bandwidth)
-
-    selected_set = {router.fingerprint for router in guards}
-
     # We select the exit nodes which we do not have yet with the largest available bandwidth.
-    # Note that they can also act as guards.
-    exits = nlargest(n_exits, potential_exits, key=lambda r: r.bandwidth)
-
-    for router in exits:
-        selected_set.add(router.fingerprint)
+    exits = nlargest(number_exits, potential_exits, key=lambda r: r.bandwidth)
+    selected_set = {router.fingerprint for router in exits}
 
     # We select some other routers based on their available bandwidth and provided we didn't
     # already select them.
-    # Note that some might also act as guard or exit.
     n_middles = number_routers - len(selected_set)
     middles = nlargest(
         n_middles,
-        potential_middles,
+        potential_routers,
         key=lambda r: r.bandwidth if r.fingerprint not in selected_set else 0
     )
 
@@ -324,8 +302,10 @@ def generate_signed_consensus(
         authority_signing_key: RSA.RsaKey,
         authority_certificate: KeyCertificate,
         authority_nickname: str,
-        authority_addresses: str,
-        authority_ports: str,
+        authority_hostname: str,
+        authority_ip_address: str,
+        authority_dirport: int,
+        authority_orport: int,
         authority_contact: str,
         consensus_lifetime: int
     ) -> bytes:
@@ -358,8 +338,10 @@ def generate_signed_consensus(
     authority = AUTHORITY_FMT.format(
         nickname=authority_nickname,
         fingerprint=authority_certificate.fingerprint,
-        addresses=authority_addresses,
-        ports=authority_ports,
+        hostname=authority_hostname,
+        ip_address=authority_ip_address,
+        dirport=authority_dirport,
+        orport=authority_orport,
         contact=authority_contact
     ).encode("ascii")
 
@@ -458,8 +440,10 @@ def create_custom_consensus(namespace: Namespace) -> None:
     routers = select_routers(consensus_original, number_routers, exit_ratio)
 
     authority_nickname: str = namespace.authority_nickname
-    authority_addresses: str = namespace.authority_addresses
-    authority_ports: str = namespace.authority_ports
+    authority_hostname: str = namespace.authority_hostname
+    authority_ip_address: str = namespace.authority_ip_address
+    authority_dirport: int = namespace.authority_dirport
+    authority_orport: int = namespace.authority_orport
     authority_contact: str = namespace.authority_contact
     consensus_lifetime: int = namespace.consensus_lifetime
 
@@ -469,8 +453,10 @@ def create_custom_consensus(namespace: Namespace) -> None:
         authority_signing_key,
         authority_certificate,
         authority_nickname,
-        authority_addresses,
-        authority_ports,
+        authority_hostname,
+        authority_ip_address,
+        authority_dirport,
+        authority_orport,
         authority_contact,
         consensus_lifetime
     )
@@ -500,7 +486,7 @@ def main(program: str, arguments: List[str]) -> None:
     Entrypoint of the program. Parse the arguments, and call the correct function.
 
     :param program: name of the script.
-    :param arguments: arguments passed to teh program.
+    :param arguments: arguments passed to the program.
     """
     parser = ArgumentParser(prog=program)
     parser.add_argument(
@@ -522,16 +508,28 @@ def main(program: str, arguments: List[str]) -> None:
         default="spring"
     )
     parser.add_argument(
-        "--authority-addresses",
-        help="Addresses of the directory authority for OR and DIR.",
+        "--authority-hostname",
+        help="Hostname of the directory authority.",
         type=str,
-        default="127.0.0.1 127.0.0.1"
+        default="127.0.0.1"
     )
     parser.add_argument(
-        "--authority-ports",
-        help="Ports of the directory authority.",
+        "--authority-ip-address",
+        help="Address of the directory authority.",
         type=str,
-        default="80 443"
+        default="127.0.0.1"
+    )
+    parser.add_argument(
+        "--authority-dirport",
+        help="Dir port of the directory authority.",
+        type=int,
+        default=80
+    )
+    parser.add_argument(
+        "--authority-orport",
+        help="OR port of the directory authority.",
+        type=int,
+        default=443
     )
     parser.add_argument(
         "--authority-contact",
