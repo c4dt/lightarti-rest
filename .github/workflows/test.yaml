@@ -44,4 +44,4 @@ jobs:
       - name: Run pytest
         working-directory: ./tools
         run: |
-          pytest
+          python -m pytest
