@@ -279,8 +279,7 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
     }
     fn advance(self: Box<Self>) -> Result<Box<dyn DirState>> {
         if self.can_advance() {
-            //let validated = self.unvalidated.check_signature(&self.certs[..])?;
-            let validated = self.unvalidated.dangerously_assume_wellsigned();
+            let validated = self.unvalidated.check_signature(&self.certs[..])?;
             Ok(Box::new(GetMicrodescsState::new(
                 validated,
                 self.consensus_meta,
