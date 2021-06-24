@@ -8,7 +8,7 @@
 
 use tor_circmgr::TargetPort;
 use tor_chanmgr;
-use tor_customdirmgr::NetDirConfig;
+use tor_dirmgr::NetDirConfig;
 use tor_proto::circuit::IpVersionPreference;
 use tor_proto::stream::DataStream;
 use tor_rtcompat::{Runtime, SleepProviderExt};
@@ -34,7 +34,7 @@ pub struct TorClient<R: Runtime> {
     /// them on-demand.
     circmgr: Arc<tor_circmgr::CircMgr<R>>,
     /// Directory manager for keeping our directory material up to date.
-    dirmgr: Arc<tor_customdirmgr::DirMgr>,
+    dirmgr: Arc<tor_dirmgr::DirMgr>,
 }
 
 /// Preferences for how to route a stream over the Tor network.
@@ -86,7 +86,7 @@ impl<R: Runtime> TorClient<R> {
             runtime.clone(),
             Arc::clone(&chanmgr),
         ));
-        let dirmgr = tor_customdirmgr::DirMgr::bootstrap_from_config(
+        let dirmgr = tor_dirmgr::DirMgr::bootstrap_from_config(
             dircfg,
             docdir,
         )

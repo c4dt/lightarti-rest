@@ -9,10 +9,10 @@ use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tor_config::CfgPath;
-use tor_customdirmgr::{DownloadScheduleConfig, NetworkConfig, NetDirConfigBuilder};
+use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig, NetDirConfigBuilder};
 
 #[cfg(not(target_os = "android"))]
-use tor_customdirmgr::{NetDirConfig};
+use tor_dirmgr::{NetDirConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
 use crate::arti::client::TorClient;
 

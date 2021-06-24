@@ -24,8 +24,7 @@ tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "
 tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-proto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-
-tor-customdirmgr = { path = "./src/arti/tor-customdirmgr" }
+tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 
 async-std = { version = "1.9.0", features = ["attributes"] }
 serde = { version = "1.0.124", features = ["derive"] }
@@ -44,6 +43,9 @@ rand = "0.8.3"
 ring = "0.16.19"
 url = "2.2.2"
 log = "0.4.14"
+
+[patch."https://gitlab.torproject.org/tpo/core/arti.git"]
+tor-dirmgr = { path = "./src/arti/tor-dirmgr" }
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = { version = "0.16", default-features = false }

@@ -134,7 +134,7 @@ dependencies = [
  "tor-chanmgr",
  "tor-circmgr",
  "tor-config",
- "tor-customdirmgr",
+ "tor-dirmgr",
  "tor-llcrypto",
  "tor-proto",
  "tor-rtcompat",
@@ -2497,7 +2497,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "tor-customdirmgr"
+name = "tor-dirclient"
+version = "0.0.0"
+source = "git+https://gitlab.torproject.org/tpo/core/arti.git?rev=c372671b5ad2663151cbaf2ff392f1e6f0ba292f#c372671b5ad2663151cbaf2ff392f1e6f0ba292f"
+dependencies = [
+ "anyhow",
+ "async-compression",
+ "base64",
+ "futures",
+ "hex",
+ "http",
+ "httparse",
+ "httpdate",
+ "log",
+ "memchr",
+ "thiserror",
+ "tor-chanmgr",
+ "tor-circmgr",
+ "tor-llcrypto",
+ "tor-netdir",
+ "tor-netdoc",
+ "tor-proto",
+ "tor-rtcompat",
+]
+
+[[package]]
+name = "tor-dirmgr"
 version = "0.0.0"
 dependencies = [
  "anyhow",
@@ -2525,31 +2550,6 @@ dependencies = [
  "tor-netdir",
  "tor-netdoc",
  "tor-retry",
- "tor-rtcompat",
-]
-
-[[package]]
-name = "tor-dirclient"
-version = "0.0.0"
-source = "git+https://gitlab.torproject.org/tpo/core/arti.git?rev=c372671b5ad2663151cbaf2ff392f1e6f0ba292f#c372671b5ad2663151cbaf2ff392f1e6f0ba292f"
-dependencies = [
- "anyhow",
- "async-compression",
- "base64",
- "futures",
- "hex",
- "http",
- "httparse",
- "httpdate",
- "log",
- "memchr",
- "thiserror",
- "tor-chanmgr",
- "tor-circmgr",
- "tor-llcrypto",
- "tor-netdir",
- "tor-netdoc",
- "tor-proto",
  "tor-rtcompat",
 ]
 
