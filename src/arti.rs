@@ -91,10 +91,7 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
 #[cfg(not(target_os = "android"))]
 async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&str>) -> Result<TorClient<T>> {
     let dircfg = config.get_dir_config()?;
-    let docdir = match cache_dir {
-        Some(dir) => dir,
-        _ => "./"
-    };
+    let docdir = cache_dir.unwrap_or("./");
     TorClient::bootstrap(runtime.clone(), dircfg, &docdir).await
 }
 
@@ -124,11 +121,9 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&
 
     let netdircfg = dircfg.finalize().expect("Failed to build netdircfg.");
 
+    let docdir = cache_dir.unwrap_or("./");
+
     debug!("Connect to tor");
-    let docdir = match cache_dir {
-        Some(dir) => dir,
-        _ => "./"
-    };
     TorClient::bootstrap(runtime, netdircfg, &docdir).await
 }
 
@@ -183,10 +178,6 @@ impl ArtiConfig {
 
 #[cfg(test)]
 mod tests {
-    use tempdir::TempDir;
-    use std::fs::File;
-    use std::io::Write;
-
     use crate::tests;
 
     use super::*;
@@ -194,25 +185,13 @@ mod tests {
     #[test]
     fn clearnet_and_tor_gives_the_same_page() {
         tests::setup_tracing();
-
-        let tempdir = TempDir::new("tor-cache").expect("create temp dir");
-
-        let consensus = include_str!("test-data/consensus.txt");
-        let microdescriptors = include_str!("test-data/microdescriptors.txt");
-
-        let consensus_path = tempdir.path().join("consensus.txt");
-        let mut consensus_file = File::create(consensus_path).expect("create temp consensus file");
-        write!(consensus_file, "{}", consensus).expect("write temp consensus file");
-
-        let microdescriptors_path = tempdir.path().join("microdescriptors.txt");
-        let mut microdescriptors_file = File::create(microdescriptors_path).expect("create temp microdescriptors file");
-        write!(microdescriptors_file, "{}", microdescriptors).expect("write temp microdescriptors file");
+        let docdir = tests::setup_docdir();
 
         tls_send(
             "www.c4dt.org",
             "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
             &DirectoryCache {
-                tmp_dir: tempdir.path().to_str().map(String::from),
+                tmp_dir: docdir.path().to_str().map(String::from),
                 nodes: None,
                 relays: None,
             },
