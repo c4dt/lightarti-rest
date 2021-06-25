@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use core_foundation::{
     base::TCFType,
     string::{CFString, CFStringRef},
@@ -5,7 +7,7 @@ use core_foundation::{
 use http::Request;
 use libc::c_char;
 
-use crate::{client::Client, DirectoryCache};
+use crate::client::Client;
 
 fn setup_logger() {
     let subscriber = tracing_fmt::FmtSubscriber::builder()
@@ -19,11 +21,7 @@ fn setup_logger() {
 pub unsafe extern "C" fn call_tls_get(domain_cc: *const c_char) -> CFStringRef {
     let domain = cstring_to_str(&domain_cc);
 
-    let client = Client::new(DirectoryCache {
-        tmp_dir: None,
-        nodes: None,
-        relays: None,
-    });
+    let client = Client::new(Path::new(".").to_path_buf());
 
     let req = Request::get(format!("https://{}", domain))
         .version(http::Version::HTTP_10)

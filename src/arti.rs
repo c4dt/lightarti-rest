@@ -1,13 +1,12 @@
-use std::sync::Arc;
+use std::{path::Path, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tor_rtcompat::{Runtime, SpawnBlocking};
 use tracing::{debug, info, trace};
 
 use crate::arti::client::TorClient;
-use crate::DirectoryCache;
 
 mod client;
 mod conv;
@@ -22,7 +21,7 @@ const ARTI_DEFAULTS: &str = concat!(
 
 /// This connection sends a generic request over TLS to the host.
 /// It returns the result from the request, or an error.
-pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result<String> {
+pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
     info!("Starting TorClient");
     let dflt_config = tor_config::default_config_file();
     let mut cfg = config::Config::new();
@@ -37,17 +36,23 @@ pub fn tls_send(host: &str, request: &str, dir_cache: &DirectoryCache) -> Result
 
     let runtime = tor_rtcompat::create_runtime()?;
     runtime.block_on(async {
-        debug!("Getting tor connection");
-        let cc = dir_cache.tmp_dir.as_ref().map(|s| &**s);
-        let tor = get_tor(runtime.clone(), cc).await?;
+        let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+        dircfg.set_cache_path(cache);
 
-        debug!("Setting up tls connection and sending GET");
-        get_result(tor, host, request).await
+        let tor_client = TorClient::bootstrap(
+            runtime.clone(),
+            dircfg.finalize().context("netdir finalize")?,
+            cache.to_str().context("cache as string")?,
+        )
+        .await
+        .context("bootstrap tor client")?;
+
+        send_request(tor_client, host, request).await
     })
 }
 
 /// Sends a GET request over a TLS connection and returns the result.
-async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
+async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
     // Configure a TLS client to connect to endpoint
     let mut config = ClientConfig::new();
     config
@@ -77,59 +82,6 @@ async fn get_result(tor: TorClient<impl Runtime>, host: &str, request: &str) -> 
     Err(anyhow!("Couldn't get response"))
 }
 
-// On iOS, the get_dir_config works as supposed, so no need to do special treatment.
-#[cfg(not(target_os = "android"))]
-async fn get_tor<T: Runtime>(runtime: T, cache_dir: Option<&str>) -> Result<TorClient<T>> {
-    use anyhow::Context;
-
-    let cache_path = std::path::Path::new(cache_dir.unwrap());
-    debug!(?cache_path);
-
-    let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
-    dircfg.set_cache_path(cache_path);
-
-    let docdir = cache_dir.unwrap_or("./");
-
-    TorClient::bootstrap(
-        runtime.clone(),
-        dircfg.finalize().context("netdir finalize")?,
-        &docdir,
-    )
-    .await
-}
-
-// For Android, the cache path needs to be set, so the whole config needs to be initialized.
-// This could of course be cleaned up...
-#[cfg(target_os = "android")]
-async fn get_tor<T: Runtime>(runtime: T, cache_dir: Option<&str>) -> Result<TorClient<T>> {
-    use std::path::Path;
-
-    debug!("New dircfg");
-    let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
-
-    debug!("Clone network config");
-    let network_clone = config.network.clone();
-
-    debug!("Set network config");
-    dircfg.set_network_config(network_clone);
-
-    debug!("Set timing config");
-    dircfg.set_timing_config(config.download_schedule.clone());
-
-    debug!("Retrieve cache path");
-    let cache_path = Path::new(cache_dir.unwrap());
-
-    debug!("Set cache path");
-    dircfg.set_cache_path(&cache_path);
-
-    let netdircfg = dircfg.finalize().expect("Failed to build netdircfg.");
-
-    let docdir = cache_dir.unwrap_or("./");
-
-    debug!("Connect to tor");
-    TorClient::bootstrap(runtime, netdircfg, &docdir).await
-}
-
 #[cfg(test)]
 mod tests {
     use crate::tests;
@@ -139,16 +91,12 @@ mod tests {
     #[test]
     fn clearnet_and_tor_gives_the_same_page() {
         tests::setup_tracing();
-        let docdir = tests::setup_docdir();
+        let docdir = tests::setup_cache();
 
         tls_send(
             "www.c4dt.org",
             "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
-            &DirectoryCache {
-                tmp_dir: docdir.path().to_str().map(String::from),
-                nodes: None,
-                relays: None,
-            },
+            docdir.path(),
         )
         .expect("get page via tor");
     }
