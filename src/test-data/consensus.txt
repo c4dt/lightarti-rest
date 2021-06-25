@@ -1,9 +1,9 @@
 network-status-version 3 microdesc
 vote-status consensus
 consensus-method 30
-valid-after 2021-06-25 06:00:00
-fresh-until 2021-07-02 06:00:00
-valid-until 2021-07-09 06:00:00
+valid-after 2021-06-25 07:00:00
+fresh-until 2022-06-25 07:00:00
+valid-until 2023-06-25 07:00:00
 voting-delay 300 300
 client-versions 0.3.5.10,0.3.5.11,0.3.5.12,0.3.5.13,0.3.5.14,0.3.5.15,0.4.4.1-alpha,0.4.4.2-alpha,0.4.4.3-alpha,0.4.4.4-rc,0.4.4.5,0.4.4.6,0.4.4.7,0.4.4.8,0.4.4.9,0.4.5.1-alpha,0.4.5.2-alpha,0.4.5.3-rc,0.4.5.4-rc,0.4.5.5-rc,0.4.5.6,0.4.5.7,0.4.5.8,0.4.5.9,0.4.6.1-alpha,0.4.6.2-alpha,0.4.6.3-rc,0.4.6.4-rc,0.4.6.5
 server-versions 0.3.5.10,0.3.5.11,0.3.5.12,0.3.5.13,0.3.5.14,0.3.5.15,0.4.4.1-alpha,0.4.4.2-alpha,0.4.4.3-alpha,0.4.4.4-rc,0.4.4.5,0.4.4.6,0.4.4.7,0.4.4.8,0.4.4.9,0.4.5.1-alpha,0.4.5.2-alpha,0.4.5.3-rc,0.4.5.4-rc,0.4.5.5-rc,0.4.5.6,0.4.5.7,0.4.5.8,0.4.5.9,0.4.6.1-alpha,0.4.6.2-alpha,0.4.6.3-rc,0.4.6.4-rc,0.4.6.5
@@ -23,7 +23,7 @@ m HQmG0+NKzW9gJp14ZxtbL9aOZrS3SLyGZ6hWSlQPIf0
 s Fast Guard HSDir Running Stable V2Dir Valid
 v Tor 0.4.5.7
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
-w Bandwidth=126000
+w Bandwidth=125000
 r Hungary CLc1JkFPNxbBzFVVQRs1642lBgc 2021-06-25 03:08:14 91.219.237.21 443 80
 m Sdqn5P9zvKE5vmmXQg/kenBo+c9Ky1EZtKYbr+eVFH0
 s Exit Fast Guard HSDir Running Stable V2Dir Valid
@@ -73,7 +73,7 @@ m hWg45LX/Tb8A+ulF7cz4fDlnKVTmz/KxJs5Dom6GHZ8
 s Fast Guard Running Stable V2Dir Valid
 v Tor 0.4.5.9
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
-w Bandwidth=179000
+w Bandwidth=178000
 r scurra VngczJ9tKf6hSHmatYhCnIk6Rzw 2021-06-24 14:50:52 148.251.191.252 443 80
 a [2a01:4f8:211:d4f::2]:443
 m +5ZkEQyHaptNZABfehsKcEu4ScMtOmvaGOny1VxDD3Q
@@ -121,12 +121,6 @@ s Fast Guard HSDir Running Stable V2Dir Valid
 v Tor 0.4.5.8
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
 w Bandwidth=159000
-r DeltersvrTorRelay1 kD/AaFimv4HswniAYsjG9hfIfPA 2021-06-25 02:24:01 178.63.69.2 9001 9030
-m EZQzPr0cA981Xn3vzoYeuJwN7p/CsoKtGFzv44VnN6I
-s Fast Guard HSDir Running Stable V2Dir Valid
-v Tor 0.4.5.9
-pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
-w Bandwidth=118000
 r speedy lDt7J5GB0RIZO06roIFHTY+0UEg 2021-06-24 14:44:35 31.42.184.136 443 80
 a [2a09:2dc0:0:18::]:443
 m YsKOFPgUIuhW1PyXSI9FwbMiOECiQONexB/3hTTLBns
@@ -153,13 +147,19 @@ s Fast Guard HSDir Running Stable V2Dir Valid
 v Tor 0.4.5.8
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
 w Bandwidth=120000
+r Unnamed sjdWUtfhuYrvmkM2TzHU73j06ZU 2021-06-24 22:41:19 185.213.21.11 443 8443
+m dm0D2yeUsfhcsOJbwiNrdippUnY8oC4rkFhLea0f6AU
+s Fast Guard Running Stable V2Dir Valid
+v Tor 0.4.4.5
+pr Cons=1-2 Desc=1-2 DirCache=1-2 HSDir=1-2 HSIntro=3-4 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Relay=1-2
+w Bandwidth=120000
 r quadhead vw+1guN/c4zTPDZREl8ncnBbuOg 2021-06-25 02:38:31 148.251.190.229 9010 9030
 a [2a01:4f8:211:c68::2]:9010
 m 3i9yu1XlVSqiI06QhXJJbDowuBwOPxrSbdv+bIx0mIk
 s Fast Guard HSDir Running Stable V2Dir Valid
 v Tor 0.4.5.7
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
-w Bandwidth=155000
+w Bandwidth=154000
 r imherefortheparty w9+3vUCwcuttRlePG+Ah/dnWBxM 2021-06-24 13:38:39 116.202.55.100 9001 0
 a [2a01:4f8:10b:439b::2]:9001
 m qVRxJX6cPZ4fYviAo/198T8yzyEyrEV/1wNbImcsWA0
@@ -172,14 +172,14 @@ m BHHrgSPb3VmLAY254K84z/IRsJa091AqEpaitkAzGUw
 s Fast Guard HSDir Running Stable V2Dir Valid
 v Tor 0.4.5.7
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
-w Bandwidth=128000
+w Bandwidth=127000
 r jaredfucks 49YbrqC3yxLKztyIIcUgVXvfzqM 2021-06-24 19:45:44 144.76.107.94 8080 8000
 a [2a01:4f8:192:525c::2]:8080
 m BEO309nnkCQ6ntnEZcbNLzibfuz4yxo5kS9mE8Kg3/s
 s Fast Guard HSDir Running Stable V2Dir Valid
 v Tor 0.4.5.7
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
-w Bandwidth=127000
+w Bandwidth=126000
 r WonderWoman42 5aqF+mnNwxkAyG5kJ8fl3hHeni0 2021-06-24 13:22:18 194.109.193.142 1194 0
 m FXGoHwL4l4qnXbpvcSW37eW2oOjZreSNw15jFScBi0c
 s Fast Guard Running Stable V2Dir Valid
@@ -204,7 +204,7 @@ m up9I2O14Nx4i2tn+qpA4Mq+RONHXTSRbbunjWo4bkto
 s Fast Guard Running Stable V2Dir Valid
 v Tor 0.4.5.9
 pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=1-2 HSIntro=3-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-3
-w Bandwidth=203000
+w Bandwidth=202000
 r kerneloopsRelay 97iktfFuzfbKYm+W9OPCGdGmZOw 2021-06-24 16:03:28 85.25.185.17 9001 80
 m QYWcMF5Ws+BMnTnR0z1QTq/y36koFoiMhHRl2RCGffg
 s Fast Guard HSDir Running Stable V2Dir Valid
@@ -215,10 +215,10 @@ directory-footer
 bandwidth-weights Wbd=0 Wbe=0 Wbg=4273 Wbm=10000 Wdb=10000 Web=10000 Wed=10000 Wee=10000 Weg=10000 Wem=10000 Wgb=10000 Wgd=0 Wgg=5727 Wgm=5727 Wmb=10000 Wmd=0 Wme=0 Wmg=4273 Wmm=10000
 directory-signature sha256 A1B62E1027298A07181BFEA6801360C21DDEDE51 6FB8C23710EF0C842577A1641F64C233018A07AD
 -----BEGIN SIGNATURE-----
-xn0Ll1YHly+DjwfVLiULN3vJZsOnykUDTiqksGmENTycQbMo6RG6JkEUZMNbEUW3
-iHPeDk03affgEQg12UxvaZjGiAdQfT0i2klYmDWVm9LKRQXJmyHNFgI39UpTBd7Q
-5PXt9A5i6FLmbzInPWPhN5jd3fr5sBEvv36e91T6BqXEZFlY9EDsvaO+Dn7ZQwgn
-IbU9b3H1+3t3mEEQ6zkTSIWUl1XtqrCTOUSkOAraq47jwp1Bu1wKT/Kx6xRnH8vn
-3bB0QleEjDj24vZW+T1nkb0i9kKS0ceSMZMpr57sOaRQFMNCTG3mi54UpY2tAili
-XpY+e4xA9jhMatIL14n/GQ==
+RCcu6yOuffgqMGdSou3R9N6RmbX/cUUACN5MjMUwVQ14lt/Uw1YVy1kFO6j/sWUg
+EF9zbXgF+ME0JPa0DKixlQLgUULr1hxR/NNH7B+L2VgSemrVpcLl9+I71A89QKwB
+ODczj7yNzRehv1I99iJzbJyYlHjIvH66i4ni1PJT/o0RkV8razi96ixcTkz0gvCR
+CdYzL4u0gt4eUVXhanbz6NaDoG838Buq/R/kB26Je4RSMPQJrqdO9wCkV/cQ2oQZ
+L0Q6pRUaqvlPIxsgxHw4OCgyAB4RM2SAsgOvpYD63AXltB044Dgkw3bUkVIw8Lmr
+sfJ6KFlclj+pcOqSdetZRw==
 -----END SIGNATURE-----
