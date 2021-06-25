@@ -57,6 +57,6 @@ pub(crate) fn default_authorities() -> Vec<Authority> {
 
     // (List generated August 2020.)
     vec![
-        auth("spring", "B03DFE2050B667BFB96AA0D5B5C31922D8F5B6DE"),
+        auth("spring", "A1B62E1027298A07181BFEA6801360C21DDEDE51"),
     ]
 }
