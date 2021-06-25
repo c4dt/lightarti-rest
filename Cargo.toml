@@ -12,60 +12,42 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-log-panics = "2.0"
-tracing = "0.1"
-tracing-fmt = "0.1"
-tracing-log = "0.1"
-
-# Packages for tor
-tor-config = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-chanmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-config = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-proto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-
-async-std = { version = "1.9.0", features = ["attributes"] }
-serde = { version = "1.0.124", features = ["derive"] }
-tokio = { version = "1.0", features = ["full"] }
-tokio-util = { version = "0.6.7", features = ["full"] }
-async-trait = "0.1.48"
-chrono = "0.4.19"
+anyhow = "1"
+config = "0.11"
 futures = "0.3"
 http = "0.2"
 httparse = "1"
-config = "0.11.0"
-anyhow = "1.0.40"
+log = "0.4"
+log-panics = "2"
+serde = { version = "1", features = ["derive"] }
 tokio-rustls = "0.22"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-fmt = "0.1"
+tracing-log = "0.1"
 webpki-roots = "0.21"
-rand = "0.8.3"
-ring = "0.16.19"
-url = "2.2.2"
-log = "0.4.14"
+
+[dev-dependencies]
+tempdir = "0.3"
 
 [patch."https://gitlab.torproject.org/tpo/core/arti.git"]
 tor-dirmgr = { path = "./src/arti/tor-dirmgr" }
 
 [target.'cfg(target_os="android")'.dependencies]
-jni = { version = "0.19.0", default-features = false }
-android_logger = "0.10.1"
-openssl-sys = { version = "0.9.62", features = ["vendored"] }
+jni = "0.19"
+android_logger = "0.10"
+tracing = { version = "0.1", features = ["log"] }
+
+# needed to correctly link
+openssl-sys = { version = "0.9", features = ["vendored"] }
 rusqlite = { version = "0.25.1", features = ["bundled"] }
-tracing = {version = "0.1", features = ["log"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
+core-foundation = "0.9"
 libc = "0.2"
-core-foundation = "0.6.2"
-
-[build-dependencies]
-env_logger = "0.6"
-
-[dev-dependencies]
-tempdir = "0.3"
-
-[profile.release]
-lto = "fat"
-opt-level = "s"
-codegen-units = 1
-panic = "abort"
