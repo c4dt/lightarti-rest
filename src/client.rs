@@ -1,18 +1,18 @@
-use std::io::Write;
+use std::{io::Write, path::PathBuf};
 
 use anyhow::{bail, Context, Result};
 use http::{Request, Response};
 use tracing::trace;
 
-use crate::{arti::tls_send, DirectoryCache};
+use crate::arti::tls_send;
 
 pub struct Client {
-    dir_cache: DirectoryCache,
+    cache: PathBuf,
 }
 
 impl Client {
-    pub fn new(dir_cache: DirectoryCache) -> Self {
-        Self { dir_cache }
+    pub fn new(cache: PathBuf) -> Self {
+        Self { cache }
     }
 
     /// Sends the request to the given URL. It returns the response.
@@ -31,7 +31,7 @@ impl Client {
         let raw_resp = tls_send(
             host,
             &String::from_utf8(raw_req).context("encode serialized as utf-8")?,
-            &self.dir_cache,
+            &self.cache,
         )?
         .into_bytes();
 
@@ -116,21 +116,17 @@ mod tests {
     #[test]
     fn test_get() {
         crate::tests::setup_tracing();
-        let docdir = tests::setup_docdir();
+        let cache = tests::setup_cache();
 
-        let resp = Client::new(DirectoryCache {
-            tmp_dir: docdir.path().to_str().map(String::from),
-            nodes: None,
-            relays: None,
-        })
-        .send(
-            Request::get("https://www.c4dt.org")
-                .header("Host", "www.c4dt.org")
-                .version(http::Version::HTTP_10)
-                .body(vec![])
-                .expect("create get request"),
-        )
-        .expect("send request");
+        let resp = Client::new(cache.path().to_path_buf())
+            .send(
+                Request::get("https://www.c4dt.org")
+                    .header("Host", "www.c4dt.org")
+                    .version(http::Version::HTTP_10)
+                    .body(vec![])
+                    .expect("create get request"),
+            )
+            .expect("send request");
 
         assert_eq!(resp.status(), 200);
     }
