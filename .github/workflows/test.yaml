@@ -22,3 +22,26 @@ jobs:
         name: cargo test
         with:
           command: test
+  test-script:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - 3.7
+          - 3.8
+          - 3.9
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pytest
+        working-directory: ./tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install -r requirements.txt
+      - name: Run pytest
+        working-directory: ./tools
+        run: |
+          python -m pytest

@@ -8,13 +8,15 @@ use tracing::{debug, info, trace};
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
-use tor_client::TorClient;
 use tor_config::CfgPath;
-use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig};
+use tor_dirmgr::{DownloadScheduleConfig, NetworkConfig, NetDirConfigBuilder};
+
 #[cfg(not(target_os = "android"))]
 use tor_dirmgr::{NetDirConfig};
 use tor_rtcompat::{Runtime, SpawnBlocking};
+use crate::arti::client::TorClient;
 
+mod client;
 mod conv;
 
 /// Some structures that were defined in the arti main source and that I took over
@@ -100,9 +102,12 @@ async fn get_tor<T: Runtime>(
     let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
     dircfg.set_cache_path(cache_path);
 
+    let docdir = cache_dir.unwrap_or("./");
+
     TorClient::bootstrap(
         runtime.clone(),
         dircfg.finalize().context("netdir finalize")?,
+        &docdir,
     )
     .await
 }
@@ -114,7 +119,7 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&
     use std::path::Path;
 
     debug!("New dircfg");
-    let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+    let mut dircfg = NetDirConfigBuilder::new();
 
     debug!("Clone network config");
     let network_clone = config.network.clone();
@@ -133,8 +138,10 @@ async fn get_tor<T: Runtime>(runtime: T, config: ArtiConfig, cache_dir: Option<&
 
     let netdircfg = dircfg.finalize().expect("Failed to build netdircfg.");
 
+    let docdir = cache_dir.unwrap_or("./");
+
     debug!("Connect to tor");
-    TorClient::bootstrap(runtime, netdircfg).await
+    TorClient::bootstrap(runtime, netdircfg, &docdir).await
 }
 
 /// Configuration for where information should be stored on disk.
@@ -178,7 +185,7 @@ pub struct ArtiConfig {
 #[cfg(not(target_os = "android"))]
 impl ArtiConfig {
     fn get_dir_config(&self) -> Result<NetDirConfig> {
-        let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+        let mut dircfg = NetDirConfigBuilder::new();
         dircfg.set_network_config(self.network.clone());
         dircfg.set_timing_config(self.download_schedule.clone());
         dircfg.set_cache_path(&self.storage.cache_dir.path()?);
@@ -188,8 +195,6 @@ impl ArtiConfig {
 
 #[cfg(test)]
 mod tests {
-    use tempdir::TempDir;
-
     use crate::tests;
 
     use super::*;
@@ -197,14 +202,13 @@ mod tests {
     #[test]
     fn clearnet_and_tor_gives_the_same_page() {
         tests::setup_tracing();
-
-        let tempdir = TempDir::new("tor-cache").expect("create temp dir");
+        let docdir = tests::setup_docdir();
 
         tls_send(
             "www.c4dt.org",
             "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
             &DirectoryCache {
-                tmp_dir: tempdir.path().to_str().map(String::from),
+                tmp_dir: docdir.path().to_str().map(String::from),
                 nodes: None,
                 relays: None,
             },

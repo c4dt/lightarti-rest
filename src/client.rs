@@ -109,17 +109,17 @@ fn deserialize_response(mut raw_resp: Vec<u8>) -> Result<Response<Vec<u8>>> {
 
 #[cfg(test)]
 mod tests {
-    use tempdir::TempDir;
+    use crate::tests;
 
     use super::*;
 
     #[test]
     fn test_get() {
         crate::tests::setup_tracing();
+        let docdir = tests::setup_docdir();
 
-        let tempdir = TempDir::new("tor-cache").expect("create temp dir");
         let resp = Client::new(DirectoryCache {
-            tmp_dir: tempdir.path().to_str().map(String::from),
+            tmp_dir: docdir.path().to_str().map(String::from),
             nodes: None,
             relays: None,
         })

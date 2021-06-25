@@ -1,0 +1,51 @@
+[package]
+name = "tor-dirmgr"
+version = "0.0.0"
+authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+publish = false
+homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
+description = "Bootstrap and update an accurate Tor network directory"
+keywords = [ "tor", "arti", "download", "async" ]
+
+[features]
+default = [ "mmap" ]
+legacy-store = []
+mmap = [ "memmap" ]
+
+[dependencies]
+# For now, we skip consensus validation with a modified arti
+tor-chanmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f", default-features=false }
+tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-consdiff = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-dirclient = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-netdir = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-netdoc = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-retry = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+
+anyhow = "1.0.38"
+async-trait = "0.1.48"
+base64 = "0.13.0"
+chrono = "0.4.19"
+digest = "0.9.0"
+directories = "3.0.1"
+event-listener = "2.5.1"
+futures = "0.3.13"
+#fslock = "0.1.6"
+hex = "0.4.3"
+log = "0.4.14"
+memmap = { version="0.7.0", optional=true }
+rand = "0.8.3"
+rusqlite = { version = "0.25.0", features = ["chrono"] }
+serde = { version = "1.0.124", features = ["derive"] }
+thiserror = "1.0.24"
+humantime-serde = "1.0.1"
+
+[dev-dependencies]
+futures-await-test = "0.3.0"
+hex-literal = "0.3.1"
+tempdir = "0.3.7"
