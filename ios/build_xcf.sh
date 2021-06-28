@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # This should theoretically also work with 'debug' and be much faster for
 # testing.
 # However, the creation of the xcframework fails, according to
@@ -12,7 +14,12 @@ if [ "$MODE" = "release" ]; then
 fi
 
 XCFRAMEWORK_ARGS=""
-for arch in x86_64-apple-ios aarch64-apple-ios; do
+ARCHS="x86_64-apple-ios aarch64-apple-ios"
+if [ "$1" = dev ]; then
+  ARCHS=x86_64-apple-ios
+fi
+
+for arch in $ARCHS; do
 	cargo build --target $arch $MODEFLAG
 	tdir=../target/$arch/$MODE
   mkdir -p $tdir/headers

@@ -4,37 +4,114 @@ use core_foundation::{
     base::TCFType,
     string::{CFString, CFStringRef},
 };
-use http::Request;
+use http::{Request, HeaderValue, HeaderMap, StatusCode};
 use libc::c_char;
+use tracing::{info, debug};
+use url::Url;
+use anyhow::Result;
+use serde::{Serialize, Deserialize};
+use http::header::HeaderName;
+use std::collections::HashMap;
 
 use crate::client::Client;
+use std::{fs, io};
 
-fn setup_logger() {
-    let subscriber = tracing_fmt::FmtSubscriber::builder()
-        .with_max_level(tracing::Level::DEBUG)
-        .with_writer(std::io::stderr)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ArtiRequest {
+    method: String,
+    url: String,
+    headers: HashMap<String, Vec<String>>,
+    body: Vec<u8>,
+    dict_dir: String,
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn call_tls_get(domain_cc: *const c_char) -> CFStringRef {
-    let domain = cstring_to_str(&domain_cc);
+pub unsafe extern "C" fn call_arti(
+    request_json: *const c_char) -> CFStringRef {
+    setup_logger();
 
+    let ret = match _call_arti(cstring_to_str(&request_json)) {
+        Ok(ret) => ret,
+        Err(e) => ReturnStruct::err(e.to_string()),
+    };
+    return to_cf_str(ret.to_json().to_string());
+}
+
+<<<<<<< HEAD
     let client = Client::new(Path::new(".").to_path_buf());
+=======
+pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
+    let request: ArtiRequest = serde_json::from_str(request_json)?;
+    info!("Request is: {:?}", request);
 
-    let req = Request::get(format!("https://{}", domain))
+    let host = Url::parse(&request.url)?.host_str().unwrap().to_string();
+    let mut req = match request.method.as_str() {
+        "GET" => Request::get(request.url),
+        "POST" => Request::post(request.url),
+        "PUT" => Request::put(request.url),
+        "DELETE" => Request::delete(request.url),
+        // TODO: add other verbs of REST
+        // TODO: correctly return error here
+        _ => Request::get(request.url),
+    }
+        .header("Host", host)
         .version(http::Version::HTTP_10)
-        .header("Host", domain)
-        .body(vec![])
-        .expect("construct request");
+        .body(vec![])?;
 
-    match client.send(req) {
-        Ok(s) => to_cf_str(format!(
-            "Result is: {:?}",
-            s.map(|raw| String::from_utf8(raw).expect("decode response as utf8"))
-        )),
-        Err(e) => to_cf_str(format!("Error while getting result: {}", e)),
+    let hm = req.headers_mut();
+    for (key, values) in request.headers {
+        for value in values {
+            hm.append(&HeaderName::from_bytes(&key.as_bytes())?,
+                      HeaderValue::from_bytes(value.as_bytes())?);
+        }
+    }
+
+    info!("Request is: {:?}", req);
+
+    let resp = Client::new(DirectoryCache {
+        tmp_dir: Some(request.dict_dir),
+        nodes: None,
+        relays: None,
+    })
+        .send(req)?;
+>>>>>>> 787a404 (Adding arti-rest call for iOS ffi)
+
+    ReturnStruct::new(resp.status(), resp.headers(), resp.body())
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ReturnStruct {
+    error: String,
+    status: u16,
+    headers: HashMap<String, Vec<String>>,
+    body: Vec<u8>,
+}
+
+impl ReturnStruct {
+    pub fn new(status: StatusCode, headers_map: &HeaderMap<HeaderValue>, body_vec: &Vec<u8>) -> Result<Self> {
+        let mut headers = HashMap::new();
+        for (k, v) in headers_map {
+            headers.insert(k.to_string(), vec![v.to_str()?.to_string()]);
+        }
+        Ok(Self {
+            error: "".to_string(),
+            status: status.into(),
+            headers,
+            body: body_vec.clone(),
+        })
+    }
+
+    pub fn err(error: String) -> ReturnStruct {
+        ReturnStruct {
+            error,
+            status: 0,
+            headers: HashMap::new(),
+            body: vec![],
+        }
+    }
+
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or("JSON error".into())
     }
 }
 
@@ -54,4 +131,12 @@ unsafe fn cstring_to_str<'a>(cstring: &'a *const c_char) -> &str {
 
     let raw = ::std::ffi::CStr::from_ptr(*cstring);
     raw.to_str().expect("Couldn't convert c string to slice")
+}
+
+fn setup_logger() {
+    let subscriber = tracing_fmt::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_writer(std::io::stderr)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
 }
