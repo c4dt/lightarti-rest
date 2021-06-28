@@ -5,4 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-CFStringRef call_tls_get(const char *domain);
+/**
+ * The call to arti
+ */
+CFStringRef call_arti(const char *request);
