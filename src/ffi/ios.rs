@@ -1,19 +1,18 @@
-use std::path::Path;
-
 use core_foundation::{
     base::TCFType,
     string::{CFString, CFStringRef},
 };
-use http::{Request, HeaderValue, HeaderMap, StatusCode};
+use http::{Request, HeaderValue, Method};
 use libc::c_char;
 use tracing::info;
 use url::Url;
-use anyhow::Result;
+use anyhow::{Result, Context};
 use serde::{Serialize, Deserialize};
 use http::header::HeaderName;
 use std::collections::HashMap;
 
 use crate::client::Client;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ArtiRequest {
@@ -36,18 +35,19 @@ pub unsafe extern "C" fn call_arti(
 
 pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
     let request: ArtiRequest = serde_json::from_str(request_json)?;
-    info!("Request is: {:?}", request);
+    info!("JSON-Request is: {:?}", request);
 
-    let host = Url::parse(&request.url)
-        .context("parse url")?
-        .host_str()
+    let host_url = Url::parse(&request.url)
+        .context("parse url")?;
+    let host = host_url.host_str()
         .context("no host in request")?;
 
     let mut req = Request::builder()
         .method(Method::from_bytes(request.method.as_bytes()).context("invalid method")?)
         .header("Host", host)
         .version(http::Version::HTTP_10)
-        .body(vec![])
+        .uri(&request.url)
+        .body(request.body)
         .context("invalid request")?;
 
     let hm = req.headers_mut();
@@ -58,16 +58,9 @@ pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
         }
     }
 
-    info!("Request is: {:?}", req);
+    info!("Parsed request is: {:?}", req);
 
-    let resp = Client::new(DirectoryCache {
-        tmp_dir: Some(request.dict_dir),
-        nodes: None,
-        relays: None,
-    })
-        .send(req)?;
-
-    ReturnStruct::new(resp.status(), resp.headers(), resp.body())
+    Client::new(request.dict_dir.into()).send(req).try_into()
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -89,22 +82,37 @@ pub struct JSONError {
     error_context: Option<String>,
 }
 
-impl ReturnStruct {
-    pub fn new(status: StatusCode, headers_map: &HeaderMap<HeaderValue>, body_vec: &Vec<u8>) -> Result<Self> {
-        let mut headers = HashMap::new();
-        for (k, v) in headers_map {
-            headers.insert(k.to_string(), vec![v.to_str()?.to_string()]);
-        }
-        Ok(Self {
-            error: None,
-            response: Some(Response {
-                status: status.into(),
-                headers,
-                body: body_vec.clone(),
-            }),
-        })
-    }
+impl TryFrom<Result<http::response::Response<Vec<u8>>>> for ReturnStruct {
+    type Error = anyhow::Error;
 
+    fn try_from(resp_result: Result<http::response::Response<Vec<u8>>>) -> Result<Self, anyhow::Error> {
+        match resp_result {
+            Ok(resp) => {
+                let mut headers = HashMap::new();
+                for (k, v) in resp.headers() {
+                    headers.insert(k.to_string(), vec![v.to_str()?.to_string()]);
+                }
+                Ok(Self {
+                    error: None,
+                    response: Some(Response {
+                        status: resp.status().as_u16(),
+                        headers,
+                        body: resp.body().clone(),
+                    }),
+                })
+            }
+            Err(e) => Ok(ReturnStruct {
+                error: Some(JSONError {
+                    error_string: e.to_string(),
+                    error_context: None,
+                }),
+                response: None,
+            }),
+        }
+    }
+}
+
+impl ReturnStruct {
     pub fn err(error: String) -> ReturnStruct {
         ReturnStruct {
             error: Some(JSONError {
