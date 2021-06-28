@@ -29,10 +29,8 @@ pub unsafe extern "C" fn call_arti(
     request_json: *const c_char) -> CFStringRef {
     setup_logger();
 
-    let ret = match _call_arti(cstring_to_str(&request_json)) {
-        Ok(ret) => ret,
-        Err(e) => ReturnStruct::err(e.to_string()),
-    };
+    let ret = _call_arti(cstring_to_str(&request_json))
+        .unwrap_or_else(|e| ReturnStruct::err(e.to_string()));
     return to_cf_str(ret.to_json().to_string());
 }
 
@@ -40,19 +38,17 @@ pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
     let request: ArtiRequest = serde_json::from_str(request_json)?;
     info!("Request is: {:?}", request);
 
-    let host = Url::parse(&request.url)?.host_str().unwrap().to_string();
-    let mut req = match request.method.as_str() {
-        "GET" => Request::get(request.url),
-        "POST" => Request::post(request.url),
-        "PUT" => Request::put(request.url),
-        "DELETE" => Request::delete(request.url),
-        // TODO: add other verbs of REST
-        // TODO: correctly return error here
-        _ => Request::get(request.url),
-    }
+    let host = Url::parse(&request.url)
+        .context("parse url")?
+        .host_str()
+        .context("no host in request")?;
+
+    let mut req = Request::builder()
+        .method(Method::from_bytes(request.method.as_bytes()).context("invalid method")?)
         .header("Host", host)
         .version(http::Version::HTTP_10)
-        .body(vec![])?;
+        .body(vec![])
+        .context("invalid request")?;
 
     let hm = req.headers_mut();
     for (key, values) in request.headers {
