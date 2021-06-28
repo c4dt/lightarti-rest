@@ -76,7 +76,6 @@ pub struct DirMgr {
     /// We use the RwLock so that we can give this out to a bunch of other
     /// users, and replace it once a new directory is bootstrapped.
     netdir: SharedMutArc<NetDir>,
-
 }
 
 impl DirMgr {
@@ -90,7 +89,7 @@ impl DirMgr {
     /// program; it's only suitable for command-line or batch tools.
     // TODO: I wish this function didn't have to be async or take a runtime.
     pub async fn load_once(config: NetDirConfig, docdir: &str) -> Result<Arc<NetDir>> {
-        let dirmgr = Arc::new(Self::from_config(config)?); //, runtime, None)?);
+        let dirmgr = Arc::new(Self::from_config(config)); //, runtime, None)?);
 
         // TODO: add some way to return a directory that isn't up-to-date
         let _success = dirmgr.load_directory(&docdir).await?;
@@ -109,10 +108,7 @@ impl DirMgr {
     ///
     /// In general, you shouldn't use this function in a long-running
     /// program; it's only suitable for command-line or batch tools.
-    pub async fn load_or_bootstrap_once(
-        config: NetDirConfig,
-        docdir: &str,
-    ) -> Result<Arc<NetDir>> {
+    pub async fn load_or_bootstrap_once(config: NetDirConfig, docdir: &str) -> Result<Arc<NetDir>> {
         let dirmgr = DirMgr::bootstrap_from_config(config, &docdir).await?; //, runtime, circmgr).await?;
         Ok(dirmgr.netdir())
     }
@@ -124,11 +120,8 @@ impl DirMgr {
     /// bootstrapped enough to build circuits.  It will also launch a
     /// background task that fetches any missing information, and that
     /// replaces the directory when a new one is available.
-    pub async fn bootstrap_from_config(
-        config: NetDirConfig,
-        docdir: &str,
-    ) -> Result<Arc<Self>> {
-        let dirmgr = Arc::new(DirMgr::from_config(config)?); //, runtime.clone(), Some(circmgr))?);
+    pub async fn bootstrap_from_config(config: NetDirConfig, docdir: &str) -> Result<Arc<Self>> {
+        let dirmgr = Arc::new(DirMgr::from_config(config)); //, runtime.clone(), Some(circmgr))?);
 
         // Try to load from the cache.
         dirmgr
@@ -142,14 +135,9 @@ impl DirMgr {
     }
 
     /// Construct a DirMgr from a NetDirConfig.
-    fn from_config(
-        config: NetDirConfig,
-    ) -> Result<Self> {
+    fn from_config(config: NetDirConfig) -> Self {
         let netdir = SharedMutArc::new();
-        Ok(DirMgr {
-            config,
-            netdir,
-        })
+        DirMgr { config, netdir }
     }
 
     /// Load the latest non-pending non-expired directory from the
@@ -157,7 +145,7 @@ impl DirMgr {
     ///
     /// Return false if there is no such consensus.
     async fn load_directory(self: &Arc<Self>, docdir: &str) -> Result<bool> {
-        let state = state::GetConsensusState::new(Arc::downgrade(self), CacheUsage::CacheOnly)?;
+        let state = state::GetConsensusState::new(Arc::downgrade(self), CacheUsage::CacheOnly);
         let _ = bootstrap::load(Box::new(state), &docdir).await?;
 
         Ok(self.netdir.get().is_some())

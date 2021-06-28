@@ -6,18 +6,16 @@
 
 // Code mostly copied from Arti.
 
+use std::sync::Arc;
+use std::time::Duration;
 use tor_circmgr::TargetPort;
-use tor_chanmgr;
 use tor_dirmgr::NetDirConfig;
 use tor_proto::circuit::IpVersionPreference;
 use tor_proto::stream::DataStream;
 use tor_rtcompat::{Runtime, SleepProviderExt};
-use std::sync::Arc;
-use std::time::Duration;
 
 use anyhow::{anyhow, Context, Result};
 use log::info;
-
 
 /// An active client connection to the Tor network.
 ///
@@ -45,18 +43,6 @@ pub struct ConnectPrefs {
 }
 
 impl ConnectPrefs {
-    /// Construct a new ConnnectPrefs.
-    pub fn new() -> Self {
-        Self::default()
-    }
-    /// Set the preference for what kind of IPv4/IPv6 connection we'd
-    /// like to make.
-    ///
-    /// (By default, IPv4 is preferred.)
-    pub fn set_ip_preference(&mut self, pref: IpVersionPreference) {
-        self.ip_ver_pref = pref;
-    }
-
     /// Get the begin_flags fields that we should use for the BEGIN
     /// cell for this stream.
     fn begin_flags(&self) -> IpVersionPreference {
@@ -86,11 +72,7 @@ impl<R: Runtime> TorClient<R> {
             runtime.clone(),
             Arc::clone(&chanmgr),
         ));
-        let dirmgr = tor_dirmgr::DirMgr::bootstrap_from_config(
-            dircfg,
-            docdir,
-        )
-        .await?;
+        let dirmgr = tor_dirmgr::DirMgr::bootstrap_from_config(dircfg, docdir).await?;
 
         Ok(TorClient {
             runtime,
