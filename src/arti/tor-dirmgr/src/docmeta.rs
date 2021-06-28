@@ -9,9 +9,7 @@
 
 use digest::Digest;
 use tor_llcrypto as ll;
-use tor_netdoc::doc::{
-    netstatus::{Lifetime, MdConsensus, UnvalidatedMdConsensus},
-};
+use tor_netdoc::doc::netstatus::{Lifetime, MdConsensus, UnvalidatedMdConsensus};
 
 /// Information about a consensus that we have in storage.
 ///
@@ -65,14 +63,6 @@ impl ConsensusMeta {
     pub fn lifetime(&self) -> &Lifetime {
         &self.lifetime
     }
-    /// Return the sha3-256 of the signed portion of this consensus.
-    pub fn sha3_256_of_signed(&self) -> &[u8; 32] {
-        &self.sha3_256_of_signed
-    }
-    /// Return the sha3-256 of the entirety of this consensus.
-    pub fn sha3_256_of_whole(&self) -> &[u8; 32] {
-        &self.sha3_256_of_whole
-    }
 }
 
 /// Compute the sha3-256 digests of signed_part on its own, and of
@@ -85,7 +75,6 @@ fn sha3_dual(signed_part: impl AsRef<[u8]>, remainder: impl AsRef<[u8]>) -> ([u8
     let sha3_of_whole = d.finalize().into();
     (sha3_of_signed, sha3_of_whole)
 }
-
 
 #[cfg(test)]
 mod test {

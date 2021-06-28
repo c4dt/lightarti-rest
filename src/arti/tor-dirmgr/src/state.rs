@@ -12,24 +12,21 @@
 
 // Code mostly copied from Arti.
 
+use ::std::fs;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use log::info;
 use rand::Rng;
 use std::collections::HashSet;
 use std::fmt::Debug;
-use::std::fs;
 use std::sync::Weak;
 use std::time::{Duration, SystemTime};
 use tor_netdir::{MdReceiver, NetDir, PartialNetDir};
 use tor_netdoc::doc::netstatus::Lifetime;
 
 use crate::{
-    authority::default_authorities,
-    docmeta::ConsensusMeta,
-    shared_ref::SharedMutArc,
-    CacheUsage, DirState, DocId, Error, NetDirConfig,
-    Result,
+    authority::default_authorities, docmeta::ConsensusMeta, shared_ref::SharedMutArc, CacheUsage,
+    DirState, DocId, Error, NetDirConfig, Result,
 };
 use tor_checkable::{ExternallySigned, SelfSigned, Timebound};
 use tor_llcrypto::pk::rsa::RsaIdentity;
@@ -46,10 +43,8 @@ use tor_netdoc::{
     AllowAnnotations,
 };
 
-
 /// Certificates of the authorities.
 static OUR_CERTIFICATE: &str = include_str!("certificate.in");
-
 
 /// An object where we can put a usable netdir.
 ///
@@ -100,17 +95,18 @@ pub(crate) struct GetConsensusState<DM: WriteNetDir> {
 impl<DM: WriteNetDir> GetConsensusState<DM> {
     /// Create a new GetConsensusState from a weak reference to a
     /// directory manager and a `cache_usage` flag.
-    pub(crate) fn new(writedir: Weak<DM>, cache_usage: CacheUsage) -> Result<Self> {
+    pub(crate) fn new(writedir: Weak<DM>, cache_usage: CacheUsage) -> Self {
         let authority_ids: Vec<_> = default_authorities()
             .iter()
             .map(|auth| *auth.v3ident())
             .collect();
-        Ok(GetConsensusState {
+
+        GetConsensusState {
             cache_usage,
             next: None,
             authority_ids,
             writedir,
-        })
+        }
     }
 }
 
@@ -144,8 +140,7 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
     fn add_from_cache(&mut self, docdir: &str) -> Result<bool> {
         // side-loaded data
         let consensus_path = format!("{}/consensus.txt", docdir);
-        let consensus = fs::read_to_string(consensus_path)
-            .expect("Failed to read the consensus.");
+        let consensus = fs::read_to_string(consensus_path).expect("Failed to read the consensus.");
         self.add_consensus_text(true, consensus.as_str())
             .map(|meta| meta.is_some())
     }
@@ -296,7 +291,7 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
         Ok(Box::new(GetConsensusState::new(
             self.writedir,
             self.cache_usage,
-        )?))
+        )))
     }
 }
 
@@ -414,11 +409,16 @@ impl<DM: WriteNetDir> DirState for GetMicrodescsState<DM> {
     fn add_from_cache(&mut self, docdir: &str) -> Result<bool> {
         // side-loaded data
         let microdescriptors_path = format!("{}/microdescriptors.txt", docdir);
-        let microdescriptors = fs::read_to_string(microdescriptors_path)
-            .expect("Failed to read microdescriptors.");
+        let microdescriptors =
+            fs::read_to_string(microdescriptors_path).expect("Failed to read microdescriptors.");
 
         let mut new_mds = Vec::new();
-        for anno in MicrodescReader::new(microdescriptors.as_str(), AllowAnnotations::AnnotationsNotAllowed).flatten() {
+        for anno in MicrodescReader::new(
+            microdescriptors.as_str(),
+            AllowAnnotations::AnnotationsNotAllowed,
+        )
+        .flatten()
+        {
             let md = anno.into_microdesc();
             self.missing.remove(md.digest());
             new_mds.push(md);
@@ -439,7 +439,7 @@ impl<DM: WriteNetDir> DirState for GetMicrodescsState<DM> {
         Ok(Box::new(GetConsensusState::new(
             self.writedir,
             CacheUsage::MustDownload,
-        )?))
+        )))
     }
 }
 

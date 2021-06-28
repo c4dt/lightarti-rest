@@ -80,7 +80,7 @@ async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -
             .context("write request")?;
         let mut res = vec![];
 
-        if let Ok(_) = tls_stream.read_to_end(&mut res).await {
+        if tls_stream.read_to_end(&mut res).await.is_ok() {
             let result = String::from_utf8_lossy(&res).to_string();
 
             debug!("Received {} bytes from stream", result.len());
