@@ -11,29 +11,17 @@ use crate::arti::client::TorClient;
 mod client;
 mod conv;
 
-/// Some structures that were defined in the arti main source and that I took over
-/// without thinking...
-
-const ARTI_DEFAULTS: &str = concat!(
-    include_str!("./arti_defaults.toml"),
-    include_str!("./authorities.toml"),
-);
-
 /// This connection sends a generic request over TLS to the host.
 /// It returns the result from the request, or an error.
 pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
-    info!("Starting TorClient");
-    let dflt_config = tor_config::default_config_file();
     let mut cfg = config::Config::new();
-    cfg.merge(config::File::from_str(
-        ARTI_DEFAULTS,
-        config::FileFormat::Toml,
-    ))
-    .context("merge config")?;
-
-    debug!("Load config");
-    let empty: Vec<String> = vec![];
-    tor_config::load(&mut cfg, dflt_config, &empty, &empty).context("load config")?;
+    tor_config::load(
+        &mut cfg,
+        None as Option<&Path>,
+        &[] as &[&Path; 0],
+        &[] as &[&str; 0],
+    )
+    .context("load config")?;
 
     let runtime = tor_rtcompat::create_runtime().context("create tor runtime")?;
     runtime.block_on(async {
