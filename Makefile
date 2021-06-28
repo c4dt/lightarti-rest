@@ -14,7 +14,7 @@ $(arxcz): ios/$(arxc)
 
 dev:
 	perl -pi -e 's/lto = "fat"/lto = "thin"/' Cargo.toml
-	perl -pi -e 's/opt-level = "s"/#opt-level = "s"/' Cargo.toml
+	perl -pi -e 's/.*opt-level = "s"/#opt-level = "s"/' Cargo.toml
 	cd ios && \
 	./build_xcf.sh dev && \
 	cp -av arti-rest.xcframework ../../arti-ios

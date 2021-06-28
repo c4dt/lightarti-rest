@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context, Result};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
 use tor_rtcompat::{Runtime, SpawnBlocking};
-use tracing::{debug, info, trace};
+use tracing::{debug, trace};
 
 use crate::arti::client::TorClient;
 
@@ -45,7 +45,7 @@ async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -
     debug!(host, "send request");
 
     for retry in 0..5u32 {
-        debug!(retry, "trying to connect");
+        debug!("Connection-try {}", retry);
         let stream: conv::TorStream = tor
             .connect(host, 443, None)
             .await
@@ -71,7 +71,6 @@ async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -
             trace!("Received stream: {}", result);
             return Ok(result);
         }
-        info!("Trying again");
     }
 
     Err(anyhow!("Couldn't get response"))
