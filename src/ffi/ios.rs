@@ -29,8 +29,16 @@ pub unsafe extern "C" fn call_arti(
     setup_logger();
 
     let ret = _call_arti(cstring_to_str(&request_json))
-        .unwrap_or_else(|e| ReturnStruct::err(e.to_string()));
-    return to_cf_str(ret.to_json().to_string());
+        .unwrap_or_else(|e| ReturnStruct {
+            error: Some(JSONError {
+                error_string: e.to_string(),
+                error_context: None,
+            }),
+            response: None,
+        });
+
+    let json_str = serde_json::to_string(&ret).unwrap_or("JSON error".into());
+    return to_cf_str(json_str.to_string());
 }
 
 pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
@@ -101,30 +109,8 @@ impl TryFrom<Result<http::response::Response<Vec<u8>>>> for ReturnStruct {
                     }),
                 })
             }
-            Err(e) => Ok(ReturnStruct {
-                error: Some(JSONError {
-                    error_string: e.to_string(),
-                    error_context: None,
-                }),
-                response: None,
-            }),
+            Err(e) => Err(e),
         }
-    }
-}
-
-impl ReturnStruct {
-    pub fn err(error: String) -> ReturnStruct {
-        ReturnStruct {
-            error: Some(JSONError {
-                error_string: error.to_string(),
-                error_context: None,
-            }),
-            response: None,
-        }
-    }
-
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap_or("JSON error".into())
     }
 }
 

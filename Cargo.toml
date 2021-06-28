@@ -32,7 +32,6 @@ tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-fmt = "0.1"
 tracing-log = "0.1"
-url = "2.2.2"
 webpki-roots = "0.21"
 
 [dev-dependencies]
@@ -53,6 +52,7 @@ rusqlite = { version = "0.25.1", features = ["bundled"] }
 [target.'cfg(target_os = "ios")'.dependencies]
 core-foundation = "0.9"
 libc = "0.2"
+url = "2.2.2"
 
 [profile.release]
 opt-level = "s" # reduce library size
