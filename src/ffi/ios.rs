@@ -6,7 +6,7 @@ use core_foundation::{
 };
 use http::{Request, HeaderValue, HeaderMap, StatusCode};
 use libc::c_char;
-use tracing::{info, debug};
+use tracing::info;
 use url::Url;
 use anyhow::Result;
 use serde::{Serialize, Deserialize};
@@ -14,7 +14,6 @@ use http::header::HeaderName;
 use std::collections::HashMap;
 
 use crate::client::Client;
-use std::{fs, io};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ArtiRequest {
@@ -37,9 +36,6 @@ pub unsafe extern "C" fn call_arti(
     return to_cf_str(ret.to_json().to_string());
 }
 
-<<<<<<< HEAD
-    let client = Client::new(Path::new(".").to_path_buf());
-=======
 pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
     let request: ArtiRequest = serde_json::from_str(request_json)?;
     info!("Request is: {:?}", request);
@@ -74,17 +70,27 @@ pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
         relays: None,
     })
         .send(req)?;
->>>>>>> 787a404 (Adding arti-rest call for iOS ffi)
 
     ReturnStruct::new(resp.status(), resp.headers(), resp.body())
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReturnStruct {
-    error: String,
+    error: Option<JSONError>,
+    response: Option<Response>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Response {
     status: u16,
     headers: HashMap<String, Vec<String>>,
     body: Vec<u8>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct JSONError {
+    error_string: String,
+    error_context: Option<String>,
 }
 
 impl ReturnStruct {
@@ -94,19 +100,22 @@ impl ReturnStruct {
             headers.insert(k.to_string(), vec![v.to_str()?.to_string()]);
         }
         Ok(Self {
-            error: "".to_string(),
-            status: status.into(),
-            headers,
-            body: body_vec.clone(),
+            error: None,
+            response: Some(Response {
+                status: status.into(),
+                headers,
+                body: body_vec.clone(),
+            }),
         })
     }
 
     pub fn err(error: String) -> ReturnStruct {
         ReturnStruct {
-            error,
-            status: 0,
-            headers: HashMap::new(),
-            body: vec![],
+            error: Some(JSONError {
+                error_string: error.to_string(),
+                error_context: None,
+            }),
+            response: None,
         }
     }
 
