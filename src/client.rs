@@ -32,7 +32,8 @@ impl Client {
             host,
             &String::from_utf8(raw_req).context("encode serialized as utf-8")?,
             &self.cache,
-        )?
+        )
+        .context("tls send")?
         .into_bytes();
 
         let resp = deserialize_response(raw_resp);
@@ -87,7 +88,9 @@ fn deserialize_response(mut raw_resp: Vec<u8>) -> Result<Response<Vec<u8>>> {
     let mut headers = [httparse::EMPTY_HEADER; MAX_HEADERS];
 
     let mut http_resp = httparse::Response::new(&mut headers);
-    let parsed = http_resp.parse(raw_resp.as_slice())?;
+    let parsed = http_resp
+        .parse(raw_resp.as_slice())
+        .context("parse response")?;
     if parsed.is_partial() {
         bail!("unfinished response");
     }

@@ -28,13 +28,14 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
     cfg.merge(config::File::from_str(
         ARTI_DEFAULTS,
         config::FileFormat::Toml,
-    ))?;
+    ))
+    .context("merge config")?;
 
     debug!("Load config");
     let empty: Vec<String> = vec![];
-    tor_config::load(&mut cfg, dflt_config, &empty, &empty)?;
+    tor_config::load(&mut cfg, dflt_config, &empty, &empty).context("load config")?;
 
-    let runtime = tor_rtcompat::create_runtime()?;
+    let runtime = tor_rtcompat::create_runtime().context("create tor runtime")?;
     runtime.block_on(async {
         let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
         dircfg.set_cache_path(cache);
@@ -59,14 +60,24 @@ async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -
         .root_store
         .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
     let config = TlsConnector::from(Arc::new(config));
-    let dnsname = DNSNameRef::try_from_ascii_str(host).unwrap();
+    let dnsname = DNSNameRef::try_from_ascii_str(host).context("read host as valid DNS")?;
 
     debug!("Connecting to the tls stream");
     for t in 0..2u32 {
         debug!("Trying to connect: {}", t);
-        let stream: conv::TorStream = tor.connect(host, 443, None).await?.into();
-        let mut tls_stream = config.connect(dnsname, stream).await?;
-        tls_stream.write_all(request.as_ref()).await.unwrap();
+        let stream: conv::TorStream = tor
+            .connect(host, 443, None)
+            .await
+            .context("tor connect")?
+            .into();
+        let mut tls_stream = config
+            .connect(dnsname, stream)
+            .await
+            .context("tls connect")?;
+        tls_stream
+            .write_all(request.as_ref())
+            .await
+            .context("write request")?;
         let mut res = vec![];
 
         if let Ok(_) = tls_stream.read_to_end(&mut res).await {
