@@ -44,7 +44,7 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
 async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
     debug!(host, "send request");
 
-    for retry in 0..2u32 {
+    for retry in 0..5u32 {
         debug!(retry, "trying to connect");
         let stream: conv::TorStream = tor
             .connect(host, 443, None)
