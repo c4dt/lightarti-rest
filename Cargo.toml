@@ -26,12 +26,11 @@ httparse = "1"
 log = "0.4"
 log-panics = "2"
 serde = { version = "1", features = ["derive"] }
-tokio-rustls = "0.22"
+tokio-native-tls = "0.3"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-fmt = "0.1"
 tracing-log = "0.1"
-webpki-roots = "0.21"
 
 [dev-dependencies]
 tempdir = "0.3"

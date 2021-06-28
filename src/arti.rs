@@ -1,8 +1,8 @@
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 
 use anyhow::{anyhow, Context, Result};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
+use tokio_native_tls::{native_tls, TlsConnector};
 use tor_rtcompat::{Runtime, SpawnBlocking};
 use tracing::{debug, info, trace};
 
@@ -42,32 +42,28 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
 
 /// Sends a GET request over a TLS connection and returns the result.
 async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
-    // Configure a TLS client to connect to endpoint
-    let mut config = ClientConfig::new();
-    config
-        .root_store
-        .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
-    let config = TlsConnector::from(Arc::new(config));
-    let dnsname = DNSNameRef::try_from_ascii_str(host).context("read host as valid DNS")?;
+    debug!(host, "send request");
 
-    debug!("Connecting to the tls stream");
-    for t in 0..2u32 {
-        debug!("Trying to connect: {}", t);
+    for retry in 0..2u32 {
+        debug!(retry, "trying to connect");
         let stream: conv::TorStream = tor
             .connect(host, 443, None)
             .await
             .context("tor connect")?
             .into();
-        let mut tls_stream = config
-            .connect(dnsname, stream)
-            .await
-            .context("tls connect")?;
+
+        let mut tls_stream =
+            TlsConnector::from(native_tls::TlsConnector::new().context("create tls connector")?)
+                .connect(host, stream)
+                .await
+                .context("tls connect")?;
+
         tls_stream
             .write_all(request.as_ref())
             .await
             .context("write request")?;
-        let mut res = vec![];
 
+        let mut res = Vec::default();
         if tls_stream.read_to_end(&mut res).await.is_ok() {
             let result = String::from_utf8_lossy(&res).to_string();
 
