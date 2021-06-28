@@ -51,3 +51,7 @@ rusqlite = { version = "0.25.1", features = ["bundled"] }
 [target.'cfg(target_os = "ios")'.dependencies]
 core-foundation = "0.9"
 libc = "0.2"
+
+[profile.release]
+opt-level = "s" # reduce library size
+lto = "fat" # use system linker (needed for iOS)
