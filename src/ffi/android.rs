@@ -18,14 +18,24 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
     _: JClass,
     who: JString,
 ) -> jstring {
-    let str: String = env
-        .get_string(who)
-        .expect("Couldn't create rust string")
-        .into();
+    let output = match || -> Result<JString> {
+        let str: String = env
+            .get_string(who)
+            .context("create rust string for `who`")?
+            .into();
 
-    let output = env
-        .new_string(format!("Hello {}!", str))
-        .expect("Couldn't create java string");
+        let output = env
+            .new_string(format!("Hello {}!", str))
+            .context("create java string")?;
+
+        Ok(output)
+    }() {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = env.throw(("java/lang/Exception", format!("process hello: {:?}", e)));
+            return JObject::null().into_inner();
+        }
+    };
 
     output.into_inner()
 }
