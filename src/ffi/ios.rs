@@ -16,7 +16,7 @@ use url::Url;
 use crate::client::Client;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ArtiRequest {
+struct ArtiRequest {
     method: String,
     url: String,
     headers: HashMap<String, Vec<String>>,
@@ -40,7 +40,7 @@ pub unsafe extern "C" fn call_arti(request_json: *const c_char) -> CFStringRef {
     return to_cf_str(json_str.to_string());
 }
 
-pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
+fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
     let request: ArtiRequest = serde_json::from_str(request_json)?;
     info!("JSON-Request is: {:?}", request);
 
@@ -71,20 +71,20 @@ pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ReturnStruct {
+struct ReturnStruct {
     error: Option<JSONError>,
     response: Option<Response>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Response {
+struct Response {
     status: u16,
     headers: HashMap<String, Vec<String>>,
     body: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct JSONError {
+struct JSONError {
     error_string: String,
     error_context: Option<String>,
 }
