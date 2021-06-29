@@ -46,19 +46,22 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: 
     info!("init log system - done");
 }
 
-fn make_request(
-    env: JNIEnv,
-    cache_dir_j: JString,
-    method_j: JString,
-    url_j: JString,
-    headers_j: JObject,
-    body_j: jbyteArray,
-) -> Result<(String, http::Request<Vec<u8>>)> {
+fn get_cache_dir(env: JNIEnv, cache_dir_j: JString) -> Result<String> {
     let cache_dir: String = env
         .get_string(cache_dir_j)
         .context("create rust string for `cache_dir_j`")?
         .into();
 
+    Ok(cache_dir)
+}
+
+fn make_request(
+    env: JNIEnv,
+    method_j: JString,
+    url_j: JString,
+    headers_j: JObject,
+    body_j: jbyteArray,
+) -> Result<http::Request<Vec<u8>>> {
     let method: String = env
         .get_string(method_j)
         .context("create rust string for `method_j`")?
@@ -106,7 +109,7 @@ fn make_request(
 
     let request = req_builder.body(body).context("create request")?;
 
-    Ok((cache_dir, request))
+    Ok(request)
 }
 
 fn format_response(env: JNIEnv, response: http::Response<Vec<u8>>) -> Result<JObject> {
@@ -203,19 +206,28 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     headers_j: JObject,
     body_j: jbyteArray,
 ) -> jobject {
-    let (cache_dir, request) =
-        match make_request(env, cache_dir_j, method_j, url_j, headers_j, body_j) {
-            Ok(v) => v,
-            Err(e) => {
-                let _ = env.throw((
-                    "org/c4dt/artiwrapper/TorLibException",
-                    format!("make request: {:?}", e),
-                ));
-                return JObject::null().into_inner();
-            }
-        };
+    let request = match make_request(env, method_j, url_j, headers_j, body_j) {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = env.throw((
+                "org/c4dt/artiwrapper/TorLibException",
+                format!("make request: {:?}", e),
+            ));
+            return JObject::null().into_inner();
+        }
+    };
     trace!("Request: {:?}", request);
 
+    let cache_dir = match get_cache_dir(env, cache_dir_j) {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = env.throw((
+                "org/c4dt/artiwrapper/TorLibException",
+                format!("get cache dir: {:?}", e),
+            ));
+            return JObject::null().into_inner();
+        }
+    };
     let client = Client::new(PathBuf::from(cache_dir));
 
     let response = match client.send(request) {
