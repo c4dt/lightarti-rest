@@ -1,18 +1,19 @@
+use std::collections::HashMap;
+use std::convert::TryFrom;
+
+use anyhow::{Context, Result};
 use core_foundation::{
     base::TCFType,
     string::{CFString, CFStringRef},
 };
-use http::{Request, HeaderValue, Method};
+use http::header::HeaderName;
+use http::{HeaderValue, Method, Request};
 use libc::c_char;
+use serde::{Deserialize, Serialize};
 use tracing::info;
 use url::Url;
-use anyhow::{Result, Context};
-use serde::{Serialize, Deserialize};
-use http::header::HeaderName;
-use std::collections::HashMap;
 
 use crate::client::Client;
-use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ArtiRequest {
@@ -24,18 +25,16 @@ pub struct ArtiRequest {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn call_arti(
-    request_json: *const c_char) -> CFStringRef {
+pub unsafe extern "C" fn call_arti(request_json: *const c_char) -> CFStringRef {
     setup_logger();
 
-    let ret = _call_arti(cstring_to_str(&request_json))
-        .unwrap_or_else(|e| ReturnStruct {
-            error: Some(JSONError {
-                error_string: e.to_string(),
-                error_context: None,
-            }),
-            response: None,
-        });
+    let ret = _call_arti(cstring_to_str(&request_json)).unwrap_or_else(|e| ReturnStruct {
+        error: Some(JSONError {
+            error_string: e.to_string(),
+            error_context: None,
+        }),
+        response: None,
+    });
 
     let json_str = serde_json::to_string(&ret).unwrap_or("JSON error".into());
     return to_cf_str(json_str.to_string());
@@ -45,10 +44,8 @@ pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
     let request: ArtiRequest = serde_json::from_str(request_json)?;
     info!("JSON-Request is: {:?}", request);
 
-    let host_url = Url::parse(&request.url)
-        .context("parse url")?;
-    let host = host_url.host_str()
-        .context("no host in request")?;
+    let host_url = Url::parse(&request.url).context("parse url")?;
+    let host = host_url.host_str().context("no host in request")?;
 
     let mut req = Request::builder()
         .method(Method::from_bytes(request.method.as_bytes()).context("invalid method")?)
@@ -61,8 +58,10 @@ pub fn _call_arti(request_json: &str) -> Result<ReturnStruct> {
     let hm = req.headers_mut();
     for (key, values) in request.headers {
         for value in values {
-            hm.append(&HeaderName::from_bytes(&key.as_bytes())?,
-                      HeaderValue::from_bytes(value.as_bytes())?);
+            hm.append(
+                &HeaderName::from_bytes(&key.as_bytes())?,
+                HeaderValue::from_bytes(value.as_bytes())?,
+            );
         }
     }
 
@@ -93,7 +92,9 @@ pub struct JSONError {
 impl TryFrom<Result<http::response::Response<Vec<u8>>>> for ReturnStruct {
     type Error = anyhow::Error;
 
-    fn try_from(resp_result: Result<http::response::Response<Vec<u8>>>) -> Result<Self, anyhow::Error> {
+    fn try_from(
+        resp_result: Result<http::response::Response<Vec<u8>>>,
+    ) -> Result<Self, anyhow::Error> {
         match resp_result {
             Ok(resp) => {
                 let mut headers = HashMap::new();
