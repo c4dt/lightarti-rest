@@ -3,13 +3,14 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use http::{Request, Uri, Version};
 use jni::objects::{JClass, JList, JMap, JObject, JString, JValue};
-use jni::sys::{jbyteArray, jint, jobject, jstring};
+use jni::sys::{jbyteArray, jint, jobject};
 use jni::JNIEnv;
 use tracing::{info, log::Level, trace};
 
 use crate::client::Client;
 
 const ANDROID_LOG_TAG: &str = "ArtiLib";
+const TOR_LIB_EXCEPTION: &str = "org/c4dt/artiwrapper/TorLibException";
 
 /// Minimal entry point used for testing purposes
 #[no_mangle]
@@ -17,27 +18,22 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
     env: JNIEnv,
     _: JClass,
     who: JString,
-) -> jstring {
-    let output = match || -> Result<JString> {
+) -> jobject {
+    || -> Result<JObject> {
         let str: String = env
             .get_string(who)
             .context("create rust string for `who`")?
             .into();
 
-        let output = env
-            .new_string(format!("Hello {}!", str))
-            .context("create java string")?;
-
-        Ok(output)
-    }() {
-        Ok(v) => v,
-        Err(e) => {
-            let _ = env.throw(("java/lang/Exception", format!("process hello: {:?}", e)));
-            return JObject::null().into_inner();
-        }
-    };
-
-    output.into_inner()
+        env.new_string(format!("Hello {}!", str))
+            .context("create java string")
+            .map(Into::into)
+    }()
+    .unwrap_or_else(|e| {
+        let _ = env.throw((TOR_LIB_EXCEPTION, format!("process hello: {:?}", e)));
+        JObject::null()
+    })
+    .into_inner()
 }
 
 /// Entry point to initialize the logger so that Rust logs show up in logcat
@@ -60,12 +56,9 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: 
 
 /// Get the cache dir from the input arguments
 fn get_cache_dir(env: JNIEnv, cache_dir_j: JString) -> Result<String> {
-    let cache_dir: String = env
-        .get_string(cache_dir_j)
-        .context("create rust string for `cache_dir_j`")?
-        .into();
-
-    Ok(cache_dir)
+    env.get_string(cache_dir_j)
+        .context("create rust string for `cache_dir_j`")
+        .map(Into::into)
 }
 
 /// Build an http::Request from the input arguments
@@ -222,52 +215,22 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     headers_j: JObject,
     body_j: jbyteArray,
 ) -> jobject {
-    let request = match make_request(env, method_j, url_j, headers_j, body_j) {
-        Ok(v) => v,
-        Err(e) => {
-            let _ = env.throw((
-                "org/c4dt/artiwrapper/TorLibException",
-                format!("make request: {:?}", e),
-            ));
-            return JObject::null().into_inner();
-        }
-    };
-    trace!("Request: {:?}", request);
+    || -> Result<JObject> {
+        let request =
+            make_request(env, method_j, url_j, headers_j, body_j).context("make request")?;
+        trace!("Request: {:?}", request);
 
-    let cache_dir = match get_cache_dir(env, cache_dir_j) {
-        Ok(v) => v,
-        Err(e) => {
-            let _ = env.throw((
-                "org/c4dt/artiwrapper/TorLibException",
-                format!("get cache dir: {:?}", e),
-            ));
-            return JObject::null().into_inner();
-        }
-    };
-    let client = Client::new(PathBuf::from(cache_dir));
+        let cache_dir = get_cache_dir(env, cache_dir_j).context("get cache dir")?;
+        let client = Client::new(PathBuf::from(cache_dir));
 
-    let response = match client.send(request) {
-        Ok(v) => v,
-        Err(e) => {
-            let _ = env.throw((
-                "org/c4dt/artiwrapper/TorLibException",
-                format!("send request: {:?}", e),
-            ));
-            return JObject::null().into_inner();
-        }
-    };
-    trace!("Response: {:?}", response);
+        let response = client.send(request).context("send request")?;
+        trace!("Response: {:?}", response);
 
-    let fmt_response = match format_response(env, response) {
-        Ok(v) => v,
-        Err(e) => {
-            let _ = env.throw((
-                "org/c4dt/artiwrapper/TorLibException",
-                format!("format response: {:?}", e),
-            ));
-            return JObject::null().into_inner();
-        }
-    };
-
-    fmt_response.into_inner()
+        format_response(env, response).context("format response")
+    }()
+    .unwrap_or_else(|e| {
+        let _ = env.throw((TOR_LIB_EXCEPTION, format!("{:?}", e)));
+        JObject::null()
+    })
+    .into_inner()
 }
