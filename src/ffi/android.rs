@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, Context, Result};
-use http::{Request, Version};
+use anyhow::{Context, Result};
+use http::{Request, Uri, Version};
 use jni::objects::{JClass, JList, JMap, JObject, JString, JValue};
 use jni::sys::{jbyteArray, jint, jobject, jstring};
 use jni::JNIEnv;
@@ -73,12 +73,14 @@ fn make_request(
         .convert_byte_array(body_j)
         .context("create byte array")?;
 
-    let mut req_builder = match method.as_str() {
-        "POST" => Request::post(format!("{}", url)),
-        "GET" => Request::get(format!("{}", url)),
-        _ => bail!("HTTP method not supported: {:?}", method),
-    }
-    .version(Version::HTTP_10);
+    let uri = url.parse::<Uri>().context("parse URL")?;
+    let host = uri.host().unwrap_or("");
+
+    let mut req_builder = Request::builder()
+        .method(method.as_bytes())
+        .header("Host", host)
+        .uri(uri)
+        .version(Version::HTTP_10);
 
     let headers_jmap: JMap = env.get_map(headers_j).context("create JMap")?;
 
