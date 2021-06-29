@@ -11,6 +11,7 @@ use crate::client::Client;
 
 const ANDROID_LOG_TAG: &str = "ArtiLib";
 
+/// Minimal entry point used for testing purposes
 #[no_mangle]
 pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
     env: JNIEnv,
@@ -29,6 +30,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
     output.into_inner()
 }
 
+/// Entry point to initialize the logger so that Rust logs show up in logcat
 #[no_mangle]
 pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: JNIEnv, _: JClass) {
     // Important: Logcat doesn't contain stdout / stderr so we need a custom logger.
@@ -46,6 +48,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: 
     info!("init log system - done");
 }
 
+/// Get the cache dir from the input arguments
 fn get_cache_dir(env: JNIEnv, cache_dir_j: JString) -> Result<String> {
     let cache_dir: String = env
         .get_string(cache_dir_j)
@@ -55,6 +58,7 @@ fn get_cache_dir(env: JNIEnv, cache_dir_j: JString) -> Result<String> {
     Ok(cache_dir)
 }
 
+/// Build an http::Request from the input arguments
 fn make_request(
     env: JNIEnv,
     method_j: JString,
@@ -112,6 +116,7 @@ fn make_request(
     Ok(request)
 }
 
+/// Format an http::Response into a Java HttpResponse object
 fn format_response(env: JNIEnv, response: http::Response<Vec<u8>>) -> Result<JObject> {
     let status: jint = response.status().as_u16().into();
 
@@ -196,6 +201,7 @@ fn format_response(env: JNIEnv, response: http::Response<Vec<u8>>) -> Result<JOb
         .context("create HttpResult")?)
 }
 
+/// Entry point to process an HTTP request via Arti
 #[no_mangle]
 pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     env: JNIEnv,
