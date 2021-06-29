@@ -124,14 +124,7 @@ fn format_response(env: JNIEnv, response: http::Response<Vec<u8>>) -> Result<JOb
     let status: jint = response.status().as_u16().into();
 
     let version = env
-        .new_string(match response.version() {
-            http::Version::HTTP_09 => "HTTP/0.9",
-            http::Version::HTTP_10 => "HTTP/1.0",
-            http::Version::HTTP_11 => "HTTP/1.1",
-            http::Version::HTTP_2 => "HTTP/2",
-            http::Version::HTTP_3 => "HTTP/3",
-            _ => "Unknown",
-        })
+        .new_string(format!("{:?}", response.version()))
         .context("build http string version")?;
 
     let headers = env
