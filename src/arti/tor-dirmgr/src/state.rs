@@ -13,6 +13,7 @@
 // Code mostly copied from Arti.
 
 use ::std::fs;
+use anyhow::Context;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use log::info;
@@ -140,7 +141,7 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
     fn add_from_cache(&mut self, docdir: &str) -> Result<bool> {
         // side-loaded data
         let consensus_path = format!("{}/consensus.txt", docdir);
-        let consensus = fs::read_to_string(consensus_path).expect("Failed to read the consensus.");
+        let consensus = fs::read_to_string(consensus_path).context("Failed to read the consensus.")?;
         self.add_consensus_text(true, consensus.as_str())
             .map(|meta| meta.is_some())
     }
@@ -344,14 +345,14 @@ impl<DM: WriteNetDir> GetMicrodescsState<DM> {
             reset_time,
         };
 
-        result.consider_upgrade();
+        result.consider_upgrade().context("considering upgrade")?;
         Ok(result)
     }
 
     /// Add a bunch of microdescriptors to the in-progress netdir.
     ///
     /// Return true if the netdir has just become usable.
-    fn register_microdescs<I>(&mut self, mds: I) -> bool
+    fn register_microdescs<I>(&mut self, mds: I) -> Result<bool>
     where
         I: IntoIterator<Item = Microdesc>,
     {
@@ -369,26 +370,27 @@ impl<DM: WriteNetDir> GetMicrodescsState<DM> {
                 Ok(())
             });
         }
-        false
+        Ok(false)
     }
 
     /// Check whether this netdir we're building has _just_ become
     /// usable when it was not previously usable.  If so, tell the
     /// dirmgr about it and return true; otherwise return false.
-    fn consider_upgrade(&mut self) -> bool {
+    fn consider_upgrade(&mut self) -> Result<bool> {
         if let Some(p) = self.partial.take() {
             match p.unwrap_if_sufficient() {
                 Ok(netdir) => {
-                    self.reset_time = pick_download_time(netdir.lifetime());
+                    self.reset_time = pick_download_time(netdir.lifetime())
+                        .context("picking download time")?;
                     if let Some(wd) = Weak::upgrade(&self.writedir) {
                         wd.netdir().replace(netdir);
-                        return true;
+                        return Ok(true);
                     }
                 }
                 Err(partial) => self.partial = Some(partial),
             }
         }
-        false
+        Ok(false)
     }
 }
 
@@ -410,7 +412,7 @@ impl<DM: WriteNetDir> DirState for GetMicrodescsState<DM> {
         // side-loaded data
         let microdescriptors_path = format!("{}/microdescriptors.txt", docdir);
         let microdescriptors =
-            fs::read_to_string(microdescriptors_path).expect("Failed to read microdescriptors.");
+            fs::read_to_string(microdescriptors_path).context("Failed to read microdescriptors.")?;
 
         let mut new_mds = Vec::new();
         for anno in MicrodescReader::new(
@@ -425,7 +427,7 @@ impl<DM: WriteNetDir> DirState for GetMicrodescsState<DM> {
         }
 
         self.newly_listed.clear();
-        self.register_microdescs(new_mds);
+        self.register_microdescs(new_mds).context("registering microdescs")?;
 
         Ok(true)
     }
@@ -445,29 +447,30 @@ impl<DM: WriteNetDir> DirState for GetMicrodescsState<DM> {
 
 /// Choose a random download time to replace a consensus whose lifetime
 /// is `lifetime`.
-fn pick_download_time(lifetime: &Lifetime) -> SystemTime {
-    let (lowbound, uncertainty) = client_download_range(lifetime);
+fn pick_download_time(lifetime: &Lifetime) -> Result<SystemTime> {
+    let (lowbound, uncertainty) = client_download_range(lifetime)
+        .context("getting download range")?;
     let zero = Duration::new(0, 0);
     let t = lowbound + rand::thread_rng().gen_range(zero..uncertainty);
     info!("The current consensus is fresh until {}, and valid until {}. I've picked {} as the earliest time to replace it.",
           DateTime::<Utc>::from(lifetime.fresh_until()),
           DateTime::<Utc>::from(lifetime.valid_until()),
           DateTime::<Utc>::from(t));
-    t
+    Ok(t)
 }
 
 /// Based on the lifetime for a consensus, return the time range during which
 /// clients should fetch the next one.
-fn client_download_range(lt: &Lifetime) -> (SystemTime, Duration) {
+fn client_download_range(lt: &Lifetime) -> Result<(SystemTime, Duration)> {
     let valid_after = lt.valid_after();
     let fresh_until = lt.fresh_until();
     let valid_until = lt.valid_until();
     let voting_interval = fresh_until
         .duration_since(valid_after)
-        .expect("valid-after must precede fresh-until");
+        .context("valid-after must precede fresh-until")?;
     let whole_lifetime = valid_until
         .duration_since(valid_after)
-        .expect("valid-after must precede valid-until");
+        .context("valid-after must precede valid-until")?;
 
     // From dir-spec:
     // "This time is chosen uniformly at random from the interval
@@ -478,5 +481,5 @@ fn client_download_range(lt: &Lifetime) -> (SystemTime, Duration) {
     let remainder = whole_lifetime - lowbound;
     let uncertainty = (remainder * 7) / 8;
 
-    (valid_after + lowbound, uncertainty)
+    Ok((valid_after + lowbound, uncertainty))
 }
