@@ -1,6 +1,6 @@
-all:	directory
+all:	directory-cache
 
-directory: pip
+directory-cache: pip
 	@if [[ ! -f authority_certificate ]]; then \
 	  echo "Please copy authority_* files to this directory"; \
 	  false; \

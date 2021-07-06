@@ -22,7 +22,7 @@ struct ArtiRequest {
     url: String,
     headers: HashMap<String, Vec<String>>,
     body: Vec<u8>,
-    dict_dir: String,
+    cache_dir: String,
 }
 
 impl TryFrom<ArtiRequest> for http::Request<Vec<u8>> {
@@ -81,7 +81,7 @@ fn _call_arti(request_json: &str) -> Result<Response> {
     info!("JSON-Request is: {:?}", request);
 
     // TODO avoid binding field to struct to avoid copying around
-    let cache_dir = PathBuf::from(request.dict_dir.clone());
+    let cache_dir = PathBuf::from(request.cache_dir.clone());
 
     let req = request
         .try_into()
