@@ -1,6 +1,6 @@
 name: Test
 on:
-  pull_request:
+#  pull_request:
   push:
     branches:
       - main
@@ -22,6 +22,7 @@ jobs:
         name: cargo test
         with:
           command: test
+
   test-script:
     runs-on: ubuntu-latest
     strategy:

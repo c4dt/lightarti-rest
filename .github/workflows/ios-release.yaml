@@ -1,0 +1,44 @@
+name: iOS-Release
+
+on:
+  push:
+    tags:
+    - '*'
+    branches:
+      - ios-release
+
+jobs:
+
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/checkout@v2
+
+      - uses: Swatinem/rust-cache@v1
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-apple-ios
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: aarch64-apple-ios
+
+      - name: Build XCFramework
+        run: make build-ios
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "arti-rest.xcframework.zip"
+          bodyFile: "ios/body.md"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit: ios-release
+          tag: 0.0.4
