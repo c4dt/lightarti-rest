@@ -33,7 +33,7 @@ jobs:
       - name: Build XCFramework
         run: |
           make build-ios
-          sha256sum art-rest.xcframework.zip >> ios/body.md
+          shasum -a 256 art-rest.xcframework.zip >> ios/body.md
 
       - uses: ncipollo/release-action@v1
         with:
