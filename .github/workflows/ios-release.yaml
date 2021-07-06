@@ -1,0 +1,51 @@
+name: iOS-Release
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/checkout@v2
+
+      - uses: Swatinem/rust-cache@v1
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-apple-ios
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: aarch64-apple-ios
+
+      - name: Build XCFramework
+        run: |
+          make build-ios
+          sha256sum art-rest.xcframework.zip >> ios/body.md
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "arti-rest.xcframework.zip"
+          bodyFile: "ios/body.md"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: trigger
+        run: |
+          curl \
+            -u ${{ secrets.REPO_TOKEN_USER }}:${{ secrets.REPO_TOKEN }} \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/c4dt/arti-ios/dispatches \
+            -d '{"event_type":"update"}'
