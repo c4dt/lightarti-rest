@@ -27,13 +27,13 @@ The asynchronous part needs to be done by the android and ios library.
 
 # Pre-caching of tor circuits
 
-This library has a modified directory controller of arti that allows to use pre-downloaded
-circuits.
+This library has a [modified directory manager](./src/arti/tor-dirmgr) of arti that allows to 
+use pre-downloaded circuits.
 The idea is to download these circuits once per week, or once per month, and then being
 able to setup new circuits with these pre-downloaded circuits.
-Of course this requires trusting the server who downloads the circuits.
+Of course this requires trusting the server who provide the circuits.
 
-For more information, see [Directory CAche Setup](tools/README.md)
+For more information, see [Directory Cache Setup](tools/README.md)
 
 # License
 
