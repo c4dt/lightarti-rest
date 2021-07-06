@@ -1,14 +1,15 @@
 all:	directory-cache
 
-directory-cache: pip
-	@if [[ ! -f authority_certificate ]]; then \
-	  echo "Please copy authority_* files to this directory"; \
-	  false; \
-	fi
-	mkdir -f directory
-	./gen_fresh_dirinfo.py
-	mv consensus.txt microdescriptors.txt directory
+authority_certificate:
+	@echo "Please copy authority_* files to this directory"
+	exit 1
 
-pip:
+directory-cache: authority_certificate pip_install
+	mkdir -p directory-cache
+	./gen_fresh_dirinfo.py
+	mv consensus.txt microdescriptors.txt directory-cache
+
+pip_install: requirements.txt
 	pip3 install -qr requirements.txt
+	touch pip_install
 
