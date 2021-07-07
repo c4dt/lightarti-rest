@@ -1,10 +1,11 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use http::{Request, Uri, Version};
 use jni::objects::{JClass, JList, JMap, JObject, JString, JValue};
 use jni::sys::{jbyteArray, jint, jobject};
 use jni::JNIEnv;
+use std::panic;
 use tracing::{info, log::Level, trace};
 
 use crate::client::Client;
@@ -208,19 +209,22 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
     headers_j: JObject,
     body_j: jbyteArray,
 ) -> jobject {
-    || -> Result<JObject> {
-        let request =
-            make_request(env, method_j, url_j, headers_j, body_j).context("make request")?;
-        trace!("Request: {:?}", request);
+    panic::catch_unwind(|| {
+        || -> Result<JObject> {
+            let request =
+                make_request(env, method_j, url_j, headers_j, body_j).context("make request")?;
+            trace!("Request: {:?}", request);
 
-        let cache_dir = get_cache_dir(env, cache_dir_j).context("get cache dir")?;
-        let client = Client::new(PathBuf::from(cache_dir));
+            let cache_dir = get_cache_dir(env, cache_dir_j).context("get cache dir")?;
+            let client = Client::new(PathBuf::from(cache_dir));
 
-        let response = client.send(request).context("send request")?;
-        trace!("Response: {:?}", response);
+            let response = client.send(request).context("send request")?;
+            trace!("Response: {:?}", response);
 
-        format_response(env, response).context("format response")
-    }()
+            format_response(env, response).context("format response")
+        }()
+    })
+    .unwrap_or_else(|e| Err(anyhow!("caught panic: {:?}", e)))
     .unwrap_or_else(|e| {
         let _ = env.throw((TOR_LIB_EXCEPTION, format!("{:?}", e)));
         JObject::null()

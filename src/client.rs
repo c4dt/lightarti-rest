@@ -2,7 +2,6 @@ use std::{io::Write, path::PathBuf};
 
 use anyhow::{bail, Context, Result};
 use http::{Request, Response};
-use std::panic;
 use tracing::trace;
 
 use crate::arti::tls_send;
@@ -29,16 +28,13 @@ impl Client {
 
         let raw_req = serialize_request(req).context("serialize request")?;
 
-        let raw_resp = match panic::catch_unwind(|| {
-            tls_send(
-                host,
-                &String::from_utf8(raw_req).context("encode serialized as utf-8")?,
-                &self.cache,
-            )
-        }) {
-            Ok(v) => v.context("tls send")?.into_bytes(),
-            Err(e) => bail!("caught panic: {:?}", e),
-        };
+        let raw_resp = tls_send(
+            host,
+            &String::from_utf8(raw_req).context("encode serialized as utf-8")?,
+            &self.cache,
+        )
+        .context("tls send")?
+        .into_bytes();
 
         let resp = deserialize_response(raw_resp);
 
