@@ -14,14 +14,19 @@ from stem.descriptor.networkstatus import (
     KeyCertificate,
     NetworkStatusDocumentV3,
 )
+from stem.directory import Authority
 
 from gen_fresh_dirinfo import (
+    AUTHORITY_MTBF_MEASURE,
     FLAG_BAD_EXIT,
     FLAG_EXIT,
+    FLAG_FAST,
     consensus_validate_signatures,
+    fetch_authorities,
     fetch_certificates,
     fetch_latest_consensus,
     fetch_microdescriptors,
+    fetch_vote,
     generate_signed_consensus,
     select_routers
 )
@@ -46,6 +51,16 @@ PATH_AUTH_SIGNING_KEY = Path("test-data")/"authority_signing_key"
 AUTH_CERTIFICATES = [KeyCertificate(cert) for cert in AUTHORITIES]
 
 
+
+@pytest.fixture(scope="session")
+def authorities():
+    """
+    Latest directory authorities data from the Tor network.
+    """
+    authorities = fetch_authorities()
+    return authorities
+
+
 @pytest.fixture(scope="session")
 def consensus():
     """
@@ -53,6 +68,16 @@ def consensus():
     """
     consensus = fetch_latest_consensus()
     return consensus
+
+
+@pytest.fixture(scope="session")
+def vote(authorities):
+    """
+    Vote of one of the directory authority measuring the MTBF of the routers.
+    """
+    authority = authorities[AUTHORITY_MTBF_MEASURE]
+    vote = fetch_vote(authority)
+    return vote
 
 
 @pytest.fixture(scope="session")
@@ -163,6 +188,15 @@ def test_generate_signed_consensus():
         assert router_a.get_bytes() == router_b.get_bytes()
 
 
+def test_fetch_authorities(authorities):
+    """
+    """
+    assert len(authorities) == 9
+
+    for auth in authorities.values():
+        assert isinstance(auth, Authority)
+
+
 def test_fetch_certificates(certificates):
     """
     Test fetching certificates of directory authorities works.
@@ -173,7 +207,8 @@ def test_fetch_certificates(certificates):
         assert isinstance(cert, KeyCertificate)
 
 
-def test_fetch_microdescriptors(consensus, certificates):
+
+def test_fetch_microdescriptors(consensus):
     """
     Test fetching microdescriptors works.
     """
@@ -198,20 +233,21 @@ def test_fetch_microdescriptors(consensus, certificates):
 
 
 
-def test_select_routers(consensus):
+def test_select_routers(consensus, vote):
     """
     Test that router selection works correctly.
     """
     n_routers = 30
 
-    routers = select_routers(consensus, n_routers, 1.0)
+    routers = select_routers(consensus, vote, n_routers)
 
     assert len(routers) == n_routers
 
     # Ensure the routers are selected correctly.
     for router in routers:
         flags = set(router.flags)
-        assert FLAG_BAD_EXIT not in flags and FLAG_EXIT in flags
+        assert FLAG_BAD_EXIT not in flags
+        assert FLAG_FAST in flags
 
     # Ensures the routers are sorted.
     routers_b = sorted(routers, key=lambda r: int(r.fingerprint, 16))

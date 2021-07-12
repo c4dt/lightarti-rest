@@ -6,8 +6,7 @@ authority_certificate:
 
 directory-cache: authority_certificate pip_install
 	mkdir -p directory-cache
-	./gen_fresh_dirinfo.py
-	mv consensus.txt microdescriptors.txt directory-cache
+	./gen_fresh_dirinfo.py generate-dirinfo --consensus directory-cache/consensus.txt --microdescriptors directory-cache/microdescriptors.txt
 
 pip_install: requirements.txt
 	pip3 install -qr requirements.txt
