@@ -197,11 +197,11 @@ def is_address_port_changed(
 
 def fetch_authorities() -> Dict[str, Authority]:
     """
-    Retrieve the directory information about the directory authorities.
+    Retrieve voting directory authorities.
 
-    :return: dictionary matching the name of the authorities to their info
+    :return: dictionary matching the name of the authorities to their object
     """
-    authorities = Authority.from_remote()
+    authorities = Authority.from_cache()
     signing_authorities = {name: auth for name, auth in authorities.items() if auth.v3ident}
     return signing_authorities
 
@@ -216,7 +216,7 @@ def fetch_vote(
     :raises ValueError: Did not retrieve the expected vote format.
     :return: the vote of the directory authority
     """
-    # pylint: disable= no-member
+    # pylint: disable=no-member
 
     downloader = DescriptorDownloader()
 
@@ -272,7 +272,10 @@ def fetch_microdescriptors(
     ] * MAX_MICRODESCRIPTOR_HASHES
     for bucket in zip_longest(*buckets):
         digests = [h for h in bucket if h is not None]
-        microdescriptors_bucket = downloader.get_microdescriptors(hashes=digests, validate=True).run()
+        microdescriptors_bucket = downloader.get_microdescriptors(
+            hashes=digests,
+            validate=True
+        ).run()
 
         digests_set = set(digests)
         for microdescriptor in microdescriptors_bucket:
@@ -351,6 +354,7 @@ def consensus_validate_signatures(
         validated.
     :return: True if the certificate is valid, False otherwise
     """
+    # pylint: disable=no-member
     consensus_digest: bytes = consensus.digest(DigestHash.SHA256, DigestEncoding.RAW).digest()
 
     num_valid = 0
@@ -702,9 +706,9 @@ def compute_churn(
             continue
 
         if (
-            FLAG_EXIT in router.flags and
-            (FLAG_EXIT not in cons_router.flags or FLAG_BAD_EXIT in cons_router.flags)
-        ):
+                FLAG_EXIT in router.flags and
+                (FLAG_EXIT not in cons_router.flags or FLAG_BAD_EXIT in cons_router.flags)
+            ):
             churn.append(router.fingerprint)
             continue
 
