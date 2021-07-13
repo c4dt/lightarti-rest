@@ -17,8 +17,13 @@ pub fn setup_tracing() {
 pub fn setup_cache() -> TempDir {
     let tempdir = TempDir::new("tor-cache").expect("create temp dir");
 
+    let certificate = include_str!("test-data/certificate.txt");
     let consensus = include_str!("test-data/consensus.txt");
     let microdescriptors = include_str!("test-data/microdescriptors.txt");
+
+    let certificate_path = tempdir.path().join("certificate.txt");
+    let mut certificate_file = File::create(certificate_path).expect("create temp certificate file");
+    write!(certificate_file, "{}", certificate).expect("write temp certificate file");
 
     let consensus_path = tempdir.path().join("consensus.txt");
     let mut consensus_file = File::create(consensus_path).expect("create temp consensus file");

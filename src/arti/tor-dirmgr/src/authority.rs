@@ -55,7 +55,7 @@ pub(crate) fn default_authorities() -> Vec<Authority> {
         Authority { name, v3ident }
     }
 
-    // (List generated August 2020.)
+    // Custom authority
     vec![
         auth("spring", "A1B62E1027298A07181BFEA6801360C21DDEDE51"),
     ]
