@@ -67,20 +67,8 @@ FLAG_FAST = "Fast"
 FLAG_GUARD = "Guard"
 FLAG_STABLE = "Stable"
 
-# Names of the directory authorities.
-AUTHORITIES_NAMES = (
-    "moria1",
-    "tor26",
-    "dizum",
-    "gabelmoo",
-    "dannenberg",
-    "maatuska",
-    "Faravahar",
-    "longclaw",
-    "bastet",
-)
-
-# Authority we trust to measure the mean time before failure (MTBF).
+# As of July 2021, mean time before failure (MTBF) is not published in the consensus, but the
+# two directory authorities, moria1 and maatuska are publishing these statistics in their vote.
 AUTHORITY_MTBF_MEASURE = "moria1"
 
 # Format of an authority entry in the consensus (with a dummy vote digest).
@@ -124,7 +112,9 @@ PUBLIC_KEY_RE = re.compile("-+BEGIN RSA PUBLIC KEY-+\n([^-]+)\n-+END RSA PUBLIC 
 # Regex to parse a raw hash packed as a PKCS#1 1.5 format.
 PKCS1_15_HASH_RE = re.compile(b"\x00\x01\xff+\x00(.+)$", re.DOTALL)
 
-# Regex to find the remove the guard flag from a relay.
+# Regex to find the remove some flags from a relay.
+BAD_EXIT_FLAG_RE = re.compile(b"(s.+)BadExit (.+)", re.MULTILINE)
+EXIT_FLAG_RE = re.compile(b"(s.*) Exit(.+)", re.MULTILINE)
 GUARD_FLAG_RE = re.compile(b"(s.+)Guard (.+)", re.MULTILINE)
 
 
@@ -177,7 +167,7 @@ def is_orport_used(router: RouterStatusEntryMicroV3, port: int) -> bool:
     :return: True if the port is used, False otherwise
     """
     for _, port_used, _ in router.or_addresses:
-        if port == port_used:
+        if port_used == port:
             return True
     return False
 
@@ -212,8 +202,8 @@ def fetch_authorities() -> Dict[str, Authority]:
     :return: dictionary matching the name of the authorities to their info
     """
     authorities = Authority.from_remote()
-    filtered_authorities = {name: authorities[name] for name in AUTHORITIES_NAMES}
-    return filtered_authorities
+    signing_authorities = {name: auth for name, auth in authorities.items() if auth.v3ident}
+    return signing_authorities
 
 
 def fetch_vote(
@@ -441,9 +431,9 @@ def select_potential_routers(
                     exit_policy: MicroExitPolicy = vote_entry.exit_policy
                     if exit_policy.can_exit_to(port=443):
                         potential_exits.append(router)
-            else:
-                # All other non-exit nodes can be potential middle nodes.
-                potential_middles.append(router)
+
+            # All other nodes can be potential middle nodes.
+            potential_middles.append(router)
 
     return potential_guards, potential_middles, potential_exits
 
@@ -495,19 +485,18 @@ def select_routers(
     }
 
     # We select the most stable exit nodes.
-    exits = nlargest(number_exits, potential_exits, key=lambda r: mtbf_cache.get(r.fingerprint, 0))
-
-    # We do not want guards reachable through non-HTTPS ports due to strict firewall.
-    for router in exits:
-        if FLAG_GUARD in router.flags:
-            router.flags.remove(FLAG_GUARD)
+    exits = nlargest(
+        number_exits,
+        potential_exits,
+        key=lambda r: mtbf_cache.get(r.fingerprint, 0)
+    )
 
     selected_set = {router.fingerprint for router in exits}
 
     # We select the most stable guard nodes we haven't yet selected.
     guards = nlargest(
         number_guards,
-        potential_middles,
+        potential_guards,
         key=lambda r: mtbf_cache.get(r.fingerprint, 0) if r.fingerprint not in selected_set else 0
     )
 
@@ -521,7 +510,15 @@ def select_routers(
         key=lambda r: mtbf_cache.get(r.fingerprint, 0) if r.fingerprint not in selected_set else 0
     )
 
-    for router in middles:
+    # We remove exit flags from routers not selected as potential exit relay.
+    for router in guards + middles:
+        if FLAG_EXIT in router.flags:
+            router.flags.remove(FLAG_EXIT)
+        if FLAG_BAD_EXIT in router.flags:
+            router.flags.remove(FLAG_BAD_EXIT)
+
+    # We do not want guards reachable through non-HTTPS ports due to strict firewall.
+    for router in middles + exits:
         if FLAG_GUARD in router.flags:
             router.flags.remove(FLAG_GUARD)
 
@@ -637,13 +634,20 @@ def generate_signed_consensus(
     ).encode("ascii")
 
     # prepare router entries
-    # remove guard flags from routers to be used as middle nodes.
+    # remove unwanted flags
     routers_b = b""
     for router in routers:
         router_b: bytes = router.get_bytes()
+
         if FLAG_GUARD not in router.flags:
-            # pylint: disable=anomalous-backslash-in-string
             router_b = GUARD_FLAG_RE.sub(b"\\g<1>\\g<2>", router_b)
+
+        if FLAG_BAD_EXIT not in router.flags:
+            router_b = BAD_EXIT_FLAG_RE.sub(b"\\g<1>\\g<2>", router_b)
+
+        if FLAG_EXIT not in router.flags:
+            router_b = EXIT_FLAG_RE.sub(b"\\g<1>\\g<2>", router_b)
+
         routers_b += router_b
 
     # Tor do not follow the PKCS#1 v1.5 signature scheme strictly,
@@ -707,9 +711,9 @@ def compute_churn(
     return churn
 
 
-def generate_custom_consensus(namespace: Namespace) -> None:
+def generate_customized_consensus(namespace: Namespace) -> None:
     """
-    Generate a custom consensus from data retrieved from the Tor network authorities.
+    Generate a customized consensus from data retrieved from the Tor network authorities.
 
     :param namespace: namespace containing parsed arguments.
     """
@@ -794,7 +798,7 @@ def generate_churninfo(namespace: Namespace) -> None:
     :param namespace: namespace containing parsed arguments.
     """
     consensus_path: Path = namespace.consensus
-    consensus_custom = NetworkStatusDocumentV3(consensus_path.read_bytes())
+    consensus_customized = NetworkStatusDocumentV3(consensus_path.read_bytes())
 
     consensus_latest = fetch_latest_consensus()
 
@@ -804,7 +808,7 @@ def generate_churninfo(namespace: Namespace) -> None:
     if not consensus_validate_signatures(consensus_latest, key_certificates):
         raise InvalidConsensus("Validation of the consensus' signature failed.")
 
-    churn_fingerprints = compute_churn(consensus_custom, consensus_latest)
+    churn_fingerprints = compute_churn(consensus_customized, consensus_latest)
 
     churn = ("\n".join(churn_fingerprints) + "\n").encode("ascii")
 
@@ -904,7 +908,7 @@ def main(program: str, arguments: List[str]) -> None:
         default=120
     )
 
-    parser_dirinfo.set_defaults(callback=generate_custom_consensus)
+    parser_dirinfo.set_defaults(callback=generate_customized_consensus)
 
 
     parser_churn.add_argument(
