@@ -1,1 +1,3 @@
 Cargo.lock binary
+src/test-data/consensus.txt binary
+src/test-data/microdescriptors.txt binary
