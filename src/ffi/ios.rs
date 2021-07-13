@@ -83,7 +83,7 @@ fn _call_arti(request_json: &str) -> Result<Response> {
         debug!("JSON-Request is: {:?}", request);
 
         // TODO avoid binding field to struct to avoid copying around
-        let cache_dir = PathBuf::from(request.dict_dir.clone());
+        let cache_dir = PathBuf::from(request.cache_dir.clone());
 
         let req = request
             .try_into()
