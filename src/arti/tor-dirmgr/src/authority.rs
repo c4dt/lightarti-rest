@@ -5,6 +5,8 @@
 
 // Code mostly copied from Arti.
 
+use std::str::FromStr;
+use anyhow::{Context, Result, Error};
 use serde::Deserialize;
 use tor_llcrypto::pk::rsa::RsaIdentity;
 use tor_netdoc::doc::authcert::{AuthCert, AuthCertKeyIds};
@@ -44,6 +46,25 @@ impl Authority {
     }
 }
 
+impl FromStr for Authority {
+    type Err = Error;
+
+    /// Parse Authority from a string.
+    fn from_str(authority_raw: &str) -> Result<Self, Self::Err> {
+        // name, v3ident_raw
+        let authority: Vec<&str> = authority_raw.split_whitespace().collect();
+
+        let name = authority[0];
+        let v3ident_raw = authority[1];
+
+        let v3ident = hex::decode(v3ident_raw).context("Built-in authority identity had bad hex!?")?;
+        let v3ident = RsaIdentity::from_bytes(&v3ident)
+            .context("Built-in authority identity had wrong length!?")?;
+
+        Ok(Authority { name: name.to_string(), v3ident })
+    }
+}
+
 /// Return a vector of the default directory authorities.
 pub(crate) fn default_authorities() -> Vec<Authority> {
     /// Build an authority; panic if input is bad.
@@ -55,7 +76,6 @@ pub(crate) fn default_authorities() -> Vec<Authority> {
         Authority { name, v3ident }
     }
 
-    // Custom authority
     vec![
         auth("spring", "A1B62E1027298A07181BFEA6801360C21DDEDE51"),
     ]
