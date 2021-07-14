@@ -27,7 +27,7 @@ mission critical piece of software without proper consideration of the following
 
 - arti itself mentions it's not ready for prime-time since it does not implement all protections that the stock Tor client does, see their 
   [README](https://gitlab.torproject.org/tpo/core/arti/-/blob/main/README.md). In particular, this might mean that you should not use Arti in production.
-- arti-rest uses a customized consensus to reduce bandwidth cost for infrequent use of arti-rest. As a result, the consensus is not signed by the default Tor directory authorities, but instead by the creator of the app. This approach in general is not secure. However, since the app developers already determines which code is loaded (and could therefore disable consensus validation altogether, or deanonymize users directly), it is likely acceptable in the case of mobile applications that directly include arti-rest.
+- arti-rest uses a customized consensus to reduce bandwidth cost for infrequent use of arti-rest. As a result, the consensus is not signed by the default Tor directory authorities, but instead by the creator of the app. This approach in general is not secure. However, since the app developer already determines which code is loaded (and could therefore disable consensus validation altogether, or deanonymize users directly), it is likely acceptable in the case of mobile applications that directly include arti-rest.
 
 In summary, you should only use `arti-rest` when you understand the current weaknesses of `arti` and `arti-rest.`
   
