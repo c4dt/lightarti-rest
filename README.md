@@ -4,7 +4,7 @@
 
 Arti-rest is a simple wrapper around [arti](https://gitlab.torproject.org/tpo/core/arti) that leverages arti to enable mobile apps to easily make anonymous REST requests via the Tor network. Arti-rest makes two changes on top of arti. First, arti-rest provides a simple wrapper for REST requests, to make calling HTTP(S) API endpoints easier. Second, arti-rest provides the option to use a customized, and therefore potentially much smaller, consensus. Using a customized consensus is less secure than using the original Tor consensus. It therefore depends on your application whether this reduction is worth while.
 
-Arti-rest is written in Rust and can therefore be compile into native libraries that is easy to integrate into mobile applications. All credits for enabling this approach go to the authors of [arti](https://gitlab.torproject.org/tpo/core/arti). Using a native library ensures that arti-rest can be bundled with Android and iOS applications, rather than relying on external Tor proxies that must be installed separately.
+Arti-rest is written in Rust and can therefore be compiled into native libraries that are easy to integrate into mobile applications. All credits for enabling this approach go to the authors of [arti](https://gitlab.torproject.org/tpo/core/arti). Using a native library ensures that arti-rest can be bundled with Android and iOS applications, rather than relying on external Tor proxies that must be installed separately.
 
 To facilitate integration in mobile applications, we provide the [arti-ios](https://github.com/c4dt/arti-ios) and [arti-android](https://github.com/c4dt/arti-android) libraries. The following graph shows how these libraries interact.
 
