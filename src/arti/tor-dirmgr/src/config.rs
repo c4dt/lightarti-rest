@@ -192,10 +192,7 @@ impl NetDirConfigBuilder {
 
     /// Set directory authorities.
     pub fn set_authorities(&mut self, authorities: &[Authority]) {
-        self.network.authority.clear();
-        for authority in authorities {
-            self.network.authority.push(authority.clone());
-        }
+        self.network.authority = authorities.to_vec();
     }
 
     /// Try to use the default cache path.

@@ -6,7 +6,7 @@
 // Code mostly copied from Arti.
 
 use std::str::FromStr;
-use anyhow::{Context, Result, Error};
+use anyhow::{bail, Context, Result, Error};
 use serde::Deserialize;
 use tor_llcrypto::pk::rsa::RsaIdentity;
 use tor_netdoc::doc::authcert::{AuthCert, AuthCertKeyIds};
@@ -53,6 +53,10 @@ impl FromStr for Authority {
     fn from_str(authority_raw: &str) -> Result<Self, Self::Err> {
         // name, v3ident_raw
         let authority: Vec<&str> = authority_raw.split_whitespace().collect();
+
+        if authority.len() != 2 {
+            bail!("Invalid format for authority.");
+        }
 
         let name = authority[0];
         let v3ident_raw = authority[1];

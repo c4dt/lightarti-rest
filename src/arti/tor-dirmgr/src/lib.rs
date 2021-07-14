@@ -145,7 +145,10 @@ impl DirMgr {
     ///
     /// Return false if there is no such consensus.
     async fn load_directory(self: &Arc<Self>, docdir: &str) -> Result<bool> {
-        let state = state::GetConsensusState::new(Arc::downgrade(self), CacheUsage::CacheOnly)?;
+        let state = state::GetConsensusState::new(
+            Arc::downgrade(self),
+            CacheUsage::CacheOnly
+        ).context("Failed to create new GetConsensusState")?;
         let _ = bootstrap::load(Box::new(state), &docdir).await?;
 
         Ok(self.netdir.get().is_some())

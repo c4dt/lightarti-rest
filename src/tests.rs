@@ -1,5 +1,5 @@
-use std::fs::File;
-use std::io::Write;
+
+use std::fs::copy;
 use tempdir::TempDir;
 
 pub fn setup_tracing() {
@@ -17,28 +17,29 @@ pub fn setup_tracing() {
 pub fn setup_cache() -> TempDir {
     let tempdir = TempDir::new("tor-cache").expect("create temp dir");
 
-    let authority = include_str!("test-data/authority.txt");
-    let certificate = include_str!("test-data/certificate.txt");
-    let consensus = include_str!("test-data/consensus.txt");
-    let microdescriptors = include_str!("test-data/microdescriptors.txt");
+    copy(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/src/test-data/authority.txt"),
+        tempdir.path().join("authority.txt"),
+    )
+    .expect("copy temp authority file");
 
-    let authority_path = tempdir.path().join("authority.txt");
-    let mut authority_file = File::create(authority_path).expect("create temp authority file");
-    write!(authority_file, "{}", authority).expect("write temp authority file");
+    copy(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/src/test-data/certificate.txt"),
+        tempdir.path().join("certificate.txt"),
+    )
+    .expect("copy temp certificate file");
 
-    let certificate_path = tempdir.path().join("certificate.txt");
-    let mut certificate_file = File::create(certificate_path).expect("create temp certificate file");
-    write!(certificate_file, "{}", certificate).expect("write temp certificate file");
+    copy(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/src/test-data/consensus.txt"),
+        tempdir.path().join("consensus.txt"),
+    )
+    .expect("copy temp consensus file");
 
-    let consensus_path = tempdir.path().join("consensus.txt");
-    let mut consensus_file = File::create(consensus_path).expect("create temp consensus file");
-    write!(consensus_file, "{}", consensus).expect("write temp consensus file");
-
-    let microdescriptors_path = tempdir.path().join("microdescriptors.txt");
-    let mut microdescriptors_file =
-        File::create(microdescriptors_path).expect("create temp microdescriptors file");
-    write!(microdescriptors_file, "{}", microdescriptors)
-        .expect("write temp microdescriptors file");
+    copy(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/src/test-data/microdescriptors.txt"),
+        tempdir.path().join("microdescriptors.txt"),
+    )
+    .expect("copy temp microdescriptors file");
 
     tempdir
 }

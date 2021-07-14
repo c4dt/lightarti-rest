@@ -95,16 +95,14 @@ impl<DM: WriteNetDir> GetConsensusState<DM> {
     /// Create a new GetConsensusState from a weak reference to a
     /// directory manager and a `cache_usage` flag.
     pub(crate) fn new(writedir: Weak<DM>, cache_usage: CacheUsage) -> Result<Self> {
-        let authority_ids: Vec<_> = if let Some(writedir) = Weak::upgrade(&writedir) {
-            writedir
-                .config()
-                .authorities()
-                .iter()
-                .map(|auth| *auth.v3ident())
-                .collect()
-        } else {
-            return Err(Error::ManagerDropped.into());
-        };
+        let authority_ids: Vec<_> = Weak::upgrade(&writedir)
+            .context(Error::ManagerDropped)?
+            .config()
+            .authorities()
+            .iter()
+            .map(|auth| *auth.v3ident())
+            .collect();
+
         Ok(GetConsensusState {
             cache_usage,
             next: None,
@@ -297,7 +295,7 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
         Ok(Box::new(GetConsensusState::new(
             self.writedir,
             self.cache_usage,
-        )?))
+        ).context("Failed to create new GetConsensusState when resetting GetCertsState")?))
     }
 }
 
@@ -446,7 +444,7 @@ impl<DM: WriteNetDir> DirState for GetMicrodescsState<DM> {
         Ok(Box::new(GetConsensusState::new(
             self.writedir,
             CacheUsage::MustDownload,
-        )?))
+        ).context("Failed to create new GetConsensusState when resetting GetMicrodescsState")?))
     }
 }
 
