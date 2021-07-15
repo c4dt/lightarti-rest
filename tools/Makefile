@@ -9,15 +9,15 @@ directory-cache: pip_install check-password
 	mkdir -p $(DIR_CACHE)
 	mkdir -p $(AUTH_DIR)
 	./gen_fresh_dirinfo.py generate-certificate \
-	--authority-identity-key $(AUTH_DIR)/authority_identity_key \
-	--authority-signing-key $(AUTH_DIR)/authority_signing_key \
-	--authority-certificate $(DIR_CACHE)/certificate.txt \
-	--authority-v3ident $(DIR_CACHE)/authority.txt
+		--authority-identity-key $(AUTH_DIR)/authority_identity_key \
+		--authority-signing-key $(AUTH_DIR)/authority_signing_key \
+		--authority-certificate $(DIR_CACHE)/certificate.txt \
+		--authority-v3ident $(DIR_CACHE)/authority.txt
 	./gen_fresh_dirinfo.py generate-dirinfo \
-	--authority-signing-key $(AUTH_DIR)/authority_signing_key \
-	--authority-certificate $(DIR_CACHE)/certificate.txt \
-	--consensus $(DIR_CACHE)/consensus.txt \
-	--microdescriptors $(DIR_CACHE)/microdescriptors.txt
+		--authority-signing-key $(AUTH_DIR)/authority_signing_key \
+		--authority-certificate $(DIR_CACHE)/certificate.txt \
+		--consensus $(DIR_CACHE)/consensus.txt \
+		--microdescriptors $(DIR_CACHE)/microdescriptors.txt
 
 pip_install: requirements.txt
 	pip3 install -qr requirements.txt
