@@ -23,7 +23,7 @@ for arch in $ARCHS; do
 	cargo build --target $arch $MODEFLAG
 	tdir=../target/$arch/$MODE
   mkdir -p $tdir/headers
-	cp arti-rest.h arti-rest.modulemap $tdir/headers
+	cp arti-rest.h module.modulemap $tdir/headers
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -library $tdir/libcore.a"
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $tdir/headers/"
 done
