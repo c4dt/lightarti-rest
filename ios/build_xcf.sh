@@ -20,12 +20,14 @@ if [ "$1" = dev ]; then
 fi
 
 for arch in $ARCHS; do
-	cargo build --target $arch $MODEFLAG
-	tdir=../target/$arch/$MODE
-  mkdir -p $tdir/headers
-	cp arti-rest.h module.modulemap $tdir/headers
+  cargo build --target $arch $MODEFLAG
+  tdir=../target/$arch/$MODE
+  hdir=$tdir/arti-rest
+  rm -rf $hdir
+  mkdir -p $hdir
+  cp arti-rest.h module.modulemap $hdir
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -library $tdir/libcore.a"
-  XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $tdir/headers/"
+  XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $hdir"
 done
 
 XCFFILE=arti-rest.xcframework
