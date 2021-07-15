@@ -814,8 +814,8 @@ def generate_certificate(namespace: Namespace) -> None:
     authority_name: Path = namespace.authority_name
     certificate_lifetime: int = namespace.certificate_lifetime
 
-    create_new_identity = !authority_identity_key_path.exists()
-    reuse_signing_key = !create_new_identity and authority_signing_key_path.exists()
+    create_new_identity = not authority_identity_key_path.exists()
+    reuse_signing_key = not create_new_identity and authority_signing_key_path.exists()
 
     call_tor_gencert(
         password.encode("utf-8"),
