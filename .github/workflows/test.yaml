@@ -11,8 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Tor
-        run: |
-          sudo apt-get install -y tor
+        run: sudo apt-get install -y tor
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7
