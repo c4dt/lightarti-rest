@@ -45,11 +45,19 @@ we decided to have both Android and iOS in a separate repository:
 You can have a look at these repositories for further instructions how to use the
 library.
 
+### Test apps
+
+The Android test app is in the `arti-android` repository.
+For the iOS test app, see here:
+[arti-ios-test](https://github.com/c4dt/arti-ios-test)
+
+
 ## Roadmap:
 
 - v0.1 - Simple GET request and reply using TLS - done
 - v0.2 - Optimized setting up of the Tor circuit - first version done
-- v0.3 - Configure arti-rest to either use standard tor, or a pre-configured circuit
+- v0.3 - Add certificate configurations to the tor-cache directory   
+- v0.4 - Configure arti-rest to either use standard tor, or a pre-configured circuit
 - v1.0 - Once arti is deemed stable enough, and other people have looked and used this code
 
 ## Directories

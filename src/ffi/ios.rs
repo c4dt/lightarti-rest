@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::path::PathBuf;
+use std::panic;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use core_foundation::{
     base::TCFType,
     string::{CFString, CFStringRef},
@@ -11,7 +12,7 @@ use http::header::HeaderName;
 use http::{HeaderValue, Method, Request};
 use libc::c_char;
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::debug;
 use url::Url;
 
 use crate::client::Client;
@@ -76,22 +77,24 @@ pub unsafe extern "C" fn call_arti(request_json: *const c_char) -> CFStringRef {
 }
 
 fn _call_arti(request_json: &str) -> Result<Response> {
-    let request: ArtiRequest =
-        serde_json::from_str(request_json).context("parse request as JSON")?;
-    info!("JSON-Request is: {:?}", request);
+    panic::catch_unwind(|| {
+        let request: ArtiRequest =
+            serde_json::from_str(request_json).context("parse request as JSON")?;
+        debug!("JSON-Request is: {:?}", request);
 
-    // TODO avoid binding field to struct to avoid copying around
-    let cache_dir = PathBuf::from(request.cache_dir.clone());
+        // TODO avoid binding field to struct to avoid copying around
+        let cache_dir = PathBuf::from(request.cache_dir.clone());
 
-    let req = request
-        .try_into()
-        .context("convert request to http::Request")?;
-    info!("Parsed request is: {:?}", req);
+        let req = request
+            .try_into()
+            .context("convert request to http::Request")?;
+        debug!("Parsed request is: {:?}", req);
 
-    let resp = Client::new(cache_dir).send(req).context("send request")?;
-
-    resp.try_into()
-        .context("convert http::Response to response")
+        let resp = Client::new(cache_dir).send(req).context("send request")?;
+        resp.try_into()
+            .context("convert http::Response to response")
+    })
+        .unwrap_or_else(|e| Err(anyhow!("caught panic: {:?}", e)))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
