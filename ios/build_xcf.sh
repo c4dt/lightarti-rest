@@ -22,10 +22,11 @@ fi
 for arch in $ARCHS; do
 	cargo build --target $arch $MODEFLAG
 	tdir=../target/$arch/$MODE
-  mkdir -p $tdir/headers
-	cp arti-rest.h module.modulemap $tdir/headers
+  rm -rf $tdir/headers
+  mkdir -p $tdir/headers/arti-rest
+	cp arti-rest.h module.modulemap $tdir/headers/arti-rest
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -library $tdir/libcore.a"
-  XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $tdir/headers/"
+  XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $tdir/headers/arti-rest"
 done
 
 XCFFILE=arti-rest.xcframework

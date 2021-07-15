@@ -31,6 +31,8 @@ jobs:
           target: aarch64-apple-ios
 
       - name: Build XCFramework
+        env:
+          CARGO_INCREMENTAL: 1
         run: |
           make build-ios
           shasum -a 256 arti-rest.xcframework.zip >> ios/body.md
