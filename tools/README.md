@@ -1,21 +1,133 @@
 # Tools for arti-cache
 
-This directory allows to set up a cached version of the most reliable
-tor-nodes for faster circuit setup.
-You will have to let this run on a regular basis on a trusted server.
+## Overview
+
+To send some data anonymously over the network, Arti-rest rely on a
+subset of relays of the Tor network.
+
+This script allows to set up a snapshot of the most reliable Tor relays
+for faster circuit setup.
+
+You will have to create a custom directory authority, and to periodically
+run this script on a trusted server.
+
 Then the app will have to download the files, put them in a directory,
 and send the path to this directory to the library.
 
-Currently, you have to do the following:
+## Requirements
 
-To create the relevant files, you need to do the following:
+This script requires requires Python 3 (version >= 3.7), as well as
+the libraries Stem (version >= 1.8.0), PyCryptodome
+(version >= 3.10.1), and Cryptography.
 
-1. Copy the `authority_``{certificate,identity_key,signing_key}` in the `tools/`-directory
-2. run `make` in the `tools`-directory
-3. include the `directory-cache` directory into the assets of your app
-4. Pass the path to the `directory-cache` in the `cache_dir` argument 
+It is advised to install the required libraries with `pip`:
 
-## TODO
+```
+pip install -r requirements.txt
+```
 
-- [make custom directory authority configurable](https://github.com/c4dt/arti-rest/issues/41)
-- [add scripts to repo](https://github.com/c4dt/arti-rest/issues/39)
+Also, to create the directory authority's certificate, this script rely
+on the program `tor-gencert` that you will have to install on your
+machine. For a debian based distribution, this program is usually
+installed by the package `tor`:
+
+```
+sudo apt-get install tor
+```
+
+## Generating Directory Info
+
+We provide a Makefile allowing you to generate all the files you need
+for running Arti-rest, but you still need to setup a password to encrypt
+some private data of the custom authority via an environment variable:
+
+```
+export DIR_AUTH_PASSWORD='dummypassword'
+make
+```
+
+We configured it to place the files required by Arti-rest in the
+sub-directory `directory-cache`, and the private data of the custom
+directory authority in the sub-directory `authority-private`.
+
+Once the data generated, you can use the subdirectory `directory-cache`
+as the `cache_dir` argument.
+
+### Custom Directory Authority
+
+As the directory information needs to be signed, you will need to
+create a custom directory authority with a valid certificate. The
+script can generate a custom directory authority with a valid
+certificate by using its `generate-certificate` sub-command.
+
+This step is required, but you only need to do it to create the
+custom directory authority and when renewing its certificate.
+
+As `tor-gencert` requires the identity key of the directory
+authority to be encrypted, you need to pass a password to the script
+via an environment variable.
+
+```
+export DIR_AUTH_PASSWORD='dummypassword'
+```
+
+Then you can call the script.
+
+```
+python3 gen_fresh_dirinfo.py generate-certificate \
+  --authority-identity-key authority_identity_key \
+  --authority-signing-key authority_signing_key \
+  --authority-certificate certificate.txt \
+  --authority-v3ident authority.txt \
+  --authority-name spring \
+  --certificate-lifetime 12
+```
+
+Which creates 4 files:
+
+- The identity key of the authority which you should keep private in a
+  secure location.
+- The signing key of the authority which you should keep private and
+  that you will need for generating the directory information.
+- The certificate of the authority which you will need for generating
+  the directory information and which you will need to provide to the
+  Arti-rest library.
+- A small file containing the v3ident identifier of the authority which
+  you will need to provide to the Arti-rest library.
+
+
+### Generate Directory Information
+
+To generate the directory information, you will need to run the
+`generate-dirinfo` sub-command this script regularly on a trusted
+server.
+
+```
+python3 gen_fresh_dirinfo.py generate-dirinfo \
+  --authority-signing-key authority_signing_key \
+  --authority-name spring \
+  --authority-contact 'SPRING Lab at EPFL' \
+  --authority-certificate certificate.txt \
+  --consensus consensus.txt \
+  --consensus-lifetime 7 \
+  --microdescriptors microdescriptors.txt \
+  --number-routers 120
+```
+
+This sub-command effectively create a snapshot of the most
+reliable advertised relays in the Tor network in the form of two files:
+
+- A customized consensus containing metadata related to a subset of
+  routers present in the Tor network.
+- A file containing a list of microdescriptors, each router described
+  in the consensus is described by one microdescriptor.
+
+
+## Generate Churn (Incomplete)
+
+To improve the reliability of the subset of the Tor network Arti-rest
+rely upon to build a circuit, we are providing a way to compute a list
+of no-longer working relays.
+
+This is a work in progress, currently Arti-rest is not able to handle
+this list.
