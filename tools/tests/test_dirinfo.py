@@ -193,7 +193,7 @@ def test_fetch_authorities(authorities):
     """
     Test fetching directory authorities information.
     """
-    assert len(authorities) == 9
+    assert len(authorities) >= 5
 
     for auth in authorities.values():
         assert isinstance(auth, Authority)
@@ -204,7 +204,7 @@ def test_fetch_certificates(certificates):
     """
     Test fetching certificates of directory authorities works.
     """
-    assert len(certificates) == 9
+    assert len(certificates) >= 5
 
     for cert in certificates:
         assert isinstance(cert, KeyCertificate)
