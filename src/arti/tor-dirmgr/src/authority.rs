@@ -55,7 +55,7 @@ impl FromStr for Authority {
         let authority: Vec<&str> = authority_raw.split_whitespace().collect();
 
         if authority.len() != 2 {
-            bail!("Invalid format for authority.");
+            bail!(format!("Invalid format for authority, expected 2 elements, found {}.", authority.len()));
         }
 
         let name = authority[0];

@@ -26,7 +26,6 @@ use tor_netdir::{MdReceiver, NetDir, PartialNetDir};
 use tor_netdoc::doc::netstatus::Lifetime;
 
 use crate::{
-    //authority::default_authorities,
     docmeta::ConsensusMeta, shared_ref::SharedMutArc, CacheUsage,
     DirState, DocId, Error, NetDirConfig, Result,
 };
