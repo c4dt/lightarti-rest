@@ -1,11 +1,12 @@
-.PHONY: check-password
+.PHONY: certificate dirinfo check-password
 
 AUTH_DIR=authority-private
 DIR_CACHE=directory-cache
 
-all: directory-cache
+all: dirinfo
 
-directory-cache: pip_install authority-private
+certificate: pip_install check-password
+	mkdir -p $(AUTH_DIR)
 	mkdir -p $(DIR_CACHE)
 	./gen_fresh_dirinfo.py generate-certificate \
 		--authority-identity-key $(AUTH_DIR)/authority_identity_key \
@@ -13,8 +14,11 @@ directory-cache: pip_install authority-private
 		--authority-certificate $(DIR_CACHE)/certificate.txt \
 		--authority-v3ident $(DIR_CACHE)/authority.txt
 
-authority-private: check-password
-	mkdir -p $(AUTH_DIR)
+dirinfo: pip_install
+ifeq ("$(wildcard $(AUTH_DIR))","")
+	$(error "Please generate a certificate first with 'make certificate'")
+endif
+	mkdir -p $(DIR_CACHE)
 	./gen_fresh_dirinfo.py generate-dirinfo \
 		--authority-signing-key $(AUTH_DIR)/authority_signing_key \
 		--authority-certificate $(DIR_CACHE)/certificate.txt \
@@ -27,5 +31,5 @@ pip_install: requirements.txt
 
 check-password:
 ifeq ($(DIR_AUTH_PASSWORD), )
-	$(error environment variable DIR_AUTH_PASSWORD is undefined or invalid)
+	$(error Environment variable DIR_AUTH_PASSWORD is undefined or invalid.)
 endif

@@ -38,12 +38,19 @@ sudo apt-get install tor
 ## Generating Directory Info
 
 We provide a Makefile allowing you to generate all the files you need
-for running Arti-rest, but you still need to setup a password to encrypt
-some private data of the custom authority via an environment variable:
+for running Arti-rest. First you will need to set a password to encrypt
+some private data of the custom authority via an environment variable,
+then create the authority and its certificate:
 
 ```
 export DIR_AUTH_PASSWORD='dummypassword'
-make
+make certificate
+```
+
+Then you will have to create the fresh directory info.
+
+```
+make dirinfo
 ```
 
 We configured it to place the files required by Arti-rest in the
@@ -96,6 +103,9 @@ Which creates 4 files:
 - A small file containing the v3ident identifier of the authority which
   you will need to provide to the Arti-rest library. (default:
   `authority.txt`)
+
+**Note:** If the files already exist when running the script, it will
+renew the certificate instead of regenerating a new identity key.
 
 
 ### Generate Directory Information

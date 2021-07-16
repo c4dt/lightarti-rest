@@ -24,7 +24,9 @@ jobs:
         working-directory: ./tools
         env:
           DIR_AUTH_PASSWORD: dummy
-        run: make
+        run: |
+          make certificate
+          make dirinfo
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
