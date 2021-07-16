@@ -25,5 +25,5 @@ pip_install: requirements.txt
 
 check-password:
 ifeq ($(DIR_AUTH_PASSWORD), )
-	$(error environment variable DIR_AUTH_PASSWORD is undefined or invalid); fi
+	$(error environment variable DIR_AUTH_PASSWORD is undefined or invalid)
 endif

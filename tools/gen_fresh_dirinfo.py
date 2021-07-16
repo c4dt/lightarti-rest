@@ -680,7 +680,7 @@ def generate_signed_consensus(
         authority_dirport: int,
         authority_orport: int,
         authority_contact: str,
-        consensus_lifetime: int
+        consensus_validity_days: int
     ) -> bytes:
     """
     Generate a consensus with a custom set of routers, signed by a custom authority.
@@ -693,14 +693,14 @@ def generate_signed_consensus(
     :param authority_addresses: IP addresses of the authority
     :param authority_ports: OR port and DIR port of the authority
     :param authority_contact: contact info of the authority
-    :param consensus_lifetime: lifetime of the consensus in days
+    :param consensus_validity_days: lifetime of the consensus in days
     :return: signed consensus with a subset of the routers
     """
 
     # Prepare the header of the consensus with corrected lifetime.
     valid_after = consensus.valid_after
-    fresh_until = valid_after + timedelta(days=consensus_lifetime)
-    valid_until = fresh_until + timedelta(days=consensus_lifetime)
+    fresh_until = valid_after + timedelta(days=consensus_validity_days)
+    valid_until = fresh_until + timedelta(days=consensus_validity_days)
     header = CONSENSUS_HEADER_FMT.format(
         valid_after=valid_after.strftime(CONSENSUS_TIME_FORMAT),
         fresh_until=fresh_until.strftime(CONSENSUS_TIME_FORMAT),
@@ -812,7 +812,7 @@ def generate_certificate(namespace: Namespace) -> None:
     authority_certificate_path: Path = namespace.authority_certificate
     authority_v3ident_path: Path = namespace.authority_v3ident
     authority_name: Path = namespace.authority_name
-    certificate_lifetime: int = namespace.certificate_lifetime
+    certificate_validity_months: int = namespace.certificate_validity_months
 
     create_new_identity = not authority_identity_key_path.exists()
     reuse_signing_key = not create_new_identity and authority_signing_key_path.exists()
@@ -824,7 +824,7 @@ def generate_certificate(namespace: Namespace) -> None:
         authority_identity_key_path,
         authority_signing_key_path,
         authority_certificate_path,
-        certificate_lifetime,
+        certificate_validity_months,
     )
 
     authority_certificate_raw = authority_certificate_path.read_bytes()
@@ -894,7 +894,7 @@ def generate_customized_consensus(namespace: Namespace) -> None:
         namespace.authority_dirport,
         namespace.authority_orport,
         namespace.authority_contact,
-        namespace.consensus_lifetime
+        namespace.consensus_validity_days
     )
 
     our_consensus = NetworkStatusDocumentV3(consensus)
@@ -995,7 +995,7 @@ def main(program: str, arguments: List[str]) -> None:
 
     parser_certificate.add_argument(
         "-m",
-        "--certificate-lifetime",
+        "--certificate-validity-months",
         help="Number of months that the certificate should be valid.",
         type=int,
         default=12
@@ -1058,8 +1058,8 @@ def main(program: str, arguments: List[str]) -> None:
         default="consensus.txt"
     )
     parser_dirinfo.add_argument(
-        "--consensus-lifetime",
-        help="Lifetime of the consensus in days.",
+        "--consensus-validity-days",
+        help="Number of days that the consensus should be valid.",
         type=int,
         default=7
     )
