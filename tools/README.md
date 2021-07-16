@@ -2,7 +2,7 @@
 
 ## Overview
 
-To send some data anonymously over the network, Arti-rest rely on a
+To send some data anonymously over the network, Arti-rest relies on a
 subset of relays of the Tor network.
 
 This script allows to set up a snapshot of the most reliable Tor relays
@@ -16,7 +16,7 @@ and send the path to this directory to the library.
 
 ## Requirements
 
-This script requires requires Python 3 (version >= 3.7), as well as
+This script requires Python 3 (version >= 3.7), as well as
 the libraries Stem (version >= 1.8.0), PyCryptodome
 (version >= 3.10.1), and Cryptography.
 
@@ -26,9 +26,9 @@ It is advised to install the required libraries with `pip`:
 pip install -r requirements.txt
 ```
 
-Also, to create the directory authority's certificate, this script rely
-on the program `tor-gencert` that you will have to install on your
-machine. For a debian based distribution, this program is usually
+Also, to create the directory authority's certificate, this script
+relies on the program `tor-gencert` that you will have to install on
+your machine. For a debian based distribution, this program is usually
 installed by the package `tor`:
 
 ```
@@ -50,15 +50,15 @@ We configured it to place the files required by Arti-rest in the
 sub-directory `directory-cache`, and the private data of the custom
 directory authority in the sub-directory `authority-private`.
 
-Once the data generated, you can use the subdirectory `directory-cache`
+Once the data is generated, you can use the subdirectory `directory-cache`
 as the `cache_dir` argument.
 
 ### Custom Directory Authority
 
 As the directory information needs to be signed, you will need to
 create a custom directory authority with a valid certificate. The
-script can generate a custom directory authority with a valid
-certificate by using its `generate-certificate` sub-command.
+script can generate it by using its `generate-certificate`
+sub-command.
 
 This step is required, but you only need to do it to create the
 custom directory authority and when renewing its certificate.
@@ -86,20 +86,22 @@ python3 gen_fresh_dirinfo.py generate-certificate \
 Which creates 4 files:
 
 - The identity key of the authority which you should keep private in a
-  secure location.
+  secure location. (default: `authority_identity_key`)
 - The signing key of the authority which you should keep private and
   that you will need for generating the directory information.
+  (default: `authority_signing_key`)
 - The certificate of the authority which you will need for generating
   the directory information and which you will need to provide to the
-  Arti-rest library.
+  Arti-rest library. (default: `certificate.txt`)
 - A small file containing the v3ident identifier of the authority which
-  you will need to provide to the Arti-rest library.
+  you will need to provide to the Arti-rest library. (default:
+  `authority.txt`)
 
 
 ### Generate Directory Information
 
 To generate the directory information, you will need to run the
-`generate-dirinfo` sub-command this script regularly on a trusted
+`generate-dirinfo` sub-command of this script regularly on a trusted
 server.
 
 ```
@@ -114,20 +116,21 @@ python3 gen_fresh_dirinfo.py generate-dirinfo \
   --number-routers 120
 ```
 
-This sub-command effectively create a snapshot of the most
+This sub-command effectively creates a snapshot of the most
 reliable advertised relays in the Tor network in the form of two files:
 
 - A customized consensus containing metadata related to a subset of
-  routers present in the Tor network.
+  routers present in the Tor network. (default: `consensus.txt`)
 - A file containing a list of microdescriptors, each router described
-  in the consensus is described by one microdescriptor.
+  in the consensus is described by one microdescriptor. (default:
+  `microdescriptors.txt`)
 
 
 ## Generate Churn (Incomplete)
 
-To improve the reliability of the subset of the Tor network Arti-rest
-rely upon to build a circuit, we are providing a way to compute a list
-of no-longer working relays.
+To improve the reliability of the subset of the Tor network upon which
+Arti-rest relies to build a circuit, we are providing a way to compute
+a list of no-longer working relays.
 
 This is a work in progress, currently Arti-rest is not able to handle
 this list.

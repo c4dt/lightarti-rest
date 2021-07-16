@@ -978,7 +978,7 @@ def main(program: str, arguments: List[str]) -> None:
         "--authority-certificate",
         help="Certificate of the directory authority used to verify the consensus.",
         type=Path,
-        default="authority_certificate"
+        default="certificate.txt"
     )
     parser_certificate.add_argument(
         "--authority-v3ident",
@@ -1012,7 +1012,7 @@ def main(program: str, arguments: List[str]) -> None:
         "--authority-certificate",
         help="Certificate of the directory authority used to verify the consensus.",
         type=Path,
-        default="authority_certificate"
+        default="certificate.txt"
     )
     parser_dirinfo.add_argument(
         "--authority-name",

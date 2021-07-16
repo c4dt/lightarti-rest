@@ -5,14 +5,16 @@ DIR_CACHE=directory-cache
 
 all: directory-cache
 
-directory-cache: pip_install check-password
+directory-cache: pip_install authority-private
 	mkdir -p $(DIR_CACHE)
-	mkdir -p $(AUTH_DIR)
 	./gen_fresh_dirinfo.py generate-certificate \
 		--authority-identity-key $(AUTH_DIR)/authority_identity_key \
 		--authority-signing-key $(AUTH_DIR)/authority_signing_key \
 		--authority-certificate $(DIR_CACHE)/certificate.txt \
 		--authority-v3ident $(DIR_CACHE)/authority.txt
+
+authority-private: check-password
+	mkdir -p $(AUTH_DIR)
 	./gen_fresh_dirinfo.py generate-dirinfo \
 		--authority-signing-key $(AUTH_DIR)/authority_signing_key \
 		--authority-certificate $(DIR_CACHE)/certificate.txt \
