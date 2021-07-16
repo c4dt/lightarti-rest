@@ -12,7 +12,7 @@
 
 // Code mostly copied from Arti.
 
-use ::std::fs;
+use std::fs;
 use anyhow::Context;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -26,7 +26,7 @@ use tor_netdir::{MdReceiver, NetDir, PartialNetDir};
 use tor_netdoc::doc::netstatus::Lifetime;
 
 use crate::{
-    authority::default_authorities, docmeta::ConsensusMeta, shared_ref::SharedMutArc, CacheUsage,
+    docmeta::ConsensusMeta, shared_ref::SharedMutArc, CacheUsage,
     DirState, DocId, Error, NetDirConfig, Result,
 };
 use tor_checkable::{ExternallySigned, SelfSigned, Timebound};
@@ -43,9 +43,6 @@ use tor_netdoc::{
     },
     AllowAnnotations,
 };
-
-/// Certificates of the authorities.
-static OUR_CERTIFICATE: &str = include_str!("certificate.in");
 
 /// An object where we can put a usable netdir.
 ///
@@ -96,18 +93,21 @@ pub(crate) struct GetConsensusState<DM: WriteNetDir> {
 impl<DM: WriteNetDir> GetConsensusState<DM> {
     /// Create a new GetConsensusState from a weak reference to a
     /// directory manager and a `cache_usage` flag.
-    pub(crate) fn new(writedir: Weak<DM>, cache_usage: CacheUsage) -> Self {
-        let authority_ids: Vec<_> = default_authorities()
+    pub(crate) fn new(writedir: Weak<DM>, cache_usage: CacheUsage) -> Result<Self> {
+        let authority_ids: Vec<_> = Weak::upgrade(&writedir)
+            .context(Error::ManagerDropped)?
+            .config()
+            .authorities()
             .iter()
             .map(|auth| *auth.v3ident())
             .collect();
 
-        GetConsensusState {
+        Ok(GetConsensusState {
             cache_usage,
             next: None,
             authority_ids,
             writedir,
-        }
+        })
     }
 }
 
@@ -262,10 +262,12 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
     fn can_advance(&self) -> bool {
         self.unvalidated.key_is_correct(&self.certs[..]).is_ok()
     }
-    fn add_from_cache(&mut self, _docdir: &str) -> Result<bool> {
+    fn add_from_cache(&mut self, docdir: &str) -> Result<bool> {
         let mut changed = false;
-        // static data for certificates
-        let parsed = AuthCert::parse(OUR_CERTIFICATE)?.check_signature()?;
+        // side-loaded data
+        let certificate_path = format!("{}/certificate.txt", docdir);
+        let certificate = fs::read_to_string(certificate_path).context("Failed to read the certificate.")?;
+        let parsed = AuthCert::parse(certificate.as_str())?.check_signature()?;
         if let Ok(cert) = parsed.check_valid_now() {
             self.missing_certs.remove(cert.key_ids());
             self.certs.push(cert);
@@ -292,7 +294,7 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
         Ok(Box::new(GetConsensusState::new(
             self.writedir,
             self.cache_usage,
-        )))
+        ).context("Failed to create new GetConsensusState when resetting GetCertsState")?))
     }
 }
 
@@ -441,7 +443,7 @@ impl<DM: WriteNetDir> DirState for GetMicrodescsState<DM> {
         Ok(Box::new(GetConsensusState::new(
             self.writedir,
             CacheUsage::MustDownload,
-        )))
+        ).context("Failed to create new GetConsensusState when resetting GetMicrodescsState")?))
     }
 }
 

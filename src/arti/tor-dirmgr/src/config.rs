@@ -190,6 +190,11 @@ impl NetDirConfigBuilder {
         self.cache_path = Some(path.to_path_buf());
     }
 
+    /// Set directory authorities.
+    pub fn set_authorities(&mut self, authorities: &[Authority]) {
+        self.network.authority = authorities.to_vec();
+    }
+
     /// Try to use the default cache path.
     ///
     /// This will be ~/.cache/arti on unix, and in other suitable

@@ -1,9 +1,10 @@
-use std::path::Path;
+use std::{fs, path::Path, str::FromStr};
 
 use anyhow::{anyhow, Context, Result};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
 use tor_rtcompat::{Runtime, SpawnBlocking};
+use tor_dirmgr::Authority;
 use tracing::{debug, trace};
 
 use crate::arti::client::TorClient;
@@ -26,12 +27,20 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
     let runtime = tor_rtcompat::create_runtime().context("create tor runtime")?;
     runtime.block_on(async {
         let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
+        let cache_str = cache.to_str().context("cache as string")?;
+
+        let authority_path = format!("{}/authority.txt", cache_str);
+        let authority_raw = fs::read_to_string(authority_path).context("Failed to read authority.")?;
+        let authority = Authority::from_str(authority_raw.as_str()).context("Failed to parse authority.")?;
+        let authority_vec: Vec<Authority> = vec![authority];
+
         dircfg.set_cache_path(cache);
+        dircfg.set_authorities(&authority_vec);
 
         let tor_client = TorClient::bootstrap(
             runtime.clone(),
             dircfg.finalize().context("netdir finalize")?,
-            cache.to_str().context("cache as string")?,
+            cache_str,
         )
         .await
         .context("bootstrap tor client")?;

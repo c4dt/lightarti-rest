@@ -1,5 +1,5 @@
-use std::fs::File;
-use std::io::Write;
+
+use std::{fs::copy, path::Path};
 use tempdir::TempDir;
 
 pub fn setup_tracing() {
@@ -15,20 +15,34 @@ pub fn setup_tracing() {
 }
 
 pub fn setup_cache() -> TempDir {
+    let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tools")
+        .join("directory-cache");
     let tempdir = TempDir::new("tor-cache").expect("create temp dir");
 
-    let consensus = include_str!("test-data/consensus.txt");
-    let microdescriptors = include_str!("test-data/microdescriptors.txt");
+    copy(
+        source.join("authority.txt"),
+        tempdir.path().join("authority.txt"),
+    )
+    .expect("copy temp authority file");
 
-    let consensus_path = tempdir.path().join("consensus.txt");
-    let mut consensus_file = File::create(consensus_path).expect("create temp consensus file");
-    write!(consensus_file, "{}", consensus).expect("write temp consensus file");
+    copy(
+        source.join("certificate.txt"),
+        tempdir.path().join("certificate.txt"),
+    )
+    .expect("copy temp certificate file");
 
-    let microdescriptors_path = tempdir.path().join("microdescriptors.txt");
-    let mut microdescriptors_file =
-        File::create(microdescriptors_path).expect("create temp microdescriptors file");
-    write!(microdescriptors_file, "{}", microdescriptors)
-        .expect("write temp microdescriptors file");
+    copy(
+        source.join("consensus.txt"),
+        tempdir.path().join("consensus.txt"),
+    )
+    .expect("copy temp consensus file");
+
+    copy(
+        source.join("microdescriptors.txt"),
+        tempdir.path().join("microdescriptors.txt"),
+    )
+    .expect("copy temp microdescriptors file");
 
     tempdir
 }

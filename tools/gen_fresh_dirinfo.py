@@ -7,7 +7,6 @@ Script to produce data to pass to Arti-rest.
 """
 
 import logging
-
 import re
 import sys
 
@@ -27,7 +26,13 @@ from hashlib import (
 from heapq import nlargest
 from math import ceil
 from itertools import zip_longest
+from os import environ
 from pathlib import Path
+from subprocess import (
+    Popen,
+    PIPE,
+    TimeoutExpired
+)
 from typing import (
     Dict,
     List,
@@ -56,6 +61,10 @@ from stem.descriptor.router_status_entry import RouterStatusEntryMicroV3
 from stem.directory import Authority
 from stem.exit_policy import MicroExitPolicy
 
+
+# Environment variable from which to retrieve the password to encrypt the identity key of the
+# custom directory authority.
+DIR_AUTH_PASSWORD_ENV = "DIR_AUTH_PASSWORD"
 
 # Time format used in the consensus.
 CONSENSUS_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -133,6 +142,12 @@ class InvalidVote(Exception):
     """
 
 
+class TorCertGenFailed(Exception):
+    """
+    The command tor-gencert failed.
+    """
+
+
 def setup_logger() -> logging.Logger:
     """
     Setup the logger.
@@ -172,7 +187,6 @@ def is_orport_used(router: RouterStatusEntryMicroV3, port: int) -> bool:
     return False
 
 
-
 def is_address_port_changed(
         addresses_ports_origin: List[Address],
         addresses_ports_new: List[Address]
@@ -193,6 +207,73 @@ def is_address_port_changed(
             return True
 
     return False
+
+
+def terminate_process(process: Popen) -> None:
+    """
+    Terminate a process in a clean way.
+
+    :param process: process to terminate
+    """
+    process.terminate()
+    try:
+        process.communicate(timeout=3)
+    except TimeoutExpired:
+        process.kill()
+
+
+def call_tor_gencert(
+        password: bytes,
+        create_new_identity: bool,
+        reuse_signing_key: bool,
+        identity_key_file: Path,
+        signing_key_file: str,
+        certificate_file: str,
+        lifetime_in_months: int,
+    ) -> None:
+    """
+    Call the tor-gencert command to generate key pairs and certificate.
+
+    :param password: the password to encrypt the identity key
+    :param create_new_identity: create a new identity key
+    :param reuse_signing_key: reuse an existing signing key
+    :param identity_key_file: file where to read or write the identity key
+    :param signing_key_file: file where to read or write the signing key
+    :param certificate_file: file where to write the certificate
+    :param lifetime_in_months: lifetime of the certificate in months
+    :raises TorCertGenFailed: The tor-gencert command failed.
+    """
+
+    args = [
+        "tor-gencert",
+        "-i", str(identity_key_file),
+        "-s", str(signing_key_file),
+        "-c", str(certificate_file),
+        "-m", f"{lifetime_in_months}",
+        "--passphrase-fd", "0"
+    ]
+
+    if create_new_identity:
+        args.append("--create-identity-key")
+
+    if reuse_signing_key:
+        args.append("--reuse")
+
+    process = Popen(args, stdin=PIPE)
+    try:
+        process.communicate(password, timeout=10)
+    except TimeoutExpired:
+        terminate_process(process)
+        raise TorCertGenFailed()
+
+    ret = process.poll()
+
+    if ret is None:
+        terminate_process(process)
+        ret = process.poll()
+
+    if ret != 0:
+        raise TorCertGenFailed()
 
 
 def fetch_authorities() -> Dict[str, Authority]:
@@ -599,7 +680,7 @@ def generate_signed_consensus(
         authority_dirport: int,
         authority_orport: int,
         authority_contact: str,
-        consensus_lifetime: int
+        consensus_validity_days: int
     ) -> bytes:
     """
     Generate a consensus with a custom set of routers, signed by a custom authority.
@@ -612,14 +693,14 @@ def generate_signed_consensus(
     :param authority_addresses: IP addresses of the authority
     :param authority_ports: OR port and DIR port of the authority
     :param authority_contact: contact info of the authority
-    :param consensus_lifetime: lifetime of the consensus in days
+    :param consensus_validity_days: lifetime of the consensus in days
     :return: signed consensus with a subset of the routers
     """
 
     # Prepare the header of the consensus with corrected lifetime.
     valid_after = consensus.valid_after
-    fresh_until = valid_after + timedelta(days=consensus_lifetime)
-    valid_until = fresh_until + timedelta(days=consensus_lifetime)
+    fresh_until = valid_after + timedelta(days=consensus_validity_days)
+    valid_until = fresh_until + timedelta(days=consensus_validity_days)
     header = CONSENSUS_HEADER_FMT.format(
         valid_after=valid_after.strftime(CONSENSUS_TIME_FORMAT),
         fresh_until=fresh_until.strftime(CONSENSUS_TIME_FORMAT),
@@ -715,6 +796,45 @@ def compute_churn(
     return churn
 
 
+
+def generate_certificate(namespace: Namespace) -> None:
+    """
+    Generate a certificate for a custom authority.
+
+    :param namespace: namespace containing parsed arguments.
+    """
+    password = environ.get(DIR_AUTH_PASSWORD_ENV, None)
+    if password is None:
+        raise Exception(f"No password provided as environment variable {DIR_AUTH_PASSWORD_ENV}.")
+
+    authority_identity_key_path: Path = namespace.authority_identity_key
+    authority_signing_key_path: Path = namespace.authority_signing_key
+    authority_certificate_path: Path = namespace.authority_certificate
+    authority_v3ident_path: Path = namespace.authority_v3ident
+    authority_name: Path = namespace.authority_name
+    certificate_validity_months: int = namespace.certificate_validity_months
+
+    create_new_identity = not authority_identity_key_path.exists()
+    reuse_signing_key = not create_new_identity and authority_signing_key_path.exists()
+
+    call_tor_gencert(
+        password.encode("utf-8"),
+        create_new_identity,
+        reuse_signing_key,
+        authority_identity_key_path,
+        authority_signing_key_path,
+        authority_certificate_path,
+        certificate_validity_months,
+    )
+
+    authority_certificate_raw = authority_certificate_path.read_bytes()
+    authority_certificate = KeyCertificate(authority_certificate_raw)
+
+    v3ident = f"{authority_name} {authority_certificate.fingerprint}".encode("ascii")
+
+    authority_v3ident_path.write_bytes(v3ident)
+
+
 def generate_customized_consensus(namespace: Namespace) -> None:
     """
     Generate a customized consensus from data retrieved from the Tor network authorities.
@@ -774,7 +894,7 @@ def generate_customized_consensus(namespace: Namespace) -> None:
         namespace.authority_dirport,
         namespace.authority_orport,
         namespace.authority_contact,
-        namespace.consensus_lifetime
+        namespace.consensus_validity_days
     )
 
     our_consensus = NetworkStatusDocumentV3(consensus)
@@ -830,6 +950,10 @@ def main(program: str, arguments: List[str]) -> None:
     parser = ArgumentParser(prog=program)
     subparsers = parser.add_subparsers(help="Command")
 
+    parser_certificate = subparsers.add_parser(
+        "generate-certificate", help="Generate the certificate of a custom authority."
+    )
+
     parser_dirinfo = subparsers.add_parser(
         "generate-dirinfo", help="Generate customized directory information."
     )
@@ -837,6 +961,46 @@ def main(program: str, arguments: List[str]) -> None:
     parser_churn = subparsers.add_parser(
         "compute-churn", help="Compute current churn in customized directory information."
     )
+
+    parser_certificate.add_argument(
+        "--authority-identity-key",
+        help="Signing key of the directory authority to sign the consensus.",
+        type=Path,
+        default="authority_identity_key"
+    )
+    parser_certificate.add_argument(
+        "--authority-signing-key",
+        help="Signing key of the directory authority to sign the consensus.",
+        type=Path,
+        default="authority_signing_key"
+    )
+    parser_certificate.add_argument(
+        "--authority-certificate",
+        help="Certificate of the directory authority used to verify the consensus.",
+        type=Path,
+        default="certificate.txt"
+    )
+    parser_certificate.add_argument(
+        "--authority-v3ident",
+        help="File containing nickname and v3ident of the authority.",
+        type=Path,
+        default="authority.txt"
+    )
+    parser_certificate.add_argument(
+        "--authority-name",
+        help="Name of the directory authority.",
+        type=str,
+        default="spring"
+    )
+    parser_certificate.add_argument(
+        "-m",
+        "--certificate-validity-months",
+        help="Number of months that the certificate should be valid.",
+        type=int,
+        default=12
+    )
+
+    parser_certificate.set_defaults(callback=generate_certificate)
 
     parser_dirinfo.add_argument(
         "--authority-signing-key",
@@ -848,7 +1012,7 @@ def main(program: str, arguments: List[str]) -> None:
         "--authority-certificate",
         help="Certificate of the directory authority used to verify the consensus.",
         type=Path,
-        default="authority_certificate"
+        default="certificate.txt"
     )
     parser_dirinfo.add_argument(
         "--authority-name",
@@ -893,8 +1057,8 @@ def main(program: str, arguments: List[str]) -> None:
         default="consensus.txt"
     )
     parser_dirinfo.add_argument(
-        "--consensus-lifetime",
-        help="Lifetime of the consensus in days.",
+        "--consensus-validity-days",
+        help="Number of days that the consensus should be valid.",
         type=int,
         default=7
     )
@@ -914,7 +1078,6 @@ def main(program: str, arguments: List[str]) -> None:
 
     parser_dirinfo.set_defaults(callback=generate_customized_consensus)
 
-
     parser_churn.add_argument(
         "--churn",
         help="File in which to write the computed churn.",
@@ -930,9 +1093,7 @@ def main(program: str, arguments: List[str]) -> None:
 
     parser_churn.set_defaults(callback=generate_churninfo)
 
-
     namespace = parser.parse_args(arguments)
-
 
     if "callback" in namespace:
         try:
