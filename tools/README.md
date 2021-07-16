@@ -80,7 +80,7 @@ python3 gen_fresh_dirinfo.py generate-certificate \
   --authority-certificate certificate.txt \
   --authority-v3ident authority.txt \
   --authority-name spring \
-  --certificate-lifetime 12
+  --certificate-validity-months 12
 ```
 
 Which creates 4 files:
@@ -109,7 +109,7 @@ python3 gen_fresh_dirinfo.py generate-dirinfo \
   --authority-contact 'SPRING Lab at EPFL' \
   --authority-certificate certificate.txt \
   --consensus consensus.txt \
-  --consensus-lifetime 7 \
+  --consensus-validity-days 7 \
   --microdescriptors microdescriptors.txt \
   --number-routers 120
 ```

@@ -992,7 +992,6 @@ def main(program: str, arguments: List[str]) -> None:
         type=str,
         default="spring"
     )
-
     parser_certificate.add_argument(
         "-m",
         "--certificate-validity-months",
