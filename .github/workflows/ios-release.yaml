@@ -40,12 +40,3 @@ jobs:
           artifacts: "arti-rest.xcframework.zip"
           bodyFile: "ios/body.md"
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: trigger
-        run: |
-          curl \
-            -u ${{ secrets.REPO_TOKEN_USER }}:${{ secrets.REPO_TOKEN }} \
-            -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/c4dt/arti-ios/dispatches \
-            -d '{"event_type":"update"}'
