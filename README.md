@@ -68,7 +68,7 @@ The patch version of the three will differ and reflect internal updates, with th
 following constraints:
 - `patch_version(arti_android) >= patch_version(arti_rest)`
 - `patch_version(arti_ios) >= patch_version(arti_rest)`
-- a new arti-rest patch version must be bigger than both the arti-android and
+- a new arti-rest patch version must be bigger than both the current arti-android and
 arti-ios patch version
 
 This allows us to quickly verify that a given library version has at least some patches
