@@ -29,3 +29,9 @@ check-password:
 ifeq ($(DIR_AUTH_PASSWORD), )
 	$(error Environment variable DIR_AUTH_PASSWORD is undefined or invalid.)
 endif
+
+secrets_authority: $(AUTH_DIR)
+	tar cjf auth.tgz $(AUTH_DIR) $(DIR_CACHE)/{certificate.txt,authority.txt}
+	base64 -i auth.tgz
+	rm auth.tgz
+	echo $$DIR_AUTH_PASSWORD
