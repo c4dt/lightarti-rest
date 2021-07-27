@@ -57,6 +57,23 @@ For the iOS test app, see here:
 - v0.4 - Configure arti-rest to either use standard tor, or a pre-configured circuit
 - v1.0 - Once arti is deemed stable enough, and other people have looked and used this code
 
+### Versioning
+
+The following repos follow the same versioning related to the major and minor version:
+- arti-rest
+- arti-android
+- arti-ios
+
+The patch version of the three will differ and reflect internal updates, with the
+following constraints:
+- `patch_version(arti_android) >= patch_version(arti_rest)`
+- `patch_version(arti_ios) >= patch_version(arti_rest)`
+- a new arti-rest patch version must be bigger than both the arti-android and
+arti-ios patch version
+
+This allows us to quickly verify that a given library version has at least some patches
+from the arti-rest code by simply looking at the version number.
+
 ## Directories
 
 - `./` is the rust library for the wrapper with arti
