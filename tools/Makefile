@@ -5,7 +5,7 @@ DIR_CACHE=directory-cache
 
 all: dirinfo
 
-certificate: pip_install check-password
+$(AUTH_DIR): pip_install check-password
 	mkdir -p $(AUTH_DIR)
 	mkdir -p $(DIR_CACHE)
 	./gen_fresh_dirinfo.py generate-certificate \
@@ -14,11 +14,7 @@ certificate: pip_install check-password
 		--authority-certificate $(DIR_CACHE)/certificate.txt \
 		--authority-v3ident $(DIR_CACHE)/authority.txt
 
-dirinfo: pip_install
-ifeq ("$(wildcard $(AUTH_DIR))","")
-	$(error "Please generate a certificate first with 'make certificate'")
-endif
-	mkdir -p $(DIR_CACHE)
+dirinfo: $(AUTH_DIR)
 	./gen_fresh_dirinfo.py generate-dirinfo \
 		--authority-signing-key $(AUTH_DIR)/authority_signing_key \
 		--authority-certificate $(DIR_CACHE)/certificate.txt \
