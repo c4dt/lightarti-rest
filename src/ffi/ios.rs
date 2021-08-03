@@ -158,6 +158,7 @@ fn setup_logger() {
     let subscriber = tracing_fmt::FmtSubscriber::builder()
         .with_max_level(tracing::Level::DEBUG)
         .with_writer(std::io::stderr)
+        .with_ansi(false)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
 }
