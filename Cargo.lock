@@ -104,40 +104,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
-name = "arti-rest"
-version = "0.1.0"
-dependencies = [
- "android_logger",
- "anyhow",
- "config",
- "core-foundation",
- "futures",
- "http",
- "httparse",
- "jni",
- "libc",
- "log",
- "log-panics",
- "openssl-sys",
- "rusqlite",
- "serde 1.0.126",
- "serde_json",
- "tempdir",
- "tokio",
- "tokio-native-tls",
- "tor-chanmgr",
- "tor-circmgr",
- "tor-config",
- "tor-dirmgr",
- "tor-proto",
- "tor-rtcompat",
- "tracing",
- "tracing-fmt",
- "tracing-log",
- "url",
-]
-
-[[package]]
 name = "async-compression"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -868,6 +834,40 @@ dependencies = [
  "cc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "lightarti-rest"
+version = "0.3.2"
+dependencies = [
+ "android_logger",
+ "anyhow",
+ "config",
+ "core-foundation",
+ "futures",
+ "http",
+ "httparse",
+ "jni",
+ "libc",
+ "log",
+ "log-panics",
+ "openssl-sys",
+ "rusqlite",
+ "serde 1.0.126",
+ "serde_json",
+ "tempdir",
+ "tokio",
+ "tokio-native-tls",
+ "tor-chanmgr",
+ "tor-circmgr",
+ "tor-config",
+ "tor-dirmgr",
+ "tor-proto",
+ "tor-rtcompat",
+ "tracing",
+ "tracing-fmt",
+ "tracing-log",
+ "url",
 ]
 
 [[package]]

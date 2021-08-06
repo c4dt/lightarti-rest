@@ -2,7 +2,7 @@
 
 ## Overview
 
-To send some data anonymously over the network, Arti-rest relies on a
+To send some data anonymously over the network, Lightarti-rest relies on a
 subset of relays of the Tor network.
 
 This script allows to set up a snapshot of the most reliable Tor relays
@@ -38,7 +38,7 @@ sudo apt-get install tor
 ## Generating Directory Info
 
 We provide a Makefile allowing you to generate all the files you need
-for running Arti-rest. First you will need to set a password to encrypt
+for running Lightarti-rest. First you will need to set a password to encrypt
 some private data of the custom authority via an environment variable,
 then create the authority and its certificate:
 
@@ -53,7 +53,7 @@ Then you will have to create the fresh directory info.
 make dirinfo
 ```
 
-We configured it to place the files required by Arti-rest in the
+We configured it to place the files required by Lightarti-rest in the
 sub-directory `directory-cache`, and the private data of the custom
 directory authority in the sub-directory `authority-private`.
 
@@ -99,9 +99,9 @@ Which creates 4 files:
   (default: `authority_signing_key`)
 - The certificate of the authority which you will need for generating
   the directory information and which you will need to provide to the
-  Arti-rest library. (default: `certificate.txt`)
+  Lightarti-rest library. (default: `certificate.txt`)
 - A small file containing the v3ident identifier of the authority which
-  you will need to provide to the Arti-rest library. (default:
+  you will need to provide to the Lightarti-rest library. (default:
   `authority.txt`)
 
 **Note:** If the files already exist when running the script, it will
@@ -139,8 +139,8 @@ reliable advertised relays in the Tor network in the form of two files:
 ## Generate Churn (Incomplete)
 
 To improve the reliability of the subset of the Tor network upon which
-Arti-rest relies to build a circuit, we are providing a way to compute
+Lightarti-rest relies to build a circuit, we are providing a way to compute
 a list of no-longer working relays.
 
-This is a work in progress, currently Arti-rest is not able to handle
+This is a work in progress, currently Lightarti-rest is not able to handle
 this list.

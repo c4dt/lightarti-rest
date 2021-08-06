@@ -1,6 +1,6 @@
 [package]
-name = "arti-rest"
-version = "0.1.0"
+name = "lightarti-rest"
+version = "0.3.2"
 authors = ["Linus Gasser <linus.gasser@epfl.ch>",
     "Laurent Girod <laurent.girod@epfl.ch>",
     "Christian Grigis <christian.grigis@epfl.ch>",

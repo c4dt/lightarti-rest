@@ -22,14 +22,14 @@ fi
 for arch in $ARCHS; do
   cargo build --target $arch $MODEFLAG
   tdir=../target/$arch/$MODE
-  hdir=$tdir/arti-rest
+  hdir=$tdir/lightarti-rest
   rm -rf $hdir
   mkdir -p $hdir
-  cp arti-rest.h module.modulemap $hdir
+  cp lightarti-rest.h module.modulemap $hdir
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -library $tdir/libcore.a"
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $hdir"
 done
 
-XCFFILE=arti-rest.xcframework
+XCFFILE=lightarti-rest.xcframework
 rm -rf $XCFFILE
 xcodebuild -create-xcframework $XCFRAMEWORK_ARGS -output $XCFFILE

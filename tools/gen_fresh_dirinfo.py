@@ -3,7 +3,7 @@
 # Copyright 2021 Laurent Girod (EPFL SPRING Lab)
 
 """
-Script to produce data to pass to Arti-rest.
+Script to produce data to pass to lightarti-rest.
 """
 
 import logging

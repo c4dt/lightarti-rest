@@ -33,10 +33,10 @@ jobs:
       - name: Build XCFramework
         run: |
           make build-ios
-          shasum -a 256 arti-rest.xcframework.zip >> ios/body.md
+          shasum -a 256 lightarti-rest.xcframework.zip >> ios/body.md
 
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "arti-rest.xcframework.zip"
+          artifacts: "lightarti-rest.xcframework.zip"
           bodyFile: "ios/body.md"
           token: ${{ secrets.GITHUB_TOKEN }}

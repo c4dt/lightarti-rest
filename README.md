@@ -1,23 +1,23 @@
-# Arti-rest
+# Lightarti-rest
 
 
-Arti-rest is a simple wrapper around [arti](https://gitlab.torproject.org/tpo/core/arti) that leverages arti to enable mobile apps to easily make anonymous REST requests via the Tor network. Arti-rest makes two changes on top of arti. First, arti-rest provides a simple wrapper for REST requests, to make calling HTTP(S) API endpoints easier. Second, arti-rest provides the option to use a customized, and therefore potentially much smaller, consensus. 
+lightarti-rest is a simple wrapper around [arti](https://gitlab.torproject.org/tpo/core/arti) that leverages arti to enable mobile apps to easily make anonymous REST requests via the Tor network. lightarti-rest makes two changes on top of arti. First, lightarti-rest provides a simple wrapper for REST requests, to make calling HTTP(S) API endpoints easier. Second, lightarti-rest provides the option to use a customized, and therefore potentially much smaller, consensus. 
 
-> :warning: **Warning: arti-rest is not secure in all situations** Arti-rest modifies several core parts of `arti`. These modifications result on arti-rest not providing the same guarantees than arti and the stock Tor client. You will have to verify on your own whether these weakened guarantees are acceptable in your situation. See the reliability section below to check what aspects of your system you need to consider to decide whether arti-rest is secure for you.
+> :warning: **Warning: lightarti-rest is not secure in all situations** lightarti-rest modifies several core parts of `arti`. These modifications result on lightarti-rest not providing the same guarantees than arti and the stock Tor client. You will have to verify on your own whether these weakened guarantees are acceptable in your situation. See the reliability section below to check what aspects of your system you need to consider to decide whether lightarti-rest is secure for you.
 
-Arti-rest is written in Rust and can therefore be compiled into native libraries that are easy to integrate into mobile applications. All credits for enabling this approach go to the authors of [arti](https://gitlab.torproject.org/tpo/core/arti). Using a native library ensures that arti-rest can be bundled with Android and iOS applications, rather than relying on external Tor proxies that must be installed separately.
+lightarti-rest is written in Rust and can therefore be compiled into native libraries that are easy to integrate into mobile applications. All credits for enabling this approach go to the authors of [arti](https://gitlab.torproject.org/tpo/core/arti). Using a native library ensures that lightarti-rest can be bundled with Android and iOS applications, rather than relying on external Tor proxies that must be installed separately.
 
-To facilitate integration in mobile applications, we provide the [arti-ios](https://github.com/c4dt/arti-ios) and [arti-android](https://github.com/c4dt/arti-android) libraries. The following graph shows how these libraries interact.
+To facilitate integration in mobile applications, we provide the [lightarti-rest-ios](https://github.com/c4dt/lightarti-rest-ios) and [lightarti-rest-android](https://github.com/c4dt/lightarti-rest-android) libraries. The following graph shows how these libraries interact.
 
 ```
-arti-ios   arti-android
-      I     I
-     arti-rest
-         I
-       arti
+lightarti-rest-ios   lightarti-rest-android
+         I                      I
+              lightarti-rest
+                    I
+                  arti
 ```
        
-`Arti-rest` provides a synchronous interface to send REST requests over Tor, and
+`lightarti-rest` provides a synchronous interface to send REST requests over Tor, and
 to receive the answers. It also does the TLS handling of the connection. The
 asynchronous part needs to be done by the Android and iOS library.
 
@@ -27,26 +27,26 @@ Even though we tried our best to produce good code, this should not be used in a
 mission critical piece of software without proper consideration of the following:
 
 - arti itself mentions it's not ready for prime-time since it does not implement all protections that the stock Tor client does. See their [README](https://gitlab.torproject.org/tpo/core/arti/-/blob/main/README.md) to check whether your application can be secure without those protections.
-- arti-rest uses a customized consensus to reduce bandwidth cost for infrequent use of arti-rest. As a result, the consensus is not signed by the default Tor directory authorities, but instead by the creator of the app. This approach in general is not secure. However, since the app developer already determines which code is loaded (and could therefore disable consensus validation altogether, or deanonymize users directly), it is likely acceptable in the case of mobile applications that directly include arti-rest. 
+- lightarti-rest uses a customized consensus to reduce bandwidth cost for infrequent use of lightarti-rest. As a result, the consensus is not signed by the default Tor directory authorities, but instead by the creator of the app. This approach in general is not secure. However, since the app developer already determines which code is loaded (and could therefore disable consensus validation altogether, or deanonymize users directly), it is likely acceptable in the case of mobile applications that directly include lightarti-rest. 
 
-In summary, you should only use `arti-rest` when you understand the differences between `arti` and `arti-rest` and Tor, and you are certain that the loss of protection with respect to Tor does not harm the security of your users. 
+In summary, you should only use `lightarti-rest` when you understand the differences between `arti` and `lightarti-rest` and Tor, and you are certain that the loss of protection with respect to Tor does not harm the security of your users. 
   
 ## Mobile Libraries
 
 Because iOS XCFrameworks and libraries need to reside in a separate GitHub repository,
 we decided to have both Android and iOS in a separate repository:
 
-- [Android](https://github.com/c4dt/arti-android)
-- [iOS](https://github.com/c4dt/arti-ios)
+- [Android](https://github.com/c4dt/lightarti-rest-android)
+- [iOS](https://github.com/c4dt/lightarti-rest-ios)
 
 You can have a look at these repositories for further instructions how to use the
 library.
 
 ### Test apps
 
-The Android test app is in the `arti-android` repository.
+The Android test app is in the `lightarti-rest-android` repository.
 For the iOS test app, see here:
-[arti-ios-test](https://github.com/c4dt/arti-ios-test)
+[lightarti-rest-ios-test](https://github.com/c4dt/lightarti-rest-ios-test)
 
 
 ## Roadmap:
@@ -54,30 +54,30 @@ For the iOS test app, see here:
 - v0.1 - Simple GET request and reply using TLS - done
 - v0.2 - Optimized setting up of the Tor circuit - first version done
 - v0.3 - Add certificate configurations to the tor-cache directory   
-- v0.4 - Configure arti-rest to either use standard tor, or a pre-configured circuit
+- v0.4 - Configure lightarti-rest to either use standard tor, or a pre-configured circuit
 - v1.0 - Once arti is deemed stable enough, and other people have looked and used this code
 
 ### Versioning
 
 The following repos follow the same versioning related to the major and minor version:
-- arti-rest
-- arti-android
-- arti-ios
+- lightarti-rest
+- lightarti-rest-android
+- lightarti-rest-ios
 
 The patch version of the three will differ and reflect internal updates, with the
 following constraints:
-- `patch_version(arti_android) >= patch_version(arti_rest)`
-- `patch_version(arti_ios) >= patch_version(arti_rest)`
-- a new arti-rest patch version must be bigger than both the current arti-android and
-arti-ios patch version
+- `patch_version(lightarti_rest_android) >= patch_version(lightarti_rest)`
+- `patch_version(lightarti_rest_ios) >= patch_version(lightarti_rest)`
+- a new lightarti-rest patch version must be bigger than both the current lightarti-rest-android and
+lightarti-rest-ios patch version
 
 This allows us to quickly verify that a given library version has at least some patches
-from the arti-rest code by simply looking at the version number.
+from the lightarti-rest code by simply looking at the version number.
 
 ## Directories
 
 - `./` is the rust library for the wrapper with arti
-- `./ios` holds scripts to create the `XCFramework` used in the `arti-ios`
+- `./ios` holds scripts to create the `XCFramework` used in the `lightarti-rest-ios`
 - `./tools` holds scripts to generate the files for the offline setup of the tor circuits
 
 # Pre-caching of Tor circuits

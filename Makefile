@@ -1,10 +1,10 @@
-arxc := arti-rest.xcframework
+arxc := lightarti-rest.xcframework
 arxcz := $(arxc).zip
 
 .PHONY: build-ios
 build-ios: $(arxcz)
 
-ios/$(arxc): $(wildcard src/*) ios/arti-rest.h ios/build_xcf.sh
+ios/$(arxc): $(wildcard src/*) ios/lightarti-rest.h ios/build_xcf.sh
 	( cd ios; ./build_xcf.sh )
 
 $(arxcz): ios/$(arxc)
@@ -15,9 +15,9 @@ $(arxcz): ios/$(arxc)
 dev:
 	perl -pi -e 's/lto = "fat"/lto = "thin"/' Cargo.toml
 	perl -pi -e 's/.*opt-level = "s"/#opt-level = "s"/' Cargo.toml
-	rm -rf ../arti-ios/arti-rest.xcframework
+	rm -rf ../lightarti-rest-ios/lightarti-rest.xcframework
 	cd ios && \
 	./build_xcf.sh dev && \
-	cp -av arti-rest.xcframework ../../arti-ios
+	cp -av lightarti-rest.xcframework ../../lightarti-rest-ios
 	perl -pi -e 's/lto = "thin"/lto = "fat"/' Cargo.toml
 	perl -pi -e 's/.*#opt-level = "s"/opt-level = "s"/' Cargo.toml
