@@ -1,3 +1,6 @@
+0.3.3 - 2021/08/06
+	* More renaming
+
 0.3.2 - 2021/08/06
 	* Rename to lightarti-rest
 

@@ -1,4 +1,4 @@
-module arti_rest {
+module lightarti_rest {
     header "lightarti-rest.h"
     export *
 }
