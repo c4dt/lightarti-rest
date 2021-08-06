@@ -82,7 +82,7 @@ from the lightarti-rest code by simply looking at the version number.
 
 # Pre-caching of Tor circuits
 
-This library has a [modified directory manager](./src/arti/tor-dirmgr) of arti that allows to 
+This library has a [modified directory manager](src/lightarti/tor-dirmgr) of arti that allows to 
 use pre-downloaded circuits.
 The idea is to download these circuits once per week, or once per month, and then being
 able to setup new circuits with these pre-downloaded circuits.

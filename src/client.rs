@@ -4,7 +4,7 @@ use anyhow::{bail, Context, Result};
 use http::{Request, Response};
 use tracing::trace;
 
-use crate::arti::tls_send;
+use crate::lightarti::tls_send;
 
 pub struct Client {
     cache: PathBuf,

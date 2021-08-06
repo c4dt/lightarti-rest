@@ -37,7 +37,7 @@ tracing-log = "0.1"
 tempdir = "0.3"
 
 [patch."https://gitlab.torproject.org/tpo/core/arti.git"]
-tor-dirmgr = { path = "./src/arti/tor-dirmgr" }
+tor-dirmgr = { path = "src/lightarti/tor-dirmgr" }
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = "0.19"

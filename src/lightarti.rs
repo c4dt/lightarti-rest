@@ -7,7 +7,7 @@ use tor_rtcompat::{Runtime, SpawnBlocking};
 use tor_dirmgr::Authority;
 use tracing::{debug, trace};
 
-use crate::arti::client::TorClient;
+use crate::lightarti::client::TorClient;
 
 mod client;
 mod conv;

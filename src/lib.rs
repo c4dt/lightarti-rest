@@ -1,6 +1,6 @@
 pub mod client;
 
-mod arti;
+mod lightarti;
 mod ffi;
 
 #[cfg(test)]
