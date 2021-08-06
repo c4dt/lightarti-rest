@@ -1,7 +1,6 @@
 # Lightarti-rest
 
-
-lightarti-rest is a simple wrapper around [arti](https://gitlab.torproject.org/tpo/core/arti) that leverages arti to enable mobile apps to easily make anonymous REST requests via the Tor network. lightarti-rest makes two changes on top of arti. First, lightarti-rest provides a simple wrapper for REST requests, to make calling HTTP(S) API endpoints easier. Second, lightarti-rest provides the option to use a customized, and therefore potentially much smaller, consensus. 
+lightarti-rest is a simple wrapper around [arti](https://gitlab.torproject.org/tpo/core/arti) that leverages arti to enable mobile apps to easily make anonymous REST requests via the Tor network. lightarti-rest makes two changes on top of arti. First, lightarti-rest provides a simple wrapper for REST requests, to make calling HTTP(S) API endpoints easier. Second, lightarti-rest provides the option to use a customized, and therefore potentially much smaller, consensus.
 
 > :warning: **Warning: lightarti-rest is not secure in all situations** lightarti-rest modifies several core parts of `arti`. These modifications result on lightarti-rest not providing the same guarantees than arti and the stock Tor client. You will have to verify on your own whether these weakened guarantees are acceptable in your situation. See the reliability section below to check what aspects of your system you need to consider to decide whether lightarti-rest is secure for you.
 
@@ -16,7 +15,7 @@ lightarti-rest-ios   lightarti-rest-android
                     I
                   arti
 ```
-       
+
 `lightarti-rest` provides a synchronous interface to send REST requests over Tor, and
 to receive the answers. It also does the TLS handling of the connection. The
 asynchronous part needs to be done by the Android and iOS library.
@@ -27,10 +26,10 @@ Even though we tried our best to produce good code, this should not be used in a
 mission critical piece of software without proper consideration of the following:
 
 - arti itself mentions it's not ready for prime-time since it does not implement all protections that the stock Tor client does. See their [README](https://gitlab.torproject.org/tpo/core/arti/-/blob/main/README.md) to check whether your application can be secure without those protections.
-- lightarti-rest uses a customized consensus to reduce bandwidth cost for infrequent use of lightarti-rest. As a result, the consensus is not signed by the default Tor directory authorities, but instead by the creator of the app. This approach in general is not secure. However, since the app developer already determines which code is loaded (and could therefore disable consensus validation altogether, or deanonymize users directly), it is likely acceptable in the case of mobile applications that directly include lightarti-rest. 
+- lightarti-rest uses a customized consensus to reduce bandwidth cost for infrequent use of lightarti-rest. As a result, the consensus is not signed by the default Tor directory authorities, but instead by the creator of the app. This approach in general is not secure. However, since the app developer already determines which code is loaded (and could therefore disable consensus validation altogether, or deanonymize users directly), it is likely acceptable in the case of mobile applications that directly include lightarti-rest.
 
-In summary, you should only use `lightarti-rest` when you understand the differences between `arti` and `lightarti-rest` and Tor, and you are certain that the loss of protection with respect to Tor does not harm the security of your users. 
-  
+In summary, you should only use `lightarti-rest` when you understand the differences between `arti` and `lightarti-rest` and Tor, and you are certain that the loss of protection with respect to Tor does not harm the security of your users.
+
 ## Mobile Libraries
 
 Because iOS XCFrameworks and libraries need to reside in a separate GitHub repository,
@@ -48,28 +47,29 @@ The Android test app is in the `lightarti-rest-android` repository.
 For the iOS test app, see here:
 [lightarti-rest-ios-test](https://github.com/c4dt/lightarti-rest-ios-test)
 
-
 ## Roadmap:
 
 - v0.1 - Simple GET request and reply using TLS - done
 - v0.2 - Optimized setting up of the Tor circuit - first version done
-- v0.3 - Add certificate configurations to the tor-cache directory   
+- v0.3 - Add certificate configurations to the tor-cache directory
 - v0.4 - Configure lightarti-rest to either use standard tor, or a pre-configured circuit
 - v1.0 - Once arti is deemed stable enough, and other people have looked and used this code
 
 ### Versioning
 
 The following repos follow the same versioning related to the major and minor version:
+
 - lightarti-rest
 - lightarti-rest-android
 - lightarti-rest-ios
 
 The patch version of the three will differ and reflect internal updates, with the
 following constraints:
+
 - `patch_version(lightarti_rest_android) >= patch_version(lightarti_rest)`
 - `patch_version(lightarti_rest_ios) >= patch_version(lightarti_rest)`
 - a new lightarti-rest patch version must be bigger than both the current lightarti-rest-android and
-lightarti-rest-ios patch version
+  lightarti-rest-ios patch version
 
 This allows us to quickly verify that a given library version has at least some patches
 from the lightarti-rest code by simply looking at the version number.
@@ -82,7 +82,7 @@ from the lightarti-rest code by simply looking at the version number.
 
 # Pre-caching of Tor circuits
 
-This library has a [modified directory manager](src/lightarti/tor-dirmgr) of arti that allows to 
+This library has a [modified directory manager](src/lightarti/tor-dirmgr) of arti that allows to
 use pre-downloaded circuits.
 The idea is to download these circuits once per week, or once per month, and then being
 able to setup new circuits with these pre-downloaded circuits.
@@ -93,3 +93,17 @@ For more information, see [Directory Cache Setup](tools/README.md)
 # License
 
 This is licensed under MPL 2.0
+
+# Contributors
+
+`lightarti-rest` is maintained by the [Center for Digital Trust](https://c4dt.org/). The following people contributed to the implementation of `lightarti-rest`:
+
+- Linus Gasser, C4DT
+- Valérian Rousset, C4DT
+- Christian Grigis, C4DT
+- Laurent Girod, SPRING Lab, EPFL
+
+Analysis and design by:
+
+- Wouter Lueks, SPRING Lab, EPFL
+- Carmela Troncoso, SPRING Lab, EPFL
