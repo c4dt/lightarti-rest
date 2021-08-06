@@ -1,3 +1,6 @@
+0.3.2 - 2021/08/06
+	* Rename to lightarti-rest
+
 0.3.1 - 2021/08/03
 	* Debugging iOS XCFramework
 
