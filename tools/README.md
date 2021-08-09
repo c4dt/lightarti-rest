@@ -3,9 +3,9 @@
 ## Overview
 
 To send some data anonymously over the network, Lightarti-rest relies on a
-subset of relays of the Tor network.
+subset of routers of the Tor network.
 
-This script allows to set up a snapshot of the most reliable Tor relays
+This script allows to set up a snapshot of the most reliable Tor routers
 for faster circuit setup.
 
 You will have to create a custom directory authority, and to periodically
@@ -127,7 +127,7 @@ python3 gen_fresh_dirinfo.py generate-dirinfo \
 ```
 
 This sub-command effectively creates a snapshot of the most
-reliable advertised relays in the Tor network in the form of two files:
+reliable advertised routers in the Tor network in the form of two files:
 
 - A customized consensus containing metadata related to a subset of
   routers present in the Tor network. (default: `consensus.txt`)
@@ -136,11 +136,29 @@ reliable advertised relays in the Tor network in the form of two files:
   `microdescriptors.txt`)
 
 
-## Generate Churn (Incomplete)
+## Generate Churn
 
 To improve the reliability of the subset of the Tor network upon which
 Lightarti-rest relies to build a circuit, we are providing a way to compute
-a list of no-longer working relays.
+a list of no longer working routers.
 
-This is a work in progress, currently Lightarti-rest is not able to handle
-this list.
+This list of churned routers is intended to be a lightweight file containing
+up-to-date info about routers that are no longer reachable with the info
+contained in the current customized consensus.
+
+Once generated, you can provide the file containing the computed churn for a
+customized consensus can to Lightarti-rest, which will no longer consider the
+routers described in the churn file when building a circuit.
+
+To generate this file containing the no longer working routers in a customized
+consensus, you will need to run the `compute-churn` sub-command of this script
+at least once a day on a trusted server.
+
+```
+./gen_fresh_dirinfo.py compute-churn \
+		--churn churn.txt \
+		--consensus consensus.txt
+```
+
+This subcommand, essentially parse a customized consensus and compare its info
+with up-to-date data retrieved from Tor's directory authorities.
