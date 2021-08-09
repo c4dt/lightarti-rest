@@ -24,7 +24,7 @@ from hashlib import (
     sha256,
 )
 from heapq import nlargest
-from math import ceil
+from math import ceil, floor
 from itertools import zip_longest
 from os import environ
 from pathlib import Path
@@ -126,6 +126,9 @@ BAD_EXIT_FLAG_RE = re.compile(b"(s.+)BadExit (.+)", re.MULTILINE)
 EXIT_FLAG_RE = re.compile(b"(s.*) Exit(.+)", re.MULTILINE)
 GUARD_FLAG_RE = re.compile(b"(s.+)Guard (.+)", re.MULTILINE)
 
+# Maximum ratio of churned routers in a customized consensus.
+CHURN_THRESHOLD_RATIO = 1/6
+
 
 Address = Tuple[str, int, bool]
 
@@ -145,6 +148,12 @@ class InvalidVote(Exception):
 class TorCertGenFailed(Exception):
     """
     The command tor-gencert failed.
+    """
+
+
+class ChurnAboveThreshold(Exception):
+    """
+    The number of churned routers is above the threshold.
     """
 
 
@@ -796,6 +805,22 @@ def compute_churn(
     return churn
 
 
+def validate_churn_threshold(
+        churn: List[str],
+        consensus_customized: NetworkStatusDocumentV3,
+    ) -> None:
+    """
+    Validate that a generated churn contains a number of routers below a threshold.
+
+    :param churn: current churn
+    :param consensus_customized: customized consensus generated with this script
+    :raises: ChurnAboveThreshold if there are too many churned relays.
+    """
+    threshold = floor(len(consensus_customized.routers) * CHURN_THRESHOLD_RATIO)
+    if len(churn) > threshold:
+        raise ChurnAboveThreshold("There are too many churned routers. "
+            "Please regenerate the customized consensus.")
+
 
 def generate_certificate(namespace: Namespace) -> None:
     """
@@ -933,6 +958,7 @@ def generate_churninfo(namespace: Namespace) -> None:
         raise InvalidConsensus("Validation of the consensus' signature failed.")
 
     churn_fingerprints = compute_churn(consensus_customized, consensus_latest)
+    validate_churn_threshold(churn_fingerprints, consensus_customized)
 
     churn = ("\n".join(churn_fingerprints) + "\n").encode("ascii")
 
@@ -1048,7 +1074,7 @@ def main(program: str, arguments: List[str]) -> None:
         "--authority-contact",
         help="Contact info for the directory authority.",
         type=str,
-        default="EPFL/ SPRING Lab"
+        default="EPFL / SPRING Lab"
     )
     parser_dirinfo.add_argument(
         "--consensus",
