@@ -13,15 +13,17 @@
 // Code mostly copied from Arti.
 
 use std::fs;
-use anyhow::Context;
+use anyhow::{bail, Context};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use log::info;
-use rand::Rng;
+use log::{info,warn};
+use rand::{Rng,seq::SliceRandom};
 use std::collections::HashSet;
 use std::fmt::Debug;
+use std::iter::FromIterator;
 use std::sync::Weak;
 use std::time::{Duration, SystemTime};
+
 use tor_netdir::{MdReceiver, NetDir, PartialNetDir};
 use tor_netdoc::doc::netstatus::Lifetime;
 
@@ -39,7 +41,7 @@ use tor_netdoc::{
     doc::{
         authcert::{AuthCert, AuthCertKeyIds},
         microdesc::MicrodescReader,
-        netstatus::{ConsensusFlavor, UnvalidatedMdConsensus},
+        netstatus::{ConsensusFlavor, UnvalidatedMdConsensus, RouterStatus},
     },
     AllowAnnotations,
 };
@@ -142,7 +144,18 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
         // side-loaded data
         let consensus_path = format!("{}/consensus.txt", docdir);
         let consensus = fs::read_to_string(consensus_path).context("Failed to read the consensus.")?;
-        self.add_consensus_text(true, consensus.as_str())
+
+        let churn_path = format!("{}/churn.txt", docdir);
+        let churn_raw = match fs::read_to_string(churn_path) {
+            Ok(content) => Some(content),
+            Err(_) => None
+        };
+        let churn = match churn_raw {
+            Some(content) => parse_churn(content.as_str()).context("Failed to parse churn info.")?,
+            None => Vec::new()
+        };
+
+        self.add_consensus_text(true, consensus.as_str(), churn)
             .map(|meta| meta.is_some())
     }
     fn advance(self: Box<Self>) -> Result<Box<dyn DirState>> {
@@ -159,6 +172,26 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
     }
 }
 
+/// Parse churned routers info.
+fn parse_churn(churn_raw: &str) -> Result<Vec<RsaIdentity>> {
+    let mut churn: Vec<RsaIdentity> = Vec::new();
+
+    for line in churn_raw.lines() {
+        let bytes = hex::decode(line).context("Failed to decode churned router id.")?;
+        churn.push(
+            match RsaIdentity::from_bytes(bytes.as_slice()) {
+                Some(id) => id,
+                None => {
+                    bail!("Invalid router id.");
+                }
+            }
+        );
+    }
+    info!("Remove {} router(s) from custom consensus as their info is no longer valid.", churn.len());
+    Ok(churn)
+}
+
+
 impl<DM: WriteNetDir> GetConsensusState<DM> {
     /// Helper: try to set the current consensus text from an input
     /// string `text`.  Refuse it if the authorities could never be
@@ -167,17 +200,46 @@ impl<DM: WriteNetDir> GetConsensusState<DM> {
         &mut self,
         from_cache: bool,
         text: &str,
+        churn: Vec<RsaIdentity>,
     ) -> Result<Option<&ConsensusMeta>> {
         // Try to parse it and get its metadata.
-        let (consensus_meta, unvalidated) = {
-            let (signedval, remainder, parsed) = MdConsensus::parse(text)?;
+        let (consensus_meta, mut unvalidated) = {
+            let (signed_part, remainder, parsed) = MdConsensus::parse(text)?;
             if let Ok(timely) = parsed.check_valid_now() {
-                let meta = ConsensusMeta::from_unvalidated(signedval, remainder, &timely);
+                let meta = ConsensusMeta::from_unvalidated(signed_part, remainder, &timely);
                 (meta, timely)
             } else {
                 return Ok(None);
             }
         };
+
+        // Filter out the churn.
+        if ! churn.is_empty() {
+            let mut churn_set: HashSet<&RsaIdentity> = HashSet::from_iter(&churn);
+
+            // If the churn is above a threshold, we only consider a random subset
+            // of the churned routers.
+            let churn_threshold = unvalidated.consensus.routers.len() / 6;
+            if churn.len() > churn_threshold {
+                warn!("Churn larger than threshold limit!");
+                let number_to_remove = churn.len() - churn_threshold;
+
+                let elements_to_remove: Vec<&RsaIdentity> = churn.choose_multiple(
+                    &mut rand::thread_rng(),
+                    number_to_remove
+                ).collect();
+
+                for element in elements_to_remove {
+                    churn_set.remove(element);
+                }
+            }
+
+            // We remove the churned routers from the consensus.
+            unvalidated.consensus.routers = unvalidated.consensus.routers
+                .into_iter()
+                .filter(|r| ! churn_set.contains(r.rsa_identity()))
+                .collect();
+        }
 
         // Check out what authorities we believe in, and see if enough
         // of them are purported to have singed this consensus.
@@ -267,6 +329,7 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
         // side-loaded data
         let certificate_path = format!("{}/certificate.txt", docdir);
         let certificate = fs::read_to_string(certificate_path).context("Failed to read the certificate.")?;
+
         let parsed = AuthCert::parse(certificate.as_str())?.check_signature()?;
         if let Ok(cert) = parsed.check_valid_now() {
             self.missing_certs.remove(cert.key_ids());
@@ -277,11 +340,15 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
     }
     fn advance(self: Box<Self>) -> Result<Box<dyn DirState>> {
         if self.can_advance() {
-            let validated = self.unvalidated.check_signature(&self.certs[..])?;
+            let validated = self.unvalidated.check_signature(&self.certs[..]).context("Consensus validation failed.")?;
+
+            //self.unvalidated.is_well_signed(&self.certs[..])?;
+            //let validated = self.unvalidated.dangerously_assume_wellsigned();
+
             Ok(Box::new(GetMicrodescsState::new(
                 validated,
                 self.consensus_meta,
-                self.writedir,
+                self.writedir
             )?))
         } else {
             Ok(self)

@@ -27,6 +27,7 @@ jobs:
         run: |
           make certificate
           make dirinfo
+          make churn
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
