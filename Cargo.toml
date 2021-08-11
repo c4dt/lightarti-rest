@@ -12,6 +12,7 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
+tor-bytes = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-chanmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 tor-config = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
@@ -38,6 +39,7 @@ tempdir = "0.3"
 
 [patch."https://gitlab.torproject.org/tpo/core/arti.git"]
 tor-dirmgr = { path = "src/lightarti/tor-dirmgr" }
+tor-netdoc = { path = "src/lightarti/tor-netdoc" }
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = "0.19"
