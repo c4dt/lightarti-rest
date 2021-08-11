@@ -11,11 +11,11 @@ keywords = [ "tor", "arti" ]
 categories = [ "parser-implementations" ]
 
 [dependencies]
-tor-llcrypto = { path="../tor-llcrypto", version="*" }
-tor-bytes = { path="../tor-bytes", version="*" }
-tor-cert = { path="../tor-cert", version="*" }
-tor-protover = { path="../tor-protover", version= "*" }
-tor-checkable = { path="../tor-checkable", version= "*" }
+tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-bytes = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-cert = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-protover = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
 
 base64 = "0.13.0"
 bitflags = "1.2.1"

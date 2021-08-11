@@ -467,7 +467,7 @@ pub struct Consensus<RS> {
     /// List of voters whose votes contributed to this consensus.
     voters: Vec<ConsensusVoterInfo>,
     /// A list of the relays on the network, with one entry per relay.
-    routers: Vec<RS>,
+    pub routers: Vec<RS>,
     /// Footer for the consensus object.
     footer: Footer,
 }
@@ -1328,7 +1328,7 @@ impl<RS: ParseRouterStatus + RouterStatus> Consensus<RS> {
 pub struct UnvalidatedConsensus<RS> {
     /// The consensus object. We don't want to expose this until it's
     /// validated.
-    consensus: Consensus<RS>,
+    pub consensus: Consensus<RS>,
     /// The signatures that need to be validated before we can call
     /// this consensus valid.
     siggroup: SignatureGroup,
