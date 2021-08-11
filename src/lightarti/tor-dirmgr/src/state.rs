@@ -177,15 +177,17 @@ fn parse_churn(churn_raw: &str) -> Result<Vec<RsaIdentity>> {
     let mut churn: Vec<RsaIdentity> = Vec::new();
 
     for line in churn_raw.lines() {
-        let bytes = hex::decode(line).context("Failed to decode churned router id.")?;
-        churn.push(
-            match RsaIdentity::from_bytes(bytes.as_slice()) {
-                Some(id) => id,
-                None => {
-                    bail!("Invalid router id.");
+        if ! line.is_empty() {
+            let bytes = hex::decode(line).context("Failed to decode churned router id.")?;
+            churn.push(
+                match RsaIdentity::from_bytes(bytes.as_slice()) {
+                    Some(id) => id,
+                    None => {
+                        bail!("Invalid router id.");
+                    }
                 }
-            }
-        );
+            );
+        }
     }
     info!("Remove {} router(s) from custom consensus as their info is no longer valid.", churn.len());
     Ok(churn)
