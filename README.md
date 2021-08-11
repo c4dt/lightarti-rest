@@ -2,7 +2,7 @@
 
 lightarti-rest is a simple wrapper around [arti](https://gitlab.torproject.org/tpo/core/arti) that leverages arti to enable mobile apps to easily make anonymous REST requests via the Tor network. lightarti-rest makes two changes on top of arti. First, lightarti-rest provides a simple wrapper for REST requests, to make calling HTTP(S) API endpoints easier. Second, lightarti-rest provides the option to use a customized, and therefore potentially much smaller, consensus.
 
-> :warning: **Warning: lightarti-rest is not secure in all situations** lightarti-rest modifies several core parts of `arti`. These modifications result on lightarti-rest not providing the same guarantees than arti and the stock Tor client. You will have to verify on your own whether these weakened guarantees are acceptable in your situation. See the reliability section below to check what aspects of your system you need to consider to decide whether lightarti-rest is secure for you.
+> :warning: **Warning: lightarti-rest is not secure in all situations** lightarti-rest modifies several core parts of `arti`. These modifications result in lightarti-rest not providing the same guarantees as arti and the stock Tor client. You will have to verify on your own whether these weakened guarantees are acceptable in your situation. See the reliability section below to check what aspects of your system you need to consider to decide whether lightarti-rest is secure for you.
 
 lightarti-rest is written in Rust and can therefore be compiled into native libraries that are easy to integrate into mobile applications. All credits for enabling this approach go to the authors of [arti](https://gitlab.torproject.org/tpo/core/arti). Using a native library ensures that lightarti-rest can be bundled with Android and iOS applications, rather than relying on external Tor proxies that must be installed separately.
 
@@ -80,15 +80,19 @@ from the lightarti-rest code by simply looking at the version number.
 - `./ios` holds scripts to create the `XCFramework` used in the `lightarti-rest-ios`
 - `./tools` holds scripts to generate the files for the offline setup of the tor circuits
 
-# Pre-caching of Tor circuits
+# Custom Tor Consensus
 
-This library has a [modified directory manager](src/lightarti/tor-dirmgr) of arti that allows to
-use pre-downloaded circuits.
-The idea is to download these circuits once per week, or once per month, and then being
-able to setup new circuits with these pre-downloaded circuits.
-Of course this requires trusting the server who provide the circuits.
+Tor relies on directory information to describe the state of the network. This information is updated every hour and signed by the Tor directory authorities. Tor clients, including arti, aim to always retrieve and use the latest Tor directory information. Updating this information requires bandwidth. When using Tor for anonymous browsing, this overhead is small. When using Tor for infrequent and small anonymous requests, however, the overhead of updating the directory information quickly starts to dominate.
 
-For more information, see [Directory Cache Setup](tools/README.md)
+To reduce the bandwidth overhead of downloading the full Tor directory, lightarti-rest instead relies on a subset of all the Tor directory information. This subset can then consists of a smaller set of reliable nodes. This modified directory can be used for a long time (as much as up to a week). Lightarti-rest achieves this as follows:
+
+1. It provides [scripts for generating and signing custom Tor directory information](tools/README.md). Apps should download these files out of band and store them for subsequent calls to lightarti-rest.
+2. This script can also be used to compute a tiny churn file of no-longer-available Tor nodes for a given custom Tor directory. This ensures lightarti-rest can still quickly build circuits even with an older custom directory.
+3. It uses a [modified arti directory manager](src/lightarti/tor-dirmgr) that parses, verifies and uses the cached and custom consensus files and applies corrections described by the churn file.
+
+The custom directory information, with the exception of the churn file, is signed. Thus making it harder to provide incorrect directory information as operators cannot later repudiate having done so. The churn file itself is not signed. A malicious operator could therefore try to disable all but a few corrupted Tor nodes. To prevent this attack, lightarti-rest limits the size of the churn file to 1/6th of the nodes. Thus ensuring that an attacker can at most disable half of the nodes for each position.
+
+As discussed above, the use of custom directory information might not be secure in your deployment scenario. It is essential that you perform your own analysis to determine whether using Lightarti-rest is secure for you.
 
 # License
 
