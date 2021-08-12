@@ -146,9 +146,9 @@ This list of churned routers is intended to be a lightweight file containing
 up-to-date info about routers that are no longer reachable with the info
 contained in the current customized consensus.
 
-Once generated, you can additionally provide the churn file to Lightarti-rest. Lightarti-rest will then ignore any routers that are marked as 
-customized consensus can to Lightarti-rest, which will no longer consider the
-routers described in the churn file when building a circuit.
+Once generated, you can additionally provide the churn file to Lightarti-rest.
+Lightarti-rest will then ignore any routers that are marked as unavailable when
+building a circuit.
 
 To generate this file containing the no longer working routers in a customized
 consensus, you will need to run the `compute-churn` sub-command of this script
