@@ -92,7 +92,7 @@ For more information, see [Directory Cache Setup](tools/README.md)
 
 # License
 
-This is licensed under MPL 2.0
+The code is licensed under the MIT license.
 
 # Contributors
 
