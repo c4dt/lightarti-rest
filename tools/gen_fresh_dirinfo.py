@@ -31,7 +31,7 @@ from pathlib import Path
 from subprocess import (
     Popen,
     PIPE,
-    TimeoutExpired
+    TimeoutExpired,
 )
 from typing import (
     Dict,
@@ -796,23 +796,22 @@ def compute_churn(
     return churn
 
 
-
-def generate_certificate(namespace: Namespace) -> None:
+def generate_certificate(
+        authority_identity_key_path: Path,
+        authority_signing_key_path: Path,
+        authority_certificate_path: Path,
+        authority_v3ident_path: Path,
+        authority_name: Path,
+        certificate_validity_months: int
+    ) -> None:
     """
     Generate a certificate for a custom authority.
 
-    :param namespace: namespace containing parsed arguments.
+    :param:
     """
     password = environ.get(DIR_AUTH_PASSWORD_ENV, None)
     if password is None:
         raise Exception(f"No password provided as environment variable {DIR_AUTH_PASSWORD_ENV}.")
-
-    authority_identity_key_path: Path = namespace.authority_identity_key
-    authority_signing_key_path: Path = namespace.authority_signing_key
-    authority_certificate_path: Path = namespace.authority_certificate
-    authority_v3ident_path: Path = namespace.authority_v3ident
-    authority_name: Path = namespace.authority_name
-    certificate_validity_months: int = namespace.certificate_validity_months
 
     create_new_identity = not authority_identity_key_path.exists()
     reuse_signing_key = not create_new_identity and authority_signing_key_path.exists()
@@ -835,21 +834,31 @@ def generate_certificate(namespace: Namespace) -> None:
     authority_v3ident_path.write_bytes(v3ident)
 
 
-def generate_customized_consensus(namespace: Namespace) -> None:
+def generate_customized_consensus(
+        authority_signing_key_path: Path,
+        authority_certificate_path: Path,
+        consensus_path: Path,
+        microdescriptors_path: Path,
+        number_routers: int,
+        authority_name: str,
+        authority_hostname: str,
+        authority_ip_address: str,
+        authority_dirport: int,
+        authority_orport: int,
+        authority_contact: str,
+        consensus_validity_days: int
+    ) -> None:
     """
     Generate a customized consensus from data retrieved from the Tor network authorities.
 
-    :param namespace: namespace containing parsed arguments.
+    :param authority_signing_key_path:
     """
 
     # Read the relevant input files related to the authority.
-    authority_signing_key_path: Path = namespace.authority_signing_key
 
     authority_signing_key_raw = authority_signing_key_path.read_bytes()
 
     authority_signing_key = RSA.import_key(authority_signing_key_raw)
-
-    authority_certificate_path: Path = namespace.authority_certificate
 
     authority_certificate_raw = authority_certificate_path.read_bytes()
 
@@ -860,23 +869,22 @@ def generate_customized_consensus(namespace: Namespace) -> None:
     v3idents = [auth.v3ident for auth in consensus_original.directory_authorities]
     key_certificates = fetch_certificates(v3idents)
 
+    # The validation provided by Stem does not works for microdescriptor flavored consensus with
+    # the tested version (1.8.0).
+    if not consensus_validate_signatures(consensus_original, key_certificates):
+        raise InvalidConsensus("Validation of the consensus' signature failed.")
+
     authorities = fetch_authorities()
     auth_mtbf = authorities[AUTHORITY_MTBF_MEASURE]
     vote_mtbf = fetch_vote(auth_mtbf)
 
     key_cert_mtbf = list(filter(lambda c: c.fingerprint == auth_mtbf.v3ident, key_certificates))
 
-    # The validation provided by Stem does not works for microdescriptor flavored consensus with
-    # the tested version (1.8.0).
-    if not consensus_validate_signatures(consensus_original, key_certificates):
-        raise InvalidConsensus("Validation of the consensus' signature failed.")
-
     try:
         vote_mtbf.validate_signatures(key_cert_mtbf)
     except ValueError as err:
         raise InvalidVote(str(err))
 
-    number_routers: int = namespace.number_routers
     routers = select_routers(
         consensus_original,
         vote_mtbf,
@@ -888,13 +896,13 @@ def generate_customized_consensus(namespace: Namespace) -> None:
         routers,
         authority_signing_key,
         authority_certificate,
-        namespace.authority_name,
-        namespace.authority_hostname,
-        namespace.authority_ip_address,
-        namespace.authority_dirport,
-        namespace.authority_orport,
-        namespace.authority_contact,
-        namespace.consensus_validity_days
+        authority_name,
+        authority_hostname,
+        authority_ip_address,
+        authority_dirport,
+        authority_orport,
+        authority_contact,
+        consensus_validity_days
     )
 
     our_consensus = NetworkStatusDocumentV3(consensus)
@@ -905,16 +913,91 @@ def generate_customized_consensus(namespace: Namespace) -> None:
 
     microdescriptors_raw = generate_microdescriptors(microdescriptors)
 
-    consensus_path: Path = namespace.consensus
-
     consensus_path.write_bytes(consensus)
-
-    microdescriptors_path: Path = namespace.microdescriptors
 
     microdescriptors_path.write_bytes(microdescriptors_raw)
 
 
-def generate_churninfo(namespace: Namespace) -> None:
+def generate_churninfo(
+        consensus_path: Path,
+        churn_path: Path,
+        consensus_latest: NetworkStatusDocumentV3
+    ) -> None:
+    """
+    Generate a churn file from a customized consensus and the latest consensus retrieved from the
+    Tor network authorities.
+
+    :param consensus_path: path to the customized consensus
+    :param churn_path: path to the file to contain the churn information
+    """
+    consensus_customized = NetworkStatusDocumentV3(consensus_path.read_bytes())
+
+    churn_fingerprints = compute_churn(consensus_customized, consensus_latest)
+
+    churn = ("\n".join(churn_fingerprints) + "\n").encode("ascii")
+
+    churn_path.write_bytes(churn)
+
+
+def generate_certificate_cb(namespace: Namespace) -> None:
+    """
+    Generate a certificate for a custom authority.
+
+    :param namespace: namespace containing parsed arguments.
+    """
+    authority_identity_key_path: Path = namespace.authority_identity_key
+    authority_signing_key_path: Path = namespace.authority_signing_key
+    authority_certificate_path: Path = namespace.authority_certificate
+    authority_v3ident_path: Path = namespace.authority_v3ident
+    authority_name: Path = namespace.authority_name
+    certificate_validity_months: int = namespace.certificate_validity_months
+
+    generate_certificate(
+        authority_identity_key_path,
+        authority_signing_key_path,
+        authority_certificate_path,
+        authority_v3ident_path,
+        authority_name,
+        certificate_validity_months
+    )
+
+
+def generate_customized_consensus_cb(namespace: Namespace) -> None:
+    """
+    Generate a customized consensus from data retrieved from the Tor network authorities.
+
+    :param namespace: namespace containing parsed arguments.
+    """
+    authority_signing_key_path: Path = namespace.authority_signing_key
+    authority_certificate_path: Path = namespace.authority_certificate
+    consensus_path: Path = namespace.consensus
+    microdescriptors_path: Path = namespace.microdescriptors
+    number_routers: int = namespace.number_routers
+    authority_name: str = namespace.authority_name
+    authority_hostname: str = namespace.authority_hostname
+    authority_ip_address: str = namespace.authority_ip_address
+    authority_dirport: int = namespace.authority_dirport
+    authority_orport: int = namespace.authority_orport
+    authority_contact: str = namespace.authority_contact
+    consensus_validity_days: int = namespace.consensus_validity_days
+
+    generate_customized_consensus(
+        authority_signing_key_path,
+        authority_certificate_path,
+        consensus_path,
+        microdescriptors_path,
+        number_routers,
+        authority_name,
+        authority_hostname,
+        authority_ip_address,
+        authority_dirport,
+        authority_orport,
+        authority_contact,
+        consensus_validity_days,
+    )
+
+
+def generate_churninfo_cb(namespace: Namespace) -> None:
     """
     Generate a churn file from a customized consensus and the latest consensus retrieved from the
     Tor network authorities.
@@ -922,7 +1005,7 @@ def generate_churninfo(namespace: Namespace) -> None:
     :param namespace: namespace containing parsed arguments.
     """
     consensus_path: Path = namespace.consensus
-    consensus_customized = NetworkStatusDocumentV3(consensus_path.read_bytes())
+    churn_path: Path = namespace.churn
 
     consensus_latest = fetch_latest_consensus()
 
@@ -932,12 +1015,7 @@ def generate_churninfo(namespace: Namespace) -> None:
     if not consensus_validate_signatures(consensus_latest, key_certificates):
         raise InvalidConsensus("Validation of the consensus' signature failed.")
 
-    churn_fingerprints = compute_churn(consensus_customized, consensus_latest)
-
-    churn = ("\n".join(churn_fingerprints) + "\n").encode("ascii")
-
-    churn_path: Path = namespace.churn
-    churn_path.write_bytes(churn)
+    generate_churninfo(consensus_path, churn_path, consensus_latest)
 
 
 def main(program: str, arguments: List[str]) -> None:
@@ -1000,7 +1078,7 @@ def main(program: str, arguments: List[str]) -> None:
         default=12
     )
 
-    parser_certificate.set_defaults(callback=generate_certificate)
+    parser_certificate.set_defaults(callback=generate_certificate_cb)
 
     parser_dirinfo.add_argument(
         "--authority-signing-key",
@@ -1076,7 +1154,7 @@ def main(program: str, arguments: List[str]) -> None:
         default=120
     )
 
-    parser_dirinfo.set_defaults(callback=generate_customized_consensus)
+    parser_dirinfo.set_defaults(callback=generate_customized_consensus_cb)
 
     parser_churn.add_argument(
         "--churn",
@@ -1091,7 +1169,7 @@ def main(program: str, arguments: List[str]) -> None:
         default="consensus.txt"
     )
 
-    parser_churn.set_defaults(callback=generate_churninfo)
+    parser_churn.set_defaults(callback=generate_churninfo_cb)
 
     namespace = parser.parse_args(arguments)
 
