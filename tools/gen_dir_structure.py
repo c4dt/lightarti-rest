@@ -13,6 +13,7 @@ from datetime import (
     timedelta
 )
 from pathlib import Path
+from posix import R_OK
 from typing import List
 
 import os
@@ -42,14 +43,21 @@ FILENAME_CHURN = "churn.txt"
 FILENAME_CONSENSUS = "consensus.txt"
 FILENAME_MICRODESCRIPTORS = "microdescriptors.txt"
 
+#
 # Feel free to modify these values as you see fit.
-CERTIFICATE_VALIDITY_MONTHS = 12
-CONSENSUS_NUMBER_ROUTERS = 120
-CONSENSUS_VALIDITY_DAYS = 7
+#
 
-# Feel free to modify these values as you see fit.
-# Note: These parameters are necessary to generate a directory authority, but their values are not
-# important.
+# Number of months for which the certificate should be valid.
+CERTIFICATE_VALIDITY_MONTHS = 12
+
+# Number of router to select for building the customized consensus.
+CONSENSUS_NUMBER_ROUTERS = 120
+
+# Minimal validity dUration of the customized consensus.
+CONSENSUS_VALIDITY_DAYS = 14
+
+# Feel free to modify these values as you want, they are used to fill fields in the certificate
+# and customized consensus but do not impact on Lightarti-rest behavior.
 AUTHORITY_NAME = "C4DT"
 AUTHORITY_HOSTNAME = "c4dt.org"
 AUTHORITY_IP_ADDRESS = "128.178.32.16"
@@ -97,19 +105,40 @@ def ensure_dir_rw_access(directory: Path) -> None:
         raise InconsistentDirectoryStructure(f"Directory {directory} do not have enough permission.")
 
 
-def ensure_file_r_access(filepath: Path) -> None:
+def _ensure_file_access(filepath: Path, access_flags: int) -> None:
     """
-    Ensures that a file exists and that we have read/write access to it.
+    Ensures that a file exists and that we can have enough access rights to it.
 
     :param filepath: file we want to ensure to have these properties
+    :param access_flags: access required to the file
     :raises InconsistentDirectoryStructure: The file does not have these properties.
     """
 
     if not filepath.is_file():
         raise InconsistentDirectoryStructure(f"File {filepath} does not exists.")
 
-    if not os.access(filepath, os.R_OK):
-        raise InconsistentDirectoryStructure(f"File {filepath} is not readable.")
+    if not os.access(filepath, access_flags):
+        raise InconsistentDirectoryStructure(f"File {filepath} do not have enough permission.")
+
+
+def ensure_file_r_access(filepath: Path) -> None:
+    """
+    Ensures that a file exists and that we have read access to it.
+
+    :param filepath: file we want to ensure to have these properties
+    :raises InconsistentDirectoryStructure: The file does not have these properties.
+    """
+    _ensure_file_access(filepath, os.R_OK)
+
+
+def ensure_file_rw_access(filepath: Path) -> None:
+    """
+    Ensures that a file exists and that we have read/write access to it.
+
+    :param filepath: file we want to ensure to have these properties
+    :raises InconsistentDirectoryStructure: The file does not have these properties.
+    """
+    _ensure_file_access(filepath, os.R_OK | os.W_OK)
 
 
 def ensure_valid_authority_dir(dir_auth: Path, date_utc: datetime) -> None:
@@ -147,6 +176,7 @@ def ensure_valid_authority_dir(dir_auth: Path, date_utc: datetime) -> None:
 
     if certificate.expires <= date_utc:
         LOGGER.info(f"Renew authority certificate in {dir_auth}.")
+        ensure_file_rw_access(certificate_path)
         update_authority_dir(dir_auth)
 
 
@@ -298,14 +328,12 @@ def main(program: str, arguments: List[str]) -> None:
 
     namespace = parser.parse_args(arguments)
 
-    directory_structure(namespace)
-
-"""     try:
+    try:
         directory_structure(namespace)
     except Exception as err:
         LOGGER.error(err)
         sys.exit(1)
- """
+
 
 if __name__ == "__main__":
     main(sys.argv[0], sys.argv[1:])
