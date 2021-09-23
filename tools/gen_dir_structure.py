@@ -58,7 +58,7 @@ CONSENSUS_VALIDITY_DAYS = 14
 
 # Feel free to modify these values as you want, they are used to fill fields in the certificate
 # and customized consensus but do not impact on Lightarti-rest behavior.
-AUTHORITY_NAME = "C4DT"
+AUTHORITY_NAME = "Center for Digital Trust"
 AUTHORITY_HOSTNAME = "c4dt.org"
 AUTHORITY_IP_ADDRESS = "128.178.32.16"
 AUTHORITY_DIR_PORT = 80
