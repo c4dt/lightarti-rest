@@ -86,7 +86,7 @@ Tor relies on directory information to describe the state of the network. This i
 
 To reduce the bandwidth overhead of downloading the full Tor directory, lightarti-rest instead relies on a subset of all the Tor directory information. This subset can then consist of a smaller set of reliable nodes. This modified directory can be used for a long time (as much as up to a week). Lightarti-rest achieves this in the following way:
 
-1. It provides [scripts for generating and signing custom Tor directory information](tools/README.md). Apps should download these files out of band and store them for subsequent calls to lightarti-rest.
+1. It provides [scripts for generating and signing custom Tor directory information](tools/README.md). Apps have to download these files over a non-tor connection and store them for subsequent calls to lightarti-rest.
 2. This script can also be used to compute a tiny churn file of no-longer-available Tor nodes for a given custom Tor directory. This ensures lightarti-rest can still quickly build circuits even with an older custom directory.
 3. It uses a [modified arti directory manager](src/lightarti/tor-dirmgr) that parses, verifies and uses the cached and custom consensus files and applies corrections described by the churn file.
 
