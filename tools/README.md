@@ -6,7 +6,7 @@ The scripts in this directory aim to pick reliable nodes so that ideally the con
 
 The tool provides three functions:
 
-1. Setting up a custom directory authority. We will use the keys of this authority to sign the smaller custom consensus files. This step only needs to be run once.
+1. Setting up a custom directory authority. The keys of this authority are used to sign the smaller custom consensus files. This step only needs to be run once.
 2. Generating a new custom consensus. Based on the latest consensus information, the script produces a smaller consensus of reliable nodes.  A new custom consensus should ideally be generated at least once a day. Generating a new custom consensus requires the keys from the previous step.
 3. Generating a churn file. As a custom consensus ages, some nodes may no longer be available. To increase efficiency, lightarti-rest can take as input a very small churn file that lists available nodes. A churn file is generated with respect to a specific custom consensus. Ideally it is updated every hour.
 
