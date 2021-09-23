@@ -96,7 +96,7 @@ As discussed above, the use of custom directory information might not be secure 
 
 # License
 
-This is licensed under MPL 2.0
+The code is licensed under the MIT license.
 
 # Contributors
 
