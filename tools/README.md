@@ -142,7 +142,7 @@ To improve the reliability of the subset of the Tor network upon which
 Lightarti-rest relies to build circuits, we are providing a way to compute
 a list of no longer available/reachable routers.
 
-This list of churned routers is intended to be a lightweight file containing
+This list of unavailable routers is intended to be a lightweight file containing
 up-to-date info about routers that are no longer reachable with the info
 contained in the current customized consensus.
 
