@@ -84,7 +84,7 @@ from the lightarti-rest code by simply looking at the version number.
 
 Tor relies on directory information to describe the state of the network. This information is updated every hour and signed by the Tor directory authorities. Tor clients, including arti, aim to always retrieve and use the latest Tor directory information. Updating this information requires bandwidth. When using Tor for anonymous browsing, this overhead is small. When using Tor for infrequent and small anonymous requests, however, the overhead of updating the directory information quickly starts to dominate.
 
-To reduce the bandwidth overhead of downloading the full Tor directory, lightarti-rest instead relies on a subset of all the Tor directory information. This subset can then consists of a smaller set of reliable nodes. This modified directory can be used for a long time (as much as up to a week). Lightarti-rest achieves this as follows:
+To reduce the bandwidth overhead of downloading the full Tor directory, lightarti-rest instead relies on a subset of all the Tor directory information. This subset can then consist of a smaller set of reliable nodes. This modified directory can be used for a long time (as much as up to a week). Lightarti-rest achieves this in the following way:
 
 1. It provides [scripts for generating and signing custom Tor directory information](tools/README.md). Apps should download these files out of band and store them for subsequent calls to lightarti-rest.
 2. This script can also be used to compute a tiny churn file of no-longer-available Tor nodes for a given custom Tor directory. This ensures lightarti-rest can still quickly build circuits even with an older custom directory.
