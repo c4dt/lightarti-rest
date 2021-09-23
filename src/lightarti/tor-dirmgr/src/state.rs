@@ -189,7 +189,7 @@ fn parse_churn(churn_raw: &str) -> Result<Vec<RsaIdentity>> {
             );
         }
     }
-    info!("Remove {} router(s) from custom consensus as their info is no longer valid.", churn.len());
+    debug!("Remove {} router(s) from custom consensus as their info is no longer valid.", churn.len());
     Ok(churn)
 }
 
