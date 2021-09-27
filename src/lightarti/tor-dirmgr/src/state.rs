@@ -16,7 +16,7 @@ use std::fs;
 use anyhow::{bail, Context};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use log::{info,warn};
+use log::{debug,info,warn};
 use rand::{Rng,seq::SliceRandom};
 use std::collections::HashSet;
 use std::fmt::Debug;
