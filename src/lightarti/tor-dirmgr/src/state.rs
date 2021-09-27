@@ -13,7 +13,7 @@
 // Code mostly copied from Arti.
 
 use std::fs;
-use anyhow::{bail, Context};
+use anyhow::{anyhow, Context};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use log::{debug,info,warn};
@@ -176,18 +176,11 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
 fn parse_churn(churn_raw: &str) -> Result<Vec<RsaIdentity>> {
     let mut churn: Vec<RsaIdentity> = Vec::new();
 
-    for line in churn_raw.lines() {
-        if ! line.is_empty() {
-            let bytes = hex::decode(line).context("Failed to decode churned router id.")?;
-            churn.push(
-                match RsaIdentity::from_bytes(bytes.as_slice()) {
-                    Some(id) => id,
-                    None => {
-                        bail!("Invalid router id.");
-                    }
-                }
-            );
-        }
+    for line in churn_raw.lines().filter(|l| !l.is_empty()) {
+        let bytes = hex::decode(line).context("Failed to decode churned router id.")?;
+        churn.push(
+            RsaIdentity::from_bytes(bytes.as_slice()).ok_or(anyhow!("Invalid router id."))?
+        );
     }
     debug!("Remove {} router(s) from custom consensus as their info is no longer valid.", churn.len());
     Ok(churn)
@@ -237,10 +230,8 @@ impl<DM: WriteNetDir> GetConsensusState<DM> {
             }
 
             // We remove the churned routers from the consensus.
-            unvalidated.consensus.routers = unvalidated.consensus.routers
-                .into_iter()
-                .filter(|r| ! churn_set.contains(r.rsa_identity()))
-                .collect();
+            unvalidated.consensus.routers
+                .retain(|r| !churn_set.contains(r.rsa_identity()));
         }
 
         // Check out what authorities we believe in, and see if enough
