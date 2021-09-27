@@ -2,7 +2,7 @@
 
 To reduce bandwidth use of lightarti-rest, the library relies on custom Tor directory information. The scripts in the `tools/` directory generate the required files, that can then be downloaded by apps for use with lightarti-rest.
 
-The scripts in this directory aim to pick reliable nodes so that ideally the consensus can be used for up to a week. We refer to the [accompanying Jupyter notebook](churn_analysis.ipynb) for a historical analysis of churn on the Tor network that shows shows that this approach is viable.
+The scripts in this directory pick reliable nodes so that ideally the consensus can be used for up to a week. Reliability is measured as INSERT MEASURES HERE. We refer to the [accompanying Jupyter notebook](churn_analysis.ipynb) for a historical analysis of churn on the Tor network that shows shows that this approach is viable.
 
 The tool provides three functions:
 
