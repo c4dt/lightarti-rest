@@ -12,6 +12,13 @@ The tool provides three functions:
 
 We describe these in more detail below.
 
+The size of a consensus retrieved from Tor authorities in microconsensus format is about 2.2 MB.
+
+The size of a shortened consensus will depend on the number of relay we decide to include, if we keep the default values (120 routers), it will have a size of about 45 KB.
+
+The size of the churn file will increase over time, as more relays become unreachable. Each unreachable relay increase the size of the churn file by 41 bytes (40 bytes for the fingerprint of the relay plus 1 byte for the new line). So typically, its size will be less 1 KB.
+
+
 ## Requirements
 
 This script requires Python 3 (version >= 3.7), as well as the libraries Stem
