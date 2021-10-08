@@ -29,7 +29,6 @@ jobs:
         env:
           DIR_AUTH_PASSWORD: dummy
         run: |
-          make certificate
           make dirinfo
 
       - uses: actions-rs/toolchain@v1
@@ -69,4 +68,5 @@ jobs:
       - name: Run pytest
         working-directory: ./tools
         run: |
+	  make dirinfo
           python -m pytest

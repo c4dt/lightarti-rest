@@ -90,6 +90,17 @@ Of course this requires trusting the server who provide the circuits.
 
 For more information, see [Directory Cache Setup](tools/README.md)
 
+# Testing the library
+
+The library has some simple tests that contact some servers using lightarti-rest.
+Before running the test, the cache information needs to be updated.
+So a full test can be started by running the following commands:
+
+```bash
+DIR_AUTH_PASSWORD=foo make -C tools clean dirinfo
+cargo test
+```
+
 # License
 
 The code is licensed under the MIT license.
