@@ -145,10 +145,10 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
         let consensus = fs::read_to_string(consensus_path).context("Failed to read the consensus.")?;
 
         let churn_path = format!("{}/churn.txt", docdir);
-        let churn = match fs::File::open(churn_path).map(BufReader::new) {
-            Ok(file) => parse_churn(file).context("Failed to parse churn info.")?,
-            Err(_) => Vec::new(),
-        };
+        let churn = fs::File::open(churn_path)
+            .map(BufReader::new)
+            .map_or(Ok(vec![]), parse_churn)
+            .context("Failed to parse churn info.")?;
 
         self.add_consensus_text(true, consensus.as_str(), churn)
             .map(|meta| meta.is_some())
