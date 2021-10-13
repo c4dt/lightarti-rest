@@ -29,7 +29,6 @@ jobs:
         env:
           DIR_AUTH_PASSWORD: dummy
         run: |
-          make certificate
           make dirinfo
           make churn
 
@@ -70,4 +69,5 @@ jobs:
       - name: Run pytest
         working-directory: ./tools
         run: |
+	  make dirinfo
           python -m pytest

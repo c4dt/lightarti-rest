@@ -1,4 +1,4 @@
-.PHONY: certificate dirinfo check-password
+.PHONY: dirinfo check-password
 
 AUTH_DIR=authority-private
 DIR_CACHE=directory-cache
@@ -29,6 +29,9 @@ churn: $(DIR_CACHE)/consensus.txt
 pip_install: requirements.txt
 	pip3 install -qr requirements.txt
 	touch pip_install
+
+clean:
+	rm -rf $(AUTH_DIR) $(DIR_CACHE)
 
 check-password:
 ifeq ($(DIR_AUTH_PASSWORD), )

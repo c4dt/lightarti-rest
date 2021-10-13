@@ -94,6 +94,17 @@ The custom directory information, with the exception of the churn file, is signe
 
 As discussed above, the use of custom directory information might not be secure in your deployment scenario. It is essential that you perform your own analysis to determine whether using Lightarti-rest is secure for you.
 
+# Testing the library
+
+The library has some simple tests that contact some servers using lightarti-rest.
+Before running the test, the cache information needs to be updated.
+So a full test can be started by running the following commands:
+
+```bash
+DIR_AUTH_PASSWORD=foo make -C tools clean dirinfo
+cargo test
+```
+
 # License
 
 The code is licensed under the MIT license.
