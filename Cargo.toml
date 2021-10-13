@@ -12,13 +12,13 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-tor-bytes = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-chanmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-config = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-proto = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
-tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", rev = "c372671b5ad2663151cbaf2ff392f1e6f0ba292f" }
+tor-bytes = { git = "https://github.com/c4dt/arti.git" }
+tor-chanmgr = { git = "https://github.com/c4dt/arti.git" }
+tor-circmgr = { git = "https://github.com/c4dt/arti.git" }
+tor-config = { git = "https://github.com/c4dt/arti.git" }
+tor-dirmgr = { git = "https://github.com/c4dt/arti.git" }
+tor-proto = { git = "https://github.com/c4dt/arti.git" }
+tor-rtcompat = { git = "https://github.com/c4dt/arti.git" }
 anyhow = "1"
 config = "0.11"
 futures = "0.3"
@@ -36,10 +36,6 @@ tracing-log = "0.1"
 
 [dev-dependencies]
 tempdir = "0.3"
-
-[patch."https://gitlab.torproject.org/tpo/core/arti.git"]
-tor-dirmgr = { path = "src/lightarti/tor-dirmgr" }
-tor-netdoc = { path = "src/lightarti/tor-netdoc" }
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = "0.19"
