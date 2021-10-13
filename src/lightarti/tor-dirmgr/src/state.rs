@@ -12,7 +12,7 @@
 
 // Code mostly copied from Arti.
 
-use std::fs;
+use std::{fs, io::{self, BufReader}};
 use anyhow::{anyhow, Context};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -20,7 +20,6 @@ use log::{debug,info,warn};
 use rand::{Rng,seq::SliceRandom};
 use std::collections::HashSet;
 use std::fmt::Debug;
-use std::iter::FromIterator;
 use std::sync::Weak;
 use std::time::{Duration, SystemTime};
 
@@ -146,13 +145,9 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
         let consensus = fs::read_to_string(consensus_path).context("Failed to read the consensus.")?;
 
         let churn_path = format!("{}/churn.txt", docdir);
-        let churn_raw = match fs::read_to_string(churn_path) {
-            Ok(content) => Some(content),
-            Err(_) => None
-        };
-        let churn = match churn_raw {
-            Some(content) => parse_churn(content.as_str()).context("Failed to parse churn info.")?,
-            None => Vec::new()
+        let churn = match fs::File::open(churn_path).map(BufReader::new) {
+            Ok(file) => parse_churn(file).context("Failed to parse churn info.")?,
+            Err(_) => Vec::new(),
         };
 
         self.add_consensus_text(true, consensus.as_str(), churn)
