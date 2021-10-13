@@ -173,15 +173,18 @@ impl<DM: WriteNetDir> DirState for GetConsensusState<DM> {
 }
 
 /// Parse churned routers info.
-fn parse_churn(churn_raw: &str) -> Result<Vec<RsaIdentity>> {
-    let mut churn: Vec<RsaIdentity> = Vec::new();
-
-    for line in churn_raw.lines().filter(|l| !l.is_empty()) {
-        let bytes = hex::decode(line).context("Failed to decode churned router id.")?;
-        churn.push(
-            RsaIdentity::from_bytes(bytes.as_slice()).ok_or(anyhow!("Invalid router id."))?
-        );
-    }
+fn parse_churn(churn_reader: impl io::BufRead) -> Result<Vec<RsaIdentity>> {
+    let churn: Vec<RsaIdentity> = churn_reader
+        .lines()
+        .collect::<io::Result<Vec<_>>>()
+        .context("Read churn lines as string")?
+        .iter()
+        .filter(|line| !line.is_empty())
+        .map(|line| {
+            let bytes = hex::decode(line).context("Decode churned router id")?;
+            RsaIdentity::from_bytes(&bytes).ok_or(anyhow!("Invalid router id"))
+        })
+        .collect::<Result<_>>()?;
     debug!("Remove {} router(s) from custom consensus as their info is no longer valid.", churn.len());
     Ok(churn)
 }
