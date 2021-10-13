@@ -211,31 +211,23 @@ impl<DM: WriteNetDir> GetConsensusState<DM> {
             }
         };
 
-        // Filter out the churn.
-        if ! churn.is_empty() {
-            let mut churn_set: HashSet<&RsaIdentity> = HashSet::from_iter(&churn);
+        // If the churn is above a threshold, we only consider a random subset
+        // of the churned routers.
+        let churn_threshold = unvalidated.consensus.routers.len() / 6;
+        let churn_set: HashSet<&RsaIdentity> = if churn.len() > churn_threshold {
+            warn!("Churn larger than threshold limit!");
+            let number_to_remove = churn.len() - churn_threshold;
 
-            // If the churn is above a threshold, we only consider a random subset
-            // of the churned routers.
-            let churn_threshold = unvalidated.consensus.routers.len() / 6;
-            if churn.len() > churn_threshold {
-                warn!("Churn larger than threshold limit!");
-                let number_to_remove = churn.len() - churn_threshold;
+            churn
+                .choose_multiple(&mut rand::thread_rng(), churn.len() - number_to_remove)
+                .collect()
+        } else {
+            churn.iter().collect()
+        };
 
-                let elements_to_remove: Vec<&RsaIdentity> = churn.choose_multiple(
-                    &mut rand::thread_rng(),
-                    number_to_remove
-                ).collect();
-
-                for element in elements_to_remove {
-                    churn_set.remove(element);
-                }
-            }
-
-            // We remove the churned routers from the consensus.
-            unvalidated.consensus.routers
-                .retain(|r| !churn_set.contains(r.rsa_identity()));
-        }
+        // We remove the churned routers from the consensus.
+        unvalidated.consensus.routers
+            .retain(|r| !churn_set.contains(r.rsa_identity()));
 
         // Check out what authorities we believe in, and see if enough
         // of them are purported to have singed this consensus.
