@@ -330,9 +330,6 @@ impl<DM: WriteNetDir> DirState for GetCertsState<DM> {
         if self.can_advance() {
             let validated = self.unvalidated.check_signature(&self.certs[..]).context("Consensus validation failed.")?;
 
-            //self.unvalidated.is_well_signed(&self.certs[..])?;
-            //let validated = self.unvalidated.dangerously_assume_wellsigned();
-
             Ok(Box::new(GetMicrodescsState::new(
                 validated,
                 self.consensus_meta,
