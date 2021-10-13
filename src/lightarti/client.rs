@@ -32,7 +32,7 @@ pub struct TorClient<R: Runtime> {
     /// them on-demand.
     circmgr: Arc<tor_circmgr::CircMgr<R>>,
     /// Directory manager for keeping our directory material up to date.
-    dirmgr: Arc<tor_dirmgr::DirMgr>,
+    dirmgr: Arc<tor_dirmgr::DirMgr<R>>,
 }
 
 /// Preferences for how to route a stream over the Tor network.
@@ -72,7 +72,7 @@ impl<R: Runtime> TorClient<R> {
             runtime.clone(),
             Arc::clone(&chanmgr),
         ));
-        let dirmgr = tor_dirmgr::DirMgr::bootstrap_from_config(dircfg, docdir).await?;
+        let dirmgr = tor_dirmgr::DirMgr::bootstrap_from_config(dircfg, runtime.clone(), docdir).await?;
 
         Ok(TorClient {
             runtime,
