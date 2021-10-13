@@ -69,5 +69,5 @@ jobs:
       - name: Run pytest
         working-directory: ./tools
         run: |
-	  make dirinfo
+          make dirinfo
           python -m pytest
