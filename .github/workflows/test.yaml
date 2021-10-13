@@ -68,6 +68,8 @@ jobs:
 
       - name: Run pytest
         working-directory: ./tools
+        env:
+          DIR_AUTH_PASSWORD: dummy
         run: |
           make dirinfo
           python -m pytest
