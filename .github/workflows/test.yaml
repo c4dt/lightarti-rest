@@ -30,6 +30,7 @@ jobs:
           DIR_AUTH_PASSWORD: dummy
         run: |
           make dirinfo
+          make churn
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -54,6 +55,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install Tor
+        run: sudo apt-get install -y tor
+
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -67,6 +71,8 @@ jobs:
 
       - name: Run pytest
         working-directory: ./tools
+        env:
+          DIR_AUTH_PASSWORD: dummy
         run: |
-	  make dirinfo
+          make dirinfo
           python -m pytest

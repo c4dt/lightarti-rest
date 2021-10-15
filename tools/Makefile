@@ -21,6 +21,11 @@ dirinfo: $(AUTH_DIR)
 		--consensus $(DIR_CACHE)/consensus.txt \
 		--microdescriptors $(DIR_CACHE)/microdescriptors.txt
 
+churn: $(DIR_CACHE)/consensus.txt
+	./gen_fresh_dirinfo.py compute-churn \
+		--consensus $(DIR_CACHE)/consensus.txt \
+		--churn $(DIR_CACHE)/churn.txt
+
 pip_install: requirements.txt
 	pip3 install -qr requirements.txt
 	touch pip_install

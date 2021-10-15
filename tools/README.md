@@ -1,26 +1,30 @@
-# Tools for arti-cache
+# Tools for generating custom directory information
 
-## Overview
+To reduce bandwidth use of lightarti-rest, the library relies on custom Tor directory information. The scripts in the `tools/` directory generate the required files, that can then be downloaded by apps for use with lightarti-rest.
 
-To send some data anonymously over the network, Lightarti-rest relies on a
-subset of relays of the Tor network.
+The scripts in this directory pick reliable nodes so that ideally the consensus can be used for up to a week. Reliability is measured as INSERT MEASURES HERE. We refer to the [accompanying Jupyter notebook](churn_analysis.ipynb) for a historical analysis of churn on the Tor network that shows shows that this approach is viable.
 
-This script allows to set up a snapshot of the most reliable Tor relays
-for faster circuit setup.
+The tool provides three functions:
 
-You will have to create a custom directory authority, and to periodically
-run this script on a trusted server.
+1. Setting up a custom directory authority. The keys of this authority are used to sign the smaller custom consensus files. This step only needs to be run once.
+2. Generating a new custom consensus. Based on the latest consensus information, the script produces a smaller consensus of reliable nodes.  A new custom consensus should ideally be generated at least once a day. Generating a new custom consensus requires the keys from the previous step.
+3. Generating a churn file. As a custom consensus ages, some nodes may no longer be available. To increase efficiency, lightarti-rest can take as input a very small churn file that lists available nodes. A churn file is generated with respect to a specific custom consensus. Ideally it is updated every hour.
 
-Then the app will have to download the files, put them in a directory,
-and send the path to this directory to the library.
+We describe these in more detail below.
+
+The size of a consensus retrieved from Tor authorities in microconsensus format is about 2.2 MB.
+
+The size of a shortened consensus will depend on the number of relay we decide to include, if we keep the default values (120 routers), it will have a size of about 45 KB.
+
+The size of the churn file will increase over time, as more relays become unreachable. Each unreachable relay increase the size of the churn file by 41 bytes (40 bytes for the fingerprint of the relay plus 1 byte for the new line). So typically, its size will be less 1 KB.
+
 
 ## Requirements
 
-This script requires Python 3 (version >= 3.7), as well as
-the libraries Stem (version >= 1.8.0), PyCryptodome
-(version >= 3.10.1), and Cryptography.
+This script requires Python 3 (version >= 3.7), as well as the libraries Stem
+(version >= 1.8.0), PyCryptodome (version >= 3.10.1), and Cryptography.
 
-It is advised to install the required libraries with `pip`:
+We recommend to install the required libraries with `pip`:
 
 ```
 pip install -r requirements.txt
@@ -28,37 +32,41 @@ pip install -r requirements.txt
 
 Also, to create the directory authority's certificate, this script
 relies on the program `tor-gencert` that you will have to install on
-your machine. For a debian based distribution, this program is usually
+your machine. For a Debian-based distribution, this program is usually
 installed by the package `tor`:
 
 ```
 sudo apt-get install tor
 ```
 
-## Generating Directory Info
+## A quick start
 
 We provide a Makefile allowing you to generate all the files you need
-for running Lightarti-rest. First you will need to set a password to encrypt
-some private data of the custom authority via an environment variable,
-then create the authority and its certificate:
+for using Lightarti-rest.
+
+When first using lightarti-rest in a new context, you must create a custom directory authority and the corresponding keys and certificates. The private keys of the custom directory authority will be password protected before writing them to disk. The Makefile assumes that the environment variable `DIR_AUTH_PASSWORD` contains this password.
+
+To set up the custom directory authority, run:
 
 ```
 export DIR_AUTH_PASSWORD='dummypassword'
 make certificate
 ```
 
-Then you will have to create the fresh directory info.
+This is a one-time operation. The private data of the custom
+directory authority are written to the sub-directory `authority-private`.
+
+To generate an updated custom consensus containing fresh directory information, run:
 
 ```
 make dirinfo
 ```
 
-We configured it to place the files required by Lightarti-rest in the
-sub-directory `directory-cache`, and the private data of the custom
-directory authority in the sub-directory `authority-private`.
+The Makefile writes the resulting files to the `directory-cache/` directory. Lightarti-rest relies on the files in this directory for its operation. Apps should download this directory and supply it as the `cache_dir` argument.
 
-Once the data is generated, you can use the subdirectory `directory-cache`
-as the `cache_dir` argument.
+## Using the scripts directly
+
+You can also call the `gen_fresh_dirinfo.py` script directly. This gives you more control than using the Makefile.
 
 ### Custom Directory Authority
 
@@ -110,9 +118,8 @@ renew the certificate instead of regenerating a new identity key.
 
 ### Generate Directory Information
 
-To generate the directory information, you will need to run the
-`generate-dirinfo` sub-command of this script regularly on a trusted
-server.
+To generate updated directory information, you must run the
+`generate-dirinfo` sub-command of this script. We recommend to do so regularly, but at least once a day.
 
 ```
 python3 gen_fresh_dirinfo.py generate-dirinfo \
@@ -127,7 +134,7 @@ python3 gen_fresh_dirinfo.py generate-dirinfo \
 ```
 
 This sub-command effectively creates a snapshot of the most
-reliable advertised relays in the Tor network in the form of two files:
+reliable advertised routers in the Tor network in the form of two files:
 
 - A customized consensus containing metadata related to a subset of
   routers present in the Tor network. (default: `consensus.txt`)
@@ -136,11 +143,29 @@ reliable advertised relays in the Tor network in the form of two files:
   `microdescriptors.txt`)
 
 
-## Generate Churn (Incomplete)
+## Generate Churn
 
 To improve the reliability of the subset of the Tor network upon which
-Lightarti-rest relies to build a circuit, we are providing a way to compute
-a list of no-longer working relays.
+Lightarti-rest relies to build circuits, we are providing a way to compute
+a list of no longer available/reachable routers.
 
-This is a work in progress, currently Lightarti-rest is not able to handle
-this list.
+This list of unavailable routers is intended to be a lightweight file containing
+up-to-date info about routers that are no longer reachable with the info
+contained in the current customized consensus.
+
+Once generated, you can additionally provide the churn file to Lightarti-rest.
+Lightarti-rest will then ignore any routers that are marked as unavailable when
+building a circuit.
+
+To generate this file containing the no longer working routers in a customized
+consensus, you will need to run the `compute-churn` sub-command of this script
+at least once a day on a trusted server.
+
+```
+./gen_fresh_dirinfo.py compute-churn \
+		--churn churn.txt \
+		--consensus consensus.txt
+```
+
+This subcommand, essentially parses a customized consensus and compare its info
+with up-to-date data retrieved from Tor's directory authorities.
