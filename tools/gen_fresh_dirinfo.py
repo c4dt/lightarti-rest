@@ -190,6 +190,9 @@ def is_orport_used(router: RouterStatusEntryMicroV3, port: int) -> bool:
     :param port: port we want to check
     :return: True if the port is used, False otherwise
     """
+    # This field correspond to the OR port specified in the "router" line of a router's description.
+    # Per Tor's spec it is always used for an IPv4 address.
+    # (Tor directory protocol, version 3, 2.1.1.)
     return router.or_port == port
 
 
