@@ -184,16 +184,16 @@ LOGGER = setup_logger()
 
 def is_orport_used(router: RouterStatusEntryMicroV3, port: int) -> bool:
     """
-    Check if a port is used as an OR port by a router.
+    Check if a port is used as an OR port by a router on its IPv4 address.
 
     :param router: router entry in the consensus
     :param port: port we want to check
     :return: True if the port is used, False otherwise
     """
-    for _, port_used, _ in router.or_addresses:
-        if port_used == port:
-            return True
-    return False
+    # This field correspond to the OR port specified in the "router" line of a router's description.
+    # Per Tor's spec it is always used for an IPv4 address.
+    # (Tor directory protocol, version 3, 2.1.1.)
+    return router.or_port == port
 
 
 def is_address_port_changed(
