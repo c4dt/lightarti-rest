@@ -75,3 +75,23 @@ jobs:
         run: |
           make cache
           python -m pytest
+
+  test-makefile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Tor
+        run: sudo apt-get install -y tor
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Run Makefile
+        working-directory: ./tools
+        env:
+          DIR_AUTH_PASSWORD: dummy
+        run: |
+          make cache
+          make update_cache_churn

@@ -10,19 +10,20 @@ CACHE_CERT=$(CACHE_DIR)/certificate.txt
 CACHE_AUTH=$(CACHE_DIR)/authority.txt
 CACHE_CONS=$(CACHE_DIR)/consensus.txt
 CACHE_MICRO=$(CACHE_DIR)/microdescriptors.txt
+CACHE_CHURN=$(CACHE_DIR)/churn.txt
 
 all: update_cache
 
 clean_auth:
 	rm -rf $(AUTH_DIR)
 
-authority: pip_install $(AUTH_ID) $(AUTH_SIGN) $(AUTH_CERT) $(AUTH_AUTH)
+authority: .venv $(AUTH_ID) $(AUTH_SIGN) $(AUTH_CERT) $(AUTH_AUTH)
 $(AUTH_ID) $(AUTH_SIGN) $(AUTH_CERT) $(AUTH_AUTH):
 ifeq ($(DIR_AUTH_PASSWORD), )
 	$(error Environment variable DIR_AUTH_PASSWORD is undefined or invalid.)
 endif
 	mkdir -p $(AUTH_DIR)
-	./gen_fresh_dirinfo.py generate-certificate \
+	. .venv/bin/activate && ./gen_fresh_dirinfo.py generate-certificate \
 		--authority-identity-key $(AUTH_ID) \
 		--authority-signing-key $(AUTH_SIGN) \
 		--authority-certificate $(AUTH_CERT) \
@@ -33,25 +34,25 @@ clean_cache:
 
 update_cache: clean_cache cache
 
-cache: $(CACHE_CERT) $(CACHE_AUTH) $(CACHE_CONS) $(CACHE_MICRO)
+cache: authority $(CACHE_CERT) $(CACHE_AUTH) $(CACHE_CONS) $(CACHE_MICRO)
 $(CACHE_CERT) $(CACHE_AUTH) $(CACHE_CONS) $(CACHE_MICRO):
 	$(MAKE) authority
 	mkdir -p $(CACHE_DIR)
 	cp $(AUTH_CERT) $(AUTH_AUTH) $(CACHE_DIR)
-	./gen_fresh_dirinfo.py generate-dirinfo \
+	. .venv/bin/activate && ./gen_fresh_dirinfo.py generate-dirinfo \
 		--authority-signing-key $(AUTH_SIGN) \
 		--authority-certificate $(CACHE_CERT) \
 		--consensus $(CACHE_CONS) \
 		--microdescriptors $(CACHE_MICRO)
 
 churn: cache
-	./gen_fresh_dirinfo.py compute-churn \
-		--consensus $(CACHE_DIR)/consensus.txt \
-		--churn $(CACHE_DIR)/churn.txt
+	. .venv/bin/activate && ./gen_fresh_dirinfo.py compute-churn \
+		--consensus $(CACHE_CONS) \
+		--churn $(CACHE_CHURN)
 
-pip_install: requirements.txt
-	pip3 install -qr requirements.txt
-	touch pip_install
+.venv: requirements.txt
+	python3 -m venv .venv
+	. .venv/bin/activate &&	pip3 install -qr requirements.txt
 
 clean: clean_cache clean_auth
 
@@ -64,14 +65,13 @@ secrets_authority: $(AUTH_DIR)
 # This updates the CACHE_DIR directory:
 # - fully every Monday or if the consensus is missing
 # - creating a new churn.txt on every day
-# It supposes that the
+# If this is called in a script, the CACHE_DIR should hold the
+# consensus for the source of the churn-file.
 CHURN_WEEK_FILE = $(CACHE_DIR)/churn_week
 CHURN_WEEK := $(shell date +%Y_%W)
 update_cache_churn: $(CHURN_WEEK_FILE)
-	if grep -v $(CHURN_WEEK) $(CHURN_WEEK_FILE); then \
-		rm -f $(CACHE_DIR)/*; \
-	fi
-	if [ $$( date +%w ) = 1 ]; then \
+	if grep -v $(CHURN_WEEK) $(CHURN_WEEK_FILE) || \
+		[ $$( date +%w ) -eq 1 ]; then \
   		rm -f $(CACHE_DIR)/*; \
 	fi
 	$(MAKE) churn $(CHURN_WEEK_FILE)
