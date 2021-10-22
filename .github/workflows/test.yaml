@@ -29,7 +29,6 @@ jobs:
         env:
           DIR_AUTH_PASSWORD: dummy
         run: |
-          make dirinfo
           make churn
 
       - uses: actions-rs/toolchain@v1
@@ -74,5 +73,5 @@ jobs:
         env:
           DIR_AUTH_PASSWORD: dummy
         run: |
-          make dirinfo
+          make cache
           python -m pytest
