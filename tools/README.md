@@ -59,7 +59,7 @@ directory authority are written to the sub-directory `authority-private`.
 To generate an updated custom consensus containing fresh directory information, run:
 
 ```
-make dirinfo
+make update_cache
 ```
 
 The Makefile writes the resulting files to the `directory-cache/` directory. Lightarti-rest relies on the files in this directory for its operation. Apps should download this directory and supply it as the `cache_dir` argument.
