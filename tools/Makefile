@@ -77,4 +77,5 @@ update_cache_churn: $(CHURN_WEEK_FILE)
 	$(MAKE) churn $(CHURN_WEEK_FILE)
 
 $(CHURN_WEEK_FILE):
+	mkdir -p $(dir $(CHURN_WEEK_FILE))
 	echo $(CHURN_WEEK) > $@
