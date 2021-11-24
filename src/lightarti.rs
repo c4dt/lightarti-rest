@@ -51,7 +51,7 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
     })
 }
 
-/// Tries several times to send a request, after which returns an error if still unsuccessful.
+/// Tries several times to send a request; if still unsuccessful, returns an error
 async fn send_request(tor: &TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
     debug!(host, "send request");
 
