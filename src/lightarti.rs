@@ -3,8 +3,8 @@ use std::{fs, path::Path, str::FromStr};
 use anyhow::{anyhow, Context, Result};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
-use tor_rtcompat::{Runtime, SpawnBlocking};
 use tor_dirmgr::Authority;
+use tor_rtcompat::{Runtime, SpawnBlocking};
 use tracing::{debug, trace};
 
 use crate::lightarti::client::TorClient;
@@ -30,8 +30,10 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
         let cache_str = cache.to_str().context("cache as string")?;
 
         let authority_path = format!("{}/authority.txt", cache_str);
-        let authority_raw = fs::read_to_string(authority_path).context("Failed to read authority.")?;
-        let authority = Authority::from_str(authority_raw.as_str()).context("Failed to parse authority.")?;
+        let authority_raw =
+            fs::read_to_string(authority_path).context("Failed to read authority.")?;
+        let authority =
+            Authority::from_str(authority_raw.as_str()).context("Failed to parse authority.")?;
         let authority_vec: Vec<Authority> = vec![authority];
 
         dircfg.set_cache_path(cache);
@@ -45,44 +47,60 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
         .await
         .context("bootstrap tor client")?;
 
-        send_request(tor_client, host, request).await
+        send_request(&tor_client, host, request).await
     })
 }
 
-/// Sends a GET request over a TLS connection and returns the result.
-async fn send_request(tor: TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
+/// Tries several times to send a request; if still unsuccessful, returns an error
+async fn send_request(tor: &TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
     debug!(host, "send request");
 
     for retry in 0..5u32 {
         debug!("Connection-try {}", retry);
-        let stream: conv::TorStream = tor
-            .connect(host, 443, None)
-            .await
-            .context("tor connect")?
-            .into();
-
-        let mut tls_stream =
-            TlsConnector::from(native_tls::TlsConnector::new().context("create tls connector")?)
-                .connect(host, stream)
-                .await
-                .context("tls connect")?;
-
-        tls_stream
-            .write_all(request.as_ref())
-            .await
-            .context("write request")?;
-
-        let mut res = Vec::default();
-        if tls_stream.read_to_end(&mut res).await.is_ok() {
-            let result = String::from_utf8_lossy(&res).to_string();
-
-            debug!("Received {} bytes from stream", result.len());
-            trace!("Received stream: {}", result);
-            return Ok(result);
+        match send_request_attempt(tor, host, request).await {
+            Err(error) => debug!("Error: {}", error),
+            v => return v,
         }
     }
 
     Err(anyhow!("Couldn't get response"))
+}
+
+/// Sends a request over a TLS connection and returns the result.
+async fn send_request_attempt(
+    tor: &TorClient<impl Runtime>,
+    host: &str,
+    request: &str,
+) -> Result<String> {
+    let stream: conv::TorStream = tor
+        .connect(host, 443, None)
+        .await
+        .context("tor connect")?
+        .into();
+
+    let mut tls_stream =
+        TlsConnector::from(native_tls::TlsConnector::new().context("create tls connector")?)
+            .connect(host, stream)
+            .await
+            .context("tls connect")?;
+
+    tls_stream
+        .write_all(request.as_ref())
+        .await
+        .context("write request")?;
+
+    let mut res = Vec::default();
+    tls_stream
+        .read_to_end(&mut res)
+        .await
+        .context("read response")?;
+
+    let result = String::from_utf8_lossy(&res).to_string();
+
+    debug!("Received {} bytes from stream", result.len());
+    trace!("Received stream: {}", result);
+
+    Ok(result)
 }
 
 #[cfg(test)]
