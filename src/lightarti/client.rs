@@ -72,7 +72,8 @@ impl<R: Runtime> TorClient<R> {
             runtime.clone(),
             Arc::clone(&chanmgr),
         ));
-        let dirmgr = tor_dirmgr::DirMgr::bootstrap_from_config(dircfg, runtime.clone(), docdir).await?;
+        let dirmgr =
+            tor_dirmgr::DirMgr::bootstrap_from_config(dircfg, runtime.clone(), docdir).await?;
 
         Ok(TorClient {
             runtime,

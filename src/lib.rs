@@ -1,7 +1,7 @@
 pub mod client;
 
-mod lightarti;
 mod ffi;
+mod lightarti;
 
 #[cfg(test)]
 mod tests;

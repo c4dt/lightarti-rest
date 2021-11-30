@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
-use std::path::PathBuf;
 use std::panic;
+use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use core_foundation::{
@@ -94,7 +94,7 @@ fn _call_arti(request_json: &str) -> Result<Response> {
         resp.try_into()
             .context("convert http::Response to response")
     })
-        .unwrap_or_else(|e| Err(anyhow!("caught panic: {:?}", e)))
+    .unwrap_or_else(|e| Err(anyhow!("caught panic: {:?}", e)))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
