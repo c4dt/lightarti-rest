@@ -1,4 +1,3 @@
-
 use std::{fs::copy, path::Path};
 use tempdir::TempDir;
 
@@ -38,11 +37,7 @@ pub fn setup_cache() -> TempDir {
     )
     .expect("copy temp consensus file");
 
-    copy(
-        source.join("churn.txt"),
-        tempdir.path().join("churn.txt"),
-    )
-    .expect("copy temp churn file");
+    copy(source.join("churn.txt"), tempdir.path().join("churn.txt")).expect("copy temp churn file");
 
     copy(
         source.join("microdescriptors.txt"),
