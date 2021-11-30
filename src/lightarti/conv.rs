@@ -48,9 +48,8 @@ impl tokio::io::AsyncWrite for TorStream {
         use futures::{io::AsyncWrite, ready};
         let ret = Pin::new(&mut self.wrapped).poll_write(cx, buf);
         // FIXME dirty fix to force tls->tor communication
-        match ready!(self.poll_flush(cx)) {
-            Err(e) => return Poll::Ready(Err(e)),
-            _ => (),
+        if let Err(e) = ready!(self.poll_flush(cx)) {
+            return Poll::Ready(Err(e));
         }
         ret
     }
