@@ -11,25 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Tor
-        run: sudo apt-get install -y tor
-
-      - uses: actions/setup-python@v2
+      - name: Retrieve latest directory cache
+        uses: dsaltares/fetch-gh-release-asset@0.0.5
         with:
-          python-version: 3.7
+          repo: c4dt/lightarti-directory
+          version: latest
+          file: directory-cache.tgz
 
-      - name: Install Python dependencies
-        working-directory: ./tools
+      - name: Set up directory cache
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Generate authority and fresh dir info
-        working-directory: ./tools
-        env:
-          DIR_AUTH_PASSWORD: dummy
-        run: |
-          make churn
+          mkdir ./directory-cache
+          tar -C ./directory-cache -xf directory-cache.tgz
 
       - uses: actions-rs/toolchain@v1
         with:

@@ -14,9 +14,7 @@ pub fn setup_tracing() {
 }
 
 pub fn setup_cache() -> TempDir {
-    let source = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tools")
-        .join("directory-cache");
+    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("directory-cache");
     let tempdir = TempDir::new("tor-cache").expect("create temp dir");
 
     copy(
