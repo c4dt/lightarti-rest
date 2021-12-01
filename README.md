@@ -101,7 +101,7 @@ Before running the test, the cache information needs to be updated.
 So a full test can be started by running the following commands:
 
 ```bash
-DIR_AUTH_PASSWORD=foo make -C tools clean dirinfo
+make dircache
 cargo test
 ```
 
