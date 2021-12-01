@@ -11,17 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Retrieve latest directory cache
-        uses: dsaltares/fetch-gh-release-asset@0.0.5
-        with:
-          repo: c4dt/lightarti-directory
-          version: latest
-          file: directory-cache.tgz
-
       - name: Set up directory cache
-        run: |
-          mkdir ./directory-cache
-          tar -C ./directory-cache -xf directory-cache.tgz
+        run: make dircache
 
       - uses: actions-rs/toolchain@v1
         with:
