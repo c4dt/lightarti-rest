@@ -1,6 +1,8 @@
 arxc := lightarti-rest.xcframework
 arxcz := $(arxc).zip
 
+LATEST_DIRCACHE_URL=https://github.com/c4dt/lightarti-directory/releases/latest/download/directory-cache.tgz
+
 .PHONY: build-ios
 build-ios: $(arxcz)
 
@@ -21,3 +23,9 @@ dev:
 	cp -av lightarti-rest.xcframework ../../lightarti-rest-ios
 	perl -pi -e 's/lto = "thin"/lto = "fat"/' Cargo.toml
 	perl -pi -e 's/.*#opt-level = "s"/opt-level = "s"/' Cargo.toml
+
+.PHONY: dircache
+
+dircache:
+	mkdir -p directory-cache
+	wget --output-document - --quiet '$(LATEST_DIRCACHE_URL)' | tar -C directory-cache -zxf -

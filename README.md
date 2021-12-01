@@ -101,7 +101,7 @@ Before running the test, the cache information needs to be updated.
 So a full test can be started by running the following commands:
 
 ```bash
-mkdir -p directory-cache && wget --output-document - --quiet 'https://github.com/c4dt/lightarti-directory/releases/latest/download/directory-cache.tgz' | tar -C directory-cache -zxf -
+make dircache
 cargo test
 ```
 
