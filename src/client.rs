@@ -123,8 +123,8 @@ mod tests {
 
         let resp = Client::new(cache.path().to_path_buf())
             .send(
-                Request::get("https://www.c4dt.org")
-                    .header("Host", "www.c4dt.org")
+                Request::get("https://www.example.com")
+                    .header("Host", "www.example.com")
                     .version(http::Version::HTTP_10)
                     .body(vec![])
                     .expect("create get request"),
