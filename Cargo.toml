@@ -12,13 +12,15 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-tor-bytes = { git = "https://github.com/c4dt/arti.git" }
-tor-chanmgr = { git = "https://github.com/c4dt/arti.git" }
-tor-circmgr = { git = "https://github.com/c4dt/arti.git" }
-tor-config = { git = "https://github.com/c4dt/arti.git" }
-tor-dirmgr = { git = "https://github.com/c4dt/arti.git" }
-tor-proto = { git = "https://github.com/c4dt/arti.git" }
-tor-rtcompat = { git = "https://github.com/c4dt/arti.git" }
+arti-client = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = ["lightarti"] }
+tor-bytes = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+tor-chanmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+tor-circmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+tor-config = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+tor-dirmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = ["lightarti"] }
+tor-proto = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+tor-rtcompat = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = ["tokio"] }
+
 anyhow = "1"
 config = "0.11"
 futures = "0.3"
@@ -44,7 +46,7 @@ tracing = { version = "0.1", features = ["log"] }
 
 # needed to correctly link
 openssl-sys = { version = "0.9", features = ["vendored"] }
-rusqlite = { version = "0.25.1", features = ["bundled"] }
+rusqlite = { version = "0.26.3", features = ["bundled"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 core-foundation = "0.9"

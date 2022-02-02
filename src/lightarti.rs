@@ -1,52 +1,41 @@
 use std::{fs, path::Path, str::FromStr};
 
 use anyhow::{anyhow, Context, Result};
+use arti_client::{TorClient, TorClientConfig};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
+use tor_config::CfgPath;
 use tor_dirmgr::Authority;
-use tor_rtcompat::{Runtime, SpawnBlocking};
+use tor_rtcompat::{BlockOn, Runtime};
 use tracing::{debug, trace};
 
-use crate::lightarti::client::TorClient;
+fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
+    let cache_str = cache_path.to_str().context("cache as string")?;
 
-mod client;
-mod conv;
+    let mut cfg_builder = TorClientConfig::builder();
+    cfg_builder
+        .storage()
+        .cache_dir(CfgPath::new(cache_str.to_string()));
+
+    let auth_path = format!("{}/authority.txt", cache_str);
+    let auth_raw = fs::read_to_string(auth_path).context("Failed to read authority")?;
+    let auth = Authority::from_str(auth_raw.as_str())?;
+
+    cfg_builder.tor_network().authorities(vec![auth]);
+    // Overriding authorities requires also overriding fallback caches
+    cfg_builder.tor_network().fallback_caches(Vec::new());
+
+    cfg_builder.build().map_err(anyhow::Error::new)
+}
 
 /// This connection sends a generic request over TLS to the host.
 /// It returns the result from the request, or an error.
 pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
-    let mut cfg = config::Config::new();
-    tor_config::load(
-        &mut cfg,
-        None as Option<&Path>,
-        &[] as &[&Path; 0],
-        &[] as &[&str; 0],
-    )
-    .context("load config")?;
+    let cfg = build_config(cache).context("load config")?;
+    let runtime = tor_rtcompat::tokio::PreferredRuntime::create().context("create runtime")?;
 
-    let runtime = tor_rtcompat::create_runtime().context("create tor runtime")?;
-    runtime.block_on(async {
-        let mut dircfg = tor_dirmgr::NetDirConfigBuilder::new();
-        let cache_str = cache.to_str().context("cache as string")?;
-
-        let authority_path = format!("{}/authority.txt", cache_str);
-        let authority_raw =
-            fs::read_to_string(authority_path).context("Failed to read authority.")?;
-        let authority =
-            Authority::from_str(authority_raw.as_str()).context("Failed to parse authority.")?;
-        let authority_vec: Vec<Authority> = vec![authority];
-
-        dircfg.set_cache_path(cache);
-        dircfg.set_authorities(&authority_vec);
-
-        let tor_client = TorClient::bootstrap(
-            runtime.clone(),
-            dircfg.finalize().context("netdir finalize")?,
-            cache_str,
-        )
-        .await
-        .context("bootstrap tor client")?;
-
+    runtime.clone().block_on(async {
+        let tor_client = TorClient::create_bootstrapped(runtime, cfg).await?;
         send_request(&tor_client, host, request).await
     })
 }
@@ -72,11 +61,7 @@ async fn send_request_attempt(
     host: &str,
     request: &str,
 ) -> Result<String> {
-    let stream: conv::TorStream = tor
-        .connect(host, 443, None)
-        .await
-        .context("tor connect")?
-        .into();
+    let stream = tor.connect((host, 443)).await.context("tor connect")?;
 
     let mut tls_stream =
         TlsConnector::from(native_tls::TlsConnector::new().context("create tls connector")?)
@@ -88,6 +73,7 @@ async fn send_request_attempt(
         .write_all(request.as_ref())
         .await
         .context("write request")?;
+    tls_stream.flush().await.context("stream flush")?;
 
     let mut res = Vec::default();
     tls_stream
@@ -115,8 +101,8 @@ mod tests {
         let docdir = tests::setup_cache();
 
         tls_send(
-            "www.c4dt.org",
-            "GET /index.html HTTP/1.0\nHost: www.c4dt.org\n\n",
+            "www.example.com",
+            "GET /index.html HTTP/1.0\nHost: www.example.com\n\n",
             docdir.path(),
         )
         .expect("get page via tor");
