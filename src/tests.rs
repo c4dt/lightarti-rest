@@ -18,8 +18,8 @@ pub fn setup_cache() -> TempDir {
     let tempdir = TempDir::new("tor-cache").expect("create temp dir");
 
     copy(
-        source.join("authority.txt"),
-        tempdir.path().join("authority.txt"),
+        source.join("authority.json"),
+        tempdir.path().join("authority.json"),
     )
     .expect("copy temp authority file");
 
