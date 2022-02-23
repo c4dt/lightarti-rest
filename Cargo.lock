@@ -36,7 +36,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fcb51a0695d8f838b1ee009b3fbf66bda078cd64590202a864a8f3e8c4315c47"
 dependencies = [
- "getrandom 0.2.4",
+ "getrandom 0.2.5",
  "once_cell",
  "version_check",
 ]
@@ -79,9 +79,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.53"
+version = "1.0.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94a45b455c14666b85fc40a019e8ab9eb75e3a124e05494f5397122bc9eb06e0"
+checksum = "159bb86af3a200e19a068f4224eae4c8bb2d0fa054c7e5d1cacd5cef95e684cd"
 
 [[package]]
 name = "arrayref"
@@ -98,7 +98,7 @@ checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 [[package]]
 name = "arti-client"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "derive_builder",
  "derive_more",
@@ -299,13 +299,13 @@ checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
 [[package]]
 name = "caret"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 
 [[package]]
 name = "cc"
-version = "1.0.72"
+version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22a9137b95ea06864e018375b72adfb7db6e6f68cfc8df5a04d00288050485ee"
+checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
 dependencies = [
  "jobserver",
 ]
@@ -461,11 +461,12 @@ dependencies = [
 
 [[package]]
 name = "crypto-common"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4600d695eb3f6ce1cd44e6e291adceb2cc3ab12f20a33777ecd0bf6eba34e06"
+checksum = "57952ca27b5e3606ff4dd79b0020231aaf9d6aa76dc05fd30137538c50bd3ce8"
 dependencies = [
  "generic-array",
+ "typenum",
 ]
 
 [[package]]
@@ -479,9 +480,9 @@ dependencies = [
 
 [[package]]
 name = "curve25519-dalek"
-version = "3.2.0"
+version = "3.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b9fdf9972b2bd6af2d913799d9ebc165ea4d2e65878e329d9c6b372c4491b61"
+checksum = "90f9d052967f590a76e62eb387bd0bbb1b000182c3cefe5364db6b7211651bc0"
 dependencies = [
  "byteorder",
  "digest 0.9.0",
@@ -590,9 +591,9 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.10.2"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cb780dce4f9a8f5c087362b3a4595936b2019e7c8b30f2c3e9a7e94e6ae9837"
+checksum = "f2fb860ca6fafa5552fb6d0e816a69c8e49f0908bf524e30a90d97c85892d506"
 dependencies = [
  "block-buffer 0.10.2",
  "crypto-common",
@@ -878,9 +879,9 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "418d37c8b1d42553c93648be529cb70f920d3baf8ef469b74b9638df426e0b4c"
+checksum = "d39cd93900197114fa1fcb7ae84ca742095eed9442088988ae74fa744e930e77"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -930,20 +931,20 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hkdf"
-version = "0.12.2"
+version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "158bc31e00a68e380286904cc598715f861f2b0ccf7aa6fe20c6d0c49ca5d0f6"
+checksum = "791a029f6b9fc27657f6f188ec6e5e43f6911f6f878e0dc5501396e09809d437"
 dependencies = [
  "hmac",
 ]
 
 [[package]]
 name = "hmac"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddca131f3e7f2ce2df364b57949a9d47915cfbd35e46cfee355ccebbf794d6a2"
+checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
- "digest 0.10.2",
+ "digest 0.10.3",
 ]
 
 [[package]]
@@ -1094,9 +1095,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.118"
+version = "0.2.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06e509672465a0504304aa87f9f176f2b2b716ed8fb105ebe5c02dc6dce96a94"
+checksum = "1bf2e165bb3457c8e098ea76f3e3bc9db55f87aa90d52d0e6be741470916aaa4"
 
 [[package]]
 name = "libm"
@@ -1122,9 +1123,11 @@ dependencies = [
  "android_logger",
  "anyhow",
  "arti-client",
+ "async-trait",
  "config",
  "core-foundation",
  "futures",
+ "hex",
  "http",
  "httparse",
  "jni",
@@ -1132,6 +1135,8 @@ dependencies = [
  "log",
  "log-panics",
  "openssl-sys",
+ "postage",
+ "rand 0.8.5",
  "rusqlite",
  "serde 1.0.136",
  "serde_json",
@@ -1140,9 +1145,13 @@ dependencies = [
  "tokio-native-tls",
  "tor-bytes",
  "tor-chanmgr",
+ "tor-checkable",
  "tor-circmgr",
  "tor-config",
  "tor-dirmgr",
+ "tor-llcrypto",
+ "tor-netdir",
+ "tor-netdoc",
  "tor-proto",
  "tor-rtcompat",
  "tracing",
@@ -1255,9 +1264,9 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "0.7.14"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8067b404fe97c70829f082dec8bcf4f71225d7eaea1d8645349cb76fa06205cc"
+checksum = "ba272f85fa0b41fc91872be579b3bbe0f56b792aa361a380eb669469f68dafb2"
 dependencies = [
  "libc",
  "log",
@@ -1476,27 +1485,25 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.11.2"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
+checksum = "87f5ec2493a61ac0506c0f4199f99070cbe83857b0337006a30f3e6719b8ef58"
 dependencies = [
- "instant",
  "lock_api",
  "parking_lot_core",
 ]
 
 [[package]]
 name = "parking_lot_core"
-version = "0.8.5"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d76e8e1493bcac0d2766c42737f34458f1c8c50c0d23bcb24ea953affb273216"
+checksum = "28141e0cc4143da2443301914478dc976a61ffdb3f043058310c70df2fed8954"
 dependencies = [
  "cfg-if",
- "instant",
  "libc",
  "redox_syscall",
  "smallvec 1.8.0",
- "winapi",
+ "windows-sys",
 ]
 
 [[package]]
@@ -1760,7 +1767,7 @@ version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7"
 dependencies = [
- "getrandom 0.2.4",
+ "getrandom 0.2.5",
 ]
 
 [[package]]
@@ -1796,7 +1803,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "528532f3d801c87aec9def2add9ca802fe569e44a544afe633765267840abe64"
 dependencies = [
- "getrandom 0.2.4",
+ "getrandom 0.2.5",
  "redox_syscall",
 ]
 
@@ -1844,7 +1851,7 @@ checksum = "51dd4445360338dab5116712bee1388dc727991d51969558a8882ab552e6db30"
 [[package]]
 name = "retry-error"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 
 [[package]]
 name = "rsa"
@@ -1969,9 +1976,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0486718e92ec9a68fbed73bb5ef687d71103b142595b406835649bebd33f72c7"
+checksum = "a4a3381e03edd24287172047536f20cabde766e2cd3e65e6b00fb3af51c4f38d"
 
 [[package]]
 name = "serde"
@@ -2030,7 +2037,7 @@ checksum = "028f48d513f9678cda28f6e4064755b3fbb2af6acd672f2c209b62323f7aea0f"
 dependencies = [
  "cfg-if",
  "cpufeatures",
- "digest 0.10.2",
+ "digest 0.10.3",
 ]
 
 [[package]]
@@ -2048,22 +2055,22 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99c3bd8169c58782adad9290a9af5939994036b76187f7b4f0e6de91dbbfc0ec"
+checksum = "55deaec60f81eefe3cce0dc50bda92d6d8e88f2a27df7c5033b42afeb1ed2676"
 dependencies = [
  "cfg-if",
  "cpufeatures",
- "digest 0.10.2",
+ "digest 0.10.3",
 ]
 
 [[package]]
 name = "sha3"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31f935e31cf406e8c0e96c2815a5516181b7004ae8c5f296293221e9b1e356bd"
+checksum = "881bf8156c87b6301fc5ca6b27f11eeb2761224c7081e69b409d5a1951a70c86"
 dependencies = [
- "digest 0.10.2",
+ "digest 0.10.3",
  "keccak",
 ]
 
@@ -2129,6 +2136,16 @@ name = "smallvec"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2dd574626839106c320a323308629dcb1acfc96e32a8cba364ddc61ac23ee83"
+
+[[package]]
+name = "socket2"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66d72b759436ae32898a2af0a14218dbf55efde3feeb170eb623637db85ee1e0"
+dependencies = [
+ "libc",
+ "winapi",
+]
 
 [[package]]
 name = "spin"
@@ -2282,9 +2299,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.16.1"
+version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c27a64b625de6d309e8c57716ba93021dccf1b3b5c97edd6d3dd2d2135afc0a"
+checksum = "2af73ac49756f3f7c01172e34a23e5d0216f6c32333757c2c61feb2bbff5a5ee"
 dependencies = [
  "bytes",
  "libc",
@@ -2295,6 +2312,7 @@ dependencies = [
  "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
+ "socket2",
  "tokio-macros",
  "winapi",
 ]
@@ -2347,13 +2365,13 @@ dependencies = [
 [[package]]
 name = "tor-bytes"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "arrayref",
  "bytes",
- "digest 0.10.2",
+ "digest 0.10.3",
  "generic-array",
- "getrandom 0.2.4",
+ "getrandom 0.2.5",
  "signature",
  "thiserror",
  "tor-error",
@@ -2363,7 +2381,7 @@ dependencies = [
 [[package]]
 name = "tor-cell"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "arrayref",
  "bitflags",
@@ -2373,6 +2391,7 @@ dependencies = [
  "thiserror",
  "tor-bytes",
  "tor-cert",
+ "tor-error",
  "tor-linkspec",
  "tor-llcrypto",
 ]
@@ -2380,10 +2399,10 @@ dependencies = [
 [[package]]
 name = "tor-cert"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "caret",
- "digest 0.10.2",
+ "digest 0.10.3",
  "signature",
  "tor-bytes",
  "tor-checkable",
@@ -2393,7 +2412,7 @@ dependencies = [
 [[package]]
 name = "tor-chanmgr"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -2412,7 +2431,7 @@ dependencies = [
 [[package]]
 name = "tor-checkable"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "signature",
  "thiserror",
@@ -2422,7 +2441,7 @@ dependencies = [
 [[package]]
 name = "tor-circmgr"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "async-trait",
  "bounded-vec-deque",
@@ -2453,7 +2472,7 @@ dependencies = [
 [[package]]
 name = "tor-config"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "derive_builder",
  "directories",
@@ -2468,9 +2487,9 @@ dependencies = [
 [[package]]
 name = "tor-consdiff"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
- "digest 0.10.2",
+ "digest 0.10.3",
  "hex",
  "thiserror",
  "tor-llcrypto",
@@ -2479,7 +2498,7 @@ dependencies = [
 [[package]]
 name = "tor-dirclient"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "async-compression",
  "base64",
@@ -2491,6 +2510,7 @@ dependencies = [
  "memchr",
  "thiserror",
  "tor-circmgr",
+ "tor-error",
  "tor-llcrypto",
  "tor-netdoc",
  "tor-proto",
@@ -2501,12 +2521,13 @@ dependencies = [
 [[package]]
 name = "tor-dirmgr"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "async-trait",
  "base64",
  "derive_builder",
- "digest 0.10.2",
+ "derive_more",
+ "digest 0.10.3",
  "event-listener",
  "fslock",
  "futures",
@@ -2539,7 +2560,7 @@ dependencies = [
 [[package]]
 name = "tor-error"
 version = "0.0.1"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "backtrace",
  "derive_more",
@@ -2550,7 +2571,7 @@ dependencies = [
 [[package]]
 name = "tor-guardmgr"
 version = "0.0.5"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "derive_builder",
  "futures",
@@ -2576,7 +2597,7 @@ dependencies = [
 [[package]]
 name = "tor-linkspec"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "tor-bytes",
  "tor-llcrypto",
@@ -2586,22 +2607,22 @@ dependencies = [
 [[package]]
 name = "tor-llcrypto"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "aes",
  "arrayref",
  "base64",
  "curve25519-dalek",
- "digest 0.10.2",
+ "digest 0.10.3",
  "ed25519-dalek",
- "getrandom 0.2.4",
+ "getrandom 0.2.5",
  "hex",
  "rand_core 0.5.1",
  "rand_core 0.6.3",
  "rsa",
  "serde 1.0.136",
  "sha-1",
- "sha2 0.10.1",
+ "sha2 0.10.2",
  "sha3",
  "signature",
  "simple_asn1",
@@ -2614,7 +2635,7 @@ dependencies = [
 [[package]]
 name = "tor-netdir"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "bitflags",
  "derive_builder",
@@ -2636,11 +2657,12 @@ dependencies = [
 [[package]]
 name = "tor-netdoc"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "base64",
  "bitflags",
- "digest 0.10.2",
+ "derive_more",
+ "digest 0.10.3",
  "hex",
  "once_cell",
  "phf",
@@ -2651,6 +2673,7 @@ dependencies = [
  "tor-bytes",
  "tor-cert",
  "tor-checkable",
+ "tor-error",
  "tor-llcrypto",
  "tor-protover",
  "weak-table",
@@ -2659,7 +2682,7 @@ dependencies = [
 [[package]]
 name = "tor-persist"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "fslock",
  "sanitize-filename",
@@ -2672,14 +2695,14 @@ dependencies = [
 [[package]]
 name = "tor-proto"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "arrayref",
  "asynchronous-codec",
  "bytes",
  "cipher",
  "coarsetime",
- "digest 0.10.2",
+ "digest 0.10.3",
  "futures",
  "generic-array",
  "hkdf",
@@ -2694,6 +2717,7 @@ dependencies = [
  "tor-cell",
  "tor-cert",
  "tor-checkable",
+ "tor-error",
  "tor-linkspec",
  "tor-llcrypto",
  "tor-protover",
@@ -2705,7 +2729,7 @@ dependencies = [
 [[package]]
 name = "tor-protover"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "caret",
  "thiserror",
@@ -2714,7 +2738,7 @@ dependencies = [
 [[package]]
 name = "tor-rtcompat"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "async-native-tls",
  "async-trait",
@@ -2729,7 +2753,7 @@ dependencies = [
 [[package]]
 name = "tor-units"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#fb1621058bd3580c9bca777c5c3882358ffa8a52"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
 dependencies = [
  "derive_more",
  "thiserror",
@@ -2737,9 +2761,9 @@ dependencies = [
 
 [[package]]
 name = "tracing"
-version = "0.1.30"
+version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d8d93354fe2a8e50d5953f5ae2e47a3fc2ef03292e7ea46e3cc38f549525fb9"
+checksum = "f6c650a8ef0cd2dd93736f033d21cbd1224c5a967aa0c258d00fcf7dafef9b9f"
 dependencies = [
  "cfg-if",
  "log",
@@ -2984,6 +3008,49 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
+name = "windows-sys"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3df6e476185f92a12c072be4a189a0210dcdcf512a1891d6dff9edb874deadc6"
+dependencies = [
+ "windows_aarch64_msvc",
+ "windows_i686_gnu",
+ "windows_i686_msvc",
+ "windows_x86_64_gnu",
+ "windows_x86_64_msvc",
+]
+
+[[package]]
+name = "windows_aarch64_msvc"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8e92753b1c443191654ec532f14c199742964a061be25d77d7a96f09db20bf5"
+
+[[package]]
+name = "windows_i686_gnu"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a711c68811799e017b6038e0922cb27a5e2f43a2ddb609fe0b6f3eeda9de615"
+
+[[package]]
+name = "windows_i686_msvc"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "146c11bb1a02615db74680b32a68e2d61f553cc24c4eb5b4ca10311740e44172"
+
+[[package]]
+name = "windows_x86_64_gnu"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c912b12f7454c6620635bbff3450962753834be2a594819bd5e945af18ec64bc"
+
+[[package]]
+name = "windows_x86_64_msvc"
+version = "0.32.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "504a2476202769977a040c6364301a3f65d0cc9e3fb08600b2bda150a0488316"
+
+[[package]]
 name = "x25519-dalek"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3023,9 +3090,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize_derive"
-version = "1.3.1"
+version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81e8f13fef10b63c06356d65d416b070798ddabcadc10d3ece0c5be9b3c7eddb"
+checksum = "3f8f187641dad4f680d25c4bfc4225b418165984179f26ca76ec4fb6441d3a17"
 dependencies = [
  "proc-macro2",
  "quote",

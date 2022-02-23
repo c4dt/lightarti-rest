@@ -1,13 +1,14 @@
 use std::{fs, path::Path};
 
 use anyhow::{anyhow, Context, Result};
-use arti_client::{TorClient, TorClientConfig};
+use arti_client::{DPConstructor, TorClient, TorClientConfig};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
 use tor_config::CfgPath;
 use tor_rtcompat::{BlockOn, Runtime};
 use tracing::{debug, trace};
 
+mod flatfiledirmgr;
 
 fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
     let mut cfg_builder = TorClientConfig::builder();
@@ -33,7 +34,14 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
     let runtime = tor_rtcompat::tokio::PreferredRuntime::create().context("create runtime")?;
 
     runtime.clone().block_on(async {
-        let tor_client = TorClient::create_bootstrapped(runtime, cfg).await?;
+        let tor_client = TorClient::builder(runtime)
+            .config(cfg)
+            .dp_constructor(&DPConstructor(&|cfg, _runtime, circmgr| {
+                let dm = flatfiledirmgr::FlatFileDirMgr::from_config(cfg, circmgr)?;
+                Ok(dm)
+            }))
+            .create_bootstrapped()
+            .await?;
         send_request(&tor_client, host, request).await
     })
 }
