@@ -1,25 +1,23 @@
-use std::{fs, path::Path, str::FromStr};
+use std::{fs, path::Path};
 
 use anyhow::{anyhow, Context, Result};
 use arti_client::{TorClient, TorClientConfig};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
 use tor_config::CfgPath;
-use tor_dirmgr::Authority;
 use tor_rtcompat::{BlockOn, Runtime};
 use tracing::{debug, trace};
 
-fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
-    let cache_str = cache_path.to_str().context("cache as string")?;
 
+fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
     let mut cfg_builder = TorClientConfig::builder();
     cfg_builder
         .storage()
-        .cache_dir(CfgPath::new(cache_str.to_string()));
+        .cache_dir(CfgPath::from_path(cache_path));
 
-    let auth_path = format!("{}/authority.txt", cache_str);
+    let auth_path = cache_path.join("authority.json");
     let auth_raw = fs::read_to_string(auth_path).context("Failed to read authority")?;
-    let auth = Authority::from_str(auth_raw.as_str())?;
+    let auth = serde_json::from_str(auth_raw.as_str())?;
 
     cfg_builder.tor_network().authorities(vec![auth]);
     // Overriding authorities requires also overriding fallback caches
