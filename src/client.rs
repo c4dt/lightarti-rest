@@ -27,15 +27,7 @@ impl Client {
         let host = uri.host().context("no host found")?;
 
         let raw_req = serialize_request(req).context("serialize request")?;
-
-        let raw_resp = tls_send(
-            host,
-            &String::from_utf8(raw_req).context("encode serialized as utf-8")?,
-            &self.cache,
-        )
-        .context("tls send")?
-        .into_bytes();
-
+        let raw_resp = tls_send(host, &raw_req, &self.cache).context("tls send")?;
         let resp = deserialize_response(raw_resp);
 
         trace!("response: {:?}", resp);
@@ -112,9 +104,8 @@ fn deserialize_response(mut raw_resp: Vec<u8>) -> Result<Response<Vec<u8>>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::tests;
-
     use super::*;
+    use crate::tests;
 
     #[test]
     fn test_get() {
