@@ -1,22 +1,33 @@
-use std::{io::Write, path::PathBuf};
+use std::{io::Write, path::Path, sync::Arc};
 
 use anyhow::{bail, Context, Result};
+use arti_client::TorClient;
 use http::{Request, Response};
+use tor_rtcompat::tokio::TokioNativeTlsRuntime;
 use tracing::trace;
 
-use crate::lightarti::tls_send;
+use crate::lightarti::{build_config, flatfiledirmgr::FlatFileDirMgrBuilder, send_request};
 
-pub struct Client {
-    cache: PathBuf,
-}
+type Runtime = TokioNativeTlsRuntime;
+
+pub struct Client(TorClient<Runtime>);
 
 impl Client {
-    pub fn new(cache: PathBuf) -> Self {
-        Self { cache }
+    pub async fn new(cache: &Path) -> Result<Self> {
+        let runtime = TokioNativeTlsRuntime::current().context("get runtime")?;
+
+        let tor_client = TorClient::with_runtime(runtime)
+            .config(build_config(cache).context("load config")?)
+            .dirmgr_builder::<FlatFileDirMgrBuilder>(Arc::new(FlatFileDirMgrBuilder {}))
+            .create_bootstrapped()
+            .await
+            .context("create tor client")?;
+
+        Ok(Self(tor_client))
     }
 
     /// Sends the request to the given URL. It returns the response.
-    pub fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>> {
+    pub async fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>> {
         trace!("request: {:?}", req);
 
         if req.version() != http::Version::HTTP_10 {
@@ -27,7 +38,9 @@ impl Client {
         let host = uri.host().context("no host found")?;
 
         let raw_req = serialize_request(req).context("serialize request")?;
-        let raw_resp = tls_send(host, &raw_req, &self.cache).context("tls send")?;
+        let raw_resp = send_request(&self.0, host, &raw_req)
+            .await
+            .context("tls send")?;
         let resp = deserialize_response(raw_resp);
 
         trace!("response: {:?}", resp);
@@ -107,12 +120,14 @@ mod tests {
     use super::*;
     use crate::tests;
 
-    #[test]
-    fn test_get() {
+    #[tokio::test]
+    async fn test_get() {
         crate::tests::setup_tracing();
         let cache = tests::setup_cache();
 
-        let resp = Client::new(cache.path().to_path_buf())
+        let resp = Client::new(cache.path())
+            .await
+            .expect("create client")
             .send(
                 Request::get("https://www.example.com")
                     .header("Host", "www.example.com")
@@ -120,6 +135,7 @@ mod tests {
                     .body(vec![])
                     .expect("create get request"),
             )
+            .await
             .expect("send request");
 
         assert_eq!(resp.status(), 200);
