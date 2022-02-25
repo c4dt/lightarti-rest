@@ -1,14 +1,13 @@
 use std::{fs, path::Path, sync::Arc};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use arti_client::{TorClient, TorClientConfig};
+use flatfiledirmgr::FlatFileDirMgrBuilder;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
 use tor_config::CfgPath;
 use tor_rtcompat::{BlockOn, Runtime};
-use tracing::{debug, trace};
-
-use flatfiledirmgr::FlatFileDirMgrBuilder;
+use tracing::trace;
 
 mod flatfiledirmgr;
 
@@ -45,27 +44,8 @@ pub fn tls_send(host: &str, request: &[u8], cache: &Path) -> Result<Vec<u8>> {
     })
 }
 
-/// Tries several times to send a request; if still unsuccessful, returns an error
-async fn send_request(
-    tor: &TorClient<impl Runtime>,
-    host: &str,
-    request: &[u8],
-) -> Result<Vec<u8>> {
-    debug!(host, "send request");
-
-    for retry in 0..5u32 {
-        debug!("Connection-try {}", retry);
-        match send_request_attempt(tor, host, request).await {
-            Err(error) => debug!("Error: {}", error),
-            v => return v,
-        }
-    }
-
-    Err(anyhow!("Couldn't get response"))
-}
-
 /// Sends a request over a TLS connection and returns the result.
-async fn send_request_attempt(
+async fn send_request(
     tor: &TorClient<impl Runtime>,
     host: &str,
     request: &[u8],
