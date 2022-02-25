@@ -1,17 +1,16 @@
-use std::{fs, path::Path, sync::Arc};
+use std::{fs, path::Path};
 
 use anyhow::{Context, Result};
 use arti_client::{TorClient, TorClientConfig};
-use flatfiledirmgr::FlatFileDirMgrBuilder;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
 use tor_config::CfgPath;
-use tor_rtcompat::{BlockOn, Runtime};
+use tor_rtcompat::Runtime;
 use tracing::trace;
 
-mod flatfiledirmgr;
+pub(super) mod flatfiledirmgr;
 
-fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
+pub(super) fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
     let mut cfg_builder = TorClientConfig::builder();
     cfg_builder
         .storage()
@@ -29,23 +28,8 @@ fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
     cfg_builder.build().map_err(anyhow::Error::new)
 }
 
-/// This connection sends a generic request over TLS to the host.
-/// It returns the result from the request, or an error.
-pub fn tls_send(host: &str, request: &[u8], cache: &Path) -> Result<Vec<u8>> {
-    let cfg = build_config(cache).context("load config")?;
-    let runtime = tor_rtcompat::tokio::PreferredRuntime::create().context("create runtime")?;
-
-    runtime.clone().block_on(async {
-        let tor_client = TorClient::with_runtime(runtime)
-            .config(cfg)
-            .dirmgr_builder::<FlatFileDirMgrBuilder>(Arc::new(FlatFileDirMgrBuilder {}))
-            .create_unbootstrapped()?;
-        send_request(&tor_client, host, request).await
-    })
-}
-
 /// Sends a request over a TLS connection and returns the result.
-async fn send_request(
+pub(super) async fn send_request(
     tor: &TorClient<impl Runtime>,
     host: &str,
     request: &[u8],
@@ -73,23 +57,4 @@ async fn send_request(
     trace!(?response, "received stream");
 
     Ok(response)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::tests;
-
-    #[test]
-    fn clearnet_and_tor_gives_the_same_page() {
-        tests::setup_tracing();
-        let docdir = tests::setup_cache();
-
-        tls_send(
-            "www.example.com",
-            "GET /index.html HTTP/1.0\nHost: www.example.com\n\n".as_bytes(),
-            docdir.path(),
-        )
-        .expect("get page via tor");
-    }
 }
