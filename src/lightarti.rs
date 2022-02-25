@@ -32,7 +32,7 @@ fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
 
 /// This connection sends a generic request over TLS to the host.
 /// It returns the result from the request, or an error.
-pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
+pub fn tls_send(host: &str, request: &[u8], cache: &Path) -> Result<Vec<u8>> {
     let cfg = build_config(cache).context("load config")?;
     let runtime = tor_rtcompat::tokio::PreferredRuntime::create().context("create runtime")?;
 
@@ -46,7 +46,11 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
 }
 
 /// Tries several times to send a request; if still unsuccessful, returns an error
-async fn send_request(tor: &TorClient<impl Runtime>, host: &str, request: &str) -> Result<String> {
+async fn send_request(
+    tor: &TorClient<impl Runtime>,
+    host: &str,
+    request: &[u8],
+) -> Result<Vec<u8>> {
     debug!(host, "send request");
 
     for retry in 0..5u32 {
@@ -64,8 +68,8 @@ async fn send_request(tor: &TorClient<impl Runtime>, host: &str, request: &str) 
 async fn send_request_attempt(
     tor: &TorClient<impl Runtime>,
     host: &str,
-    request: &str,
-) -> Result<String> {
+    request: &[u8],
+) -> Result<Vec<u8>> {
     let stream = tor.connect((host, 443)).await.context("tor connect")?;
 
     let mut tls_stream =
@@ -75,30 +79,26 @@ async fn send_request_attempt(
             .context("tls connect")?;
 
     tls_stream
-        .write_all(request.as_ref())
+        .write_all(request)
         .await
         .context("write request")?;
     tls_stream.flush().await.context("stream flush")?;
 
-    let mut res = Vec::default();
+    let mut response = Vec::new();
     tls_stream
-        .read_to_end(&mut res)
+        .read_to_end(&mut response)
         .await
         .context("read response")?;
 
-    let result = String::from_utf8_lossy(&res).to_string();
+    trace!(?response, "received stream");
 
-    debug!("Received {} bytes from stream", result.len());
-    trace!("Received stream: {}", result);
-
-    Ok(result)
+    Ok(response)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::tests;
-
     use super::*;
+    use crate::tests;
 
     #[test]
     fn clearnet_and_tor_gives_the_same_page() {
@@ -107,7 +107,7 @@ mod tests {
 
         tls_send(
             "www.example.com",
-            "GET /index.html HTTP/1.0\nHost: www.example.com\n\n",
+            "GET /index.html HTTP/1.0\nHost: www.example.com\n\n".as_bytes(),
             docdir.path(),
         )
         .expect("get page via tor");
