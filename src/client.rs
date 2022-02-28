@@ -98,30 +98,3 @@ impl Client {
         Ok(response)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::tests;
-
-    #[tokio::test]
-    async fn test_get() {
-        crate::tests::setup_tracing();
-        let cache = tests::setup_cache();
-
-        let resp = Client::new(cache.path())
-            .await
-            .expect("create client")
-            .send(
-                Request::get("https://www.example.com")
-                    .header("Host", "www.example.com")
-                    .version(http::Version::HTTP_10)
-                    .body(vec![])
-                    .expect("create get request"),
-            )
-            .await
-            .expect("send request");
-
-        assert_eq!(resp.status(), 200);
-    }
-}
