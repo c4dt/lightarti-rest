@@ -1,5 +1,5 @@
 use http::Request;
-use lightarti_rest::client::Client;
+use lightarti_rest::Client;
 
 mod utils;
 
