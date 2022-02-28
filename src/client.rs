@@ -1,14 +1,15 @@
-use std::{path::Path, sync::Arc};
+use std::{fs, path::Path, sync::Arc};
 
 use anyhow::{bail, Context, Result};
-use arti_client::TorClient;
+use arti_client::{TorClient, TorClientConfig};
 use http::{Request, Response};
+use tor_config::CfgPath;
 use tor_rtcompat::tokio::TokioNativeTlsRuntime;
 use tracing::trace;
 
 use crate::{
     http::{raw_to_response, request_to_raw},
-    lightarti::{build_config, flatfiledirmgr::FlatFileDirMgrBuilder, send_request},
+    lightarti::{flatfiledirmgr::FlatFileDirMgrBuilder, send_request},
 };
 
 type Runtime = TokioNativeTlsRuntime;
@@ -20,13 +21,31 @@ impl Client {
         let runtime = TokioNativeTlsRuntime::current().context("get runtime")?;
 
         let tor_client = TorClient::with_runtime(runtime)
-            .config(build_config(cache).context("load config")?)
+            .config(Self::tor_config(cache).context("load config")?)
             .dirmgr_builder::<FlatFileDirMgrBuilder>(Arc::new(FlatFileDirMgrBuilder {}))
             .create_bootstrapped()
             .await
             .context("create tor client")?;
 
         Ok(Self(tor_client))
+    }
+
+    fn tor_config(cache_path: &Path) -> Result<TorClientConfig> {
+        let mut cfg_builder = TorClientConfig::builder();
+        cfg_builder
+            .storage()
+            .cache_dir(CfgPath::from_path(cache_path))
+            .state_dir(CfgPath::from_path(cache_path));
+
+        let auth_path = cache_path.join("authority.json");
+        let auth_raw = fs::read_to_string(auth_path).context("Failed to read authority")?;
+        let auth = serde_json::from_str(auth_raw.as_str())?;
+
+        cfg_builder.tor_network().authorities(vec![auth]);
+        // Overriding authorities requires also overriding fallback caches
+        cfg_builder.tor_network().fallback_caches(Vec::new());
+
+        cfg_builder.build().context("build config")
     }
 
     /// Sends the request to the given URL. It returns the response.
