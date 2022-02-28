@@ -3,13 +3,15 @@ use std::{fs, path::Path, sync::Arc};
 use anyhow::{bail, Context, Result};
 use arti_client::{TorClient, TorClientConfig};
 use http::{Request, Response};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio_native_tls::{native_tls, TlsConnector};
 use tor_config::CfgPath;
 use tor_rtcompat::tokio::TokioNativeTlsRuntime;
 use tracing::trace;
 
 use crate::{
     http::{raw_to_response, request_to_raw},
-    lightarti::{flatfiledirmgr::FlatFileDirMgrBuilder, send_request},
+    lightarti::flatfiledirmgr::FlatFileDirMgrBuilder,
 };
 
 type Runtime = TokioNativeTlsRuntime;
@@ -60,14 +62,40 @@ impl Client {
         let host = uri.host().context("no host found")?;
 
         let raw_req = request_to_raw(req).context("serialize request")?;
-        let raw_resp = send_request(&self.0, host, &raw_req)
-            .await
-            .context("tls send")?;
+        let raw_resp = self.send_raw(host, &raw_req).await.context("tls send")?;
         let resp = raw_to_response(raw_resp);
 
         trace!("response: {:?}", resp);
 
         resp
+    }
+
+    /// Sends a request over a TLS connection and returns the result.
+    // TODO use Request directly
+    async fn send_raw(&self, host: &str, request: &[u8]) -> Result<Vec<u8>> {
+        let stream = self.0.connect((host, 443)).await.context("tor connect")?;
+
+        let mut tls_stream =
+            TlsConnector::from(native_tls::TlsConnector::new().context("create tls connector")?)
+                .connect(host, stream)
+                .await
+                .context("tls connect")?;
+
+        tls_stream
+            .write_all(request)
+            .await
+            .context("write request")?;
+        tls_stream.flush().await.context("stream flush")?;
+
+        let mut response = Vec::new();
+        tls_stream
+            .read_to_end(&mut response)
+            .await
+            .context("read response")?;
+
+        trace!(?response, "received stream");
+
+        Ok(response)
     }
 }
 
