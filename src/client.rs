@@ -10,8 +10,8 @@ use tor_rtcompat::tokio::TokioNativeTlsRuntime;
 use tracing::trace;
 
 use crate::{
+    flatfiledirmgr::FlatFileDirMgrBuilder,
     http::{raw_to_response, request_to_raw},
-    lightarti::flatfiledirmgr::FlatFileDirMgrBuilder,
 };
 
 type Runtime = TokioNativeTlsRuntime;
