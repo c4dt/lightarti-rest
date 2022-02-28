@@ -26,7 +26,7 @@ for arch in $ARCHS; do
   rm -rf $hdir
   mkdir -p $hdir
   cp lightarti-rest.h module.modulemap $hdir
-  XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -library $tdir/libcore.a"
+  XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -library $tdir/liblightarti_rest.a"
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $hdir"
 done
 

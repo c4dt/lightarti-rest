@@ -8,7 +8,6 @@ authors = ["Linus Gasser <linus.gasser@epfl.ch>",
 edition = "2018"
 
 [lib]
-name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
