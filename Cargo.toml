@@ -8,7 +8,7 @@ authors = ["Linus Gasser <linus.gasser@epfl.ch>",
 edition = "2018"
 
 [lib]
-crate-type = ["cdylib", "staticlib"]
+crate-type = ["cdylib", "lib", "staticlib"]
 
 [dependencies]
 arti-client = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "error_detail", "experimental-api" ] }
