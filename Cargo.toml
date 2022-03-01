@@ -12,7 +12,7 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-arti-client = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+arti-client = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = [ "error_detail", "experimental-api" ] }
 tor-bytes = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
 tor-chanmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
 tor-circmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
