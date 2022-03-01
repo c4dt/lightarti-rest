@@ -98,7 +98,7 @@ checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 [[package]]
 name = "arti-client"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "derive_builder",
  "derive_more",
@@ -299,7 +299,7 @@ checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
 [[package]]
 name = "caret"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 
 [[package]]
 name = "cc"
@@ -643,9 +643,9 @@ dependencies = [
 
 [[package]]
 name = "ed25519"
-version = "1.3.0"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74e1069e39f1454367eb2de793ed062fac4c35c2934b76a81d90dd9abcd28816"
+checksum = "eed12bbf7b5312f8da1c2722bc06d8c6b12c2d86a7fb35a194c7f3e6fc2bbe39"
 dependencies = [
  "signature",
 ]
@@ -1790,9 +1790,9 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.2.10"
+version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8383f39639269cde97d255a32bdb68c047337295414940c68bdd30c2e13203ff"
+checksum = "8380fe0152551244f0747b1bf41737e0f8a74f97a14ccefd1148187271634f3c"
 dependencies = [
  "bitflags",
 ]
@@ -1844,14 +1844,14 @@ dependencies = [
 
 [[package]]
 name = "retain_mut"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51dd4445360338dab5116712bee1388dc727991d51969558a8882ab552e6db30"
+checksum = "8c31b5c4033f8fdde8700e4657be2c497e7288f01515be52168c631e2e4d4086"
 
 [[package]]
 name = "retry-error"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 
 [[package]]
 name = "rsa"
@@ -2340,9 +2340,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.6.9"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e99e1983e5d376cd8eb4b66604d2e99e79f5bd988c3055891dcd8c9e2604cc0"
+checksum = "64910e1b9c1901aaf5375561e35b9c057d95ff41a44ede043a03e09279eabaf1"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2365,7 +2365,7 @@ dependencies = [
 [[package]]
 name = "tor-bytes"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "arrayref",
  "bytes",
@@ -2381,7 +2381,7 @@ dependencies = [
 [[package]]
 name = "tor-cell"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "arrayref",
  "bitflags",
@@ -2399,7 +2399,7 @@ dependencies = [
 [[package]]
 name = "tor-cert"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "caret",
  "digest 0.10.3",
@@ -2412,7 +2412,7 @@ dependencies = [
 [[package]]
 name = "tor-chanmgr"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -2431,7 +2431,7 @@ dependencies = [
 [[package]]
 name = "tor-checkable"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "signature",
  "thiserror",
@@ -2441,7 +2441,7 @@ dependencies = [
 [[package]]
 name = "tor-circmgr"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "async-trait",
  "bounded-vec-deque",
@@ -2472,7 +2472,7 @@ dependencies = [
 [[package]]
 name = "tor-config"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "derive_builder",
  "directories",
@@ -2487,7 +2487,7 @@ dependencies = [
 [[package]]
 name = "tor-consdiff"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "digest 0.10.3",
  "hex",
@@ -2498,7 +2498,7 @@ dependencies = [
 [[package]]
 name = "tor-dirclient"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "async-compression",
  "base64",
@@ -2521,7 +2521,7 @@ dependencies = [
 [[package]]
 name = "tor-dirmgr"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "async-trait",
  "base64",
@@ -2560,7 +2560,7 @@ dependencies = [
 [[package]]
 name = "tor-error"
 version = "0.0.1"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "backtrace",
  "derive_more",
@@ -2571,7 +2571,7 @@ dependencies = [
 [[package]]
 name = "tor-guardmgr"
 version = "0.0.5"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "derive_builder",
  "futures",
@@ -2597,7 +2597,7 @@ dependencies = [
 [[package]]
 name = "tor-linkspec"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "tor-bytes",
  "tor-llcrypto",
@@ -2607,7 +2607,7 @@ dependencies = [
 [[package]]
 name = "tor-llcrypto"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "aes",
  "arrayref",
@@ -2635,7 +2635,7 @@ dependencies = [
 [[package]]
 name = "tor-netdir"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "bitflags",
  "derive_builder",
@@ -2657,7 +2657,7 @@ dependencies = [
 [[package]]
 name = "tor-netdoc"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "base64",
  "bitflags",
@@ -2682,7 +2682,7 @@ dependencies = [
 [[package]]
 name = "tor-persist"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "fslock",
  "sanitize-filename",
@@ -2695,7 +2695,7 @@ dependencies = [
 [[package]]
 name = "tor-proto"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "arrayref",
  "asynchronous-codec",
@@ -2729,7 +2729,7 @@ dependencies = [
 [[package]]
 name = "tor-protover"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "caret",
  "thiserror",
@@ -2738,7 +2738,7 @@ dependencies = [
 [[package]]
 name = "tor-rtcompat"
 version = "0.0.4"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "async-native-tls",
  "async-trait",
@@ -2753,7 +2753,7 @@ dependencies = [
 [[package]]
 name = "tor-units"
 version = "0.0.3"
-source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#a723936a3871e79c207c90023f7f97fd261bc3e0"
+source = "git+https://github.com/c4dt/arti.git?branch=add-flatfile-dirmgr#d4e2d8b99a25ebd15c7f58a365aaa65304b66ee6"
 dependencies = [
  "derive_more",
  "thiserror",

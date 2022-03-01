@@ -1,12 +1,14 @@
 use std::{fs, path::Path};
 
 use anyhow::{anyhow, Context, Result};
-use arti_client::{DPConstructor, TorClient, TorClientConfig};
+use arti_client::{TorClient, TorClientConfig};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_native_tls::{native_tls, TlsConnector};
 use tor_config::CfgPath;
 use tor_rtcompat::{BlockOn, Runtime};
 use tracing::{debug, trace};
+
+use flatfiledirmgr::FlatFileDirMgrBuilder;
 
 mod flatfiledirmgr;
 
@@ -36,12 +38,8 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
     runtime.clone().block_on(async {
         let tor_client = TorClient::builder(runtime)
             .config(cfg)
-            .dp_constructor(&DPConstructor(&|cfg, _runtime, circmgr| {
-                let dm = flatfiledirmgr::FlatFileDirMgr::from_config(cfg, circmgr)?;
-                Ok(dm)
-            }))
-            .create_bootstrapped()
-            .await?;
+            .dirmgr_builder(FlatFileDirMgrBuilder {})
+            .create_unbootstrapped()?;
         send_request(&tor_client, host, request).await
     })
 }
