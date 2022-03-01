@@ -1,14 +1,16 @@
-use std::path::PathBuf;
+use std::{mem::ManuallyDrop, ops::Deref, path::Path, ptr};
 
-use anyhow::{anyhow, Context, Result};
-use http::{Request, Uri, Version};
-use jni::objects::{JClass, JList, JMap, JObject, JString, JValue};
-use jni::sys::{jbyteArray, jint, jobject};
-use jni::JNIEnv;
-use std::panic;
-use tracing::{info, log::Level, trace};
+use anyhow::{Context, Result};
+use jni::{
+    objects::{JClass, JObject, JString},
+    sys::{jbyteArray, jlong, jobject},
+    JNIEnv,
+};
+use tracing::{info, log::Level};
 
-use crate::client::Client;
+use super::{Request, Response, RuntimeAndClient};
+
+mod conv;
 
 const ANDROID_LOG_TAG: &str = "ArtiLib";
 const TOR_LIB_EXCEPTION: &str = "org/c4dt/artiwrapper/TorLibException";
@@ -20,7 +22,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
     _: JClass,
     who: JString,
 ) -> jobject {
-    || -> Result<JObject> {
+    throw_on_err(env, ptr::null_mut(), || {
         let str: String = env
             .get_string(who)
             .context("create rust string for `who`")?
@@ -29,12 +31,8 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
         env.new_string(format!("Hello {}!", str))
             .context("create java string")
             .map(Into::into)
-    }()
-    .unwrap_or_else(|e| {
-        let _ = env.throw((TOR_LIB_EXCEPTION, format!("process hello: {:?}", e)));
-        JObject::null()
+            .map(JObject::into_inner)
     })
-    .into_inner()
 }
 
 /// Entry point to initialize the logger so that Rust logs show up in logcat
@@ -55,179 +53,72 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: 
     info!("init log system - done");
 }
 
-/// Get the cache dir from the input arguments
-fn get_cache_dir(env: JNIEnv, cache_dir_j: JString) -> Result<String> {
-    env.get_string(cache_dir_j)
-        .context("create rust string for `cache_dir_j`")
-        .map(Into::into)
-}
-
-/// Build an http::Request from the input arguments
-fn make_request(
-    env: JNIEnv,
-    method_j: JString,
-    url_j: JString,
-    headers_j: JObject,
-    body_j: jbyteArray,
-) -> Result<http::Request<Vec<u8>>> {
-    let method: String = env
-        .get_string(method_j)
-        .context("create rust string for `method_j`")?
-        .into();
-
-    let url: String = env
-        .get_string(url_j)
-        .context("create rust string for `url_j`")?
-        .into();
-
-    let body: Vec<u8> = env
-        .convert_byte_array(body_j)
-        .context("create byte array")?;
-
-    let uri = url.parse::<Uri>().context("parse URL")?;
-    let host = uri.host().unwrap_or("");
-
-    let mut req_builder = Request::builder()
-        .method(method.as_bytes())
-        .header("Host", host)
-        .uri(uri)
-        .version(Version::HTTP_10);
-
-    let headers_jmap: JMap = env.get_map(headers_j).context("create JMap")?;
-
-    for (key, value_list) in headers_jmap.iter().context("create JMap iterator")? {
-        let header_name: String = env
-            .get_string(JString::from(key))
-            .context("create rust string for header name")?
-            .into();
-        trace!("Request header_name: {:?}", header_name);
-
-        let header_value_list: JList = env.get_list(value_list).context("create JList")?;
-
-        for value in header_value_list.iter().context("create JList iterator")? {
-            let header_value: String = env
-                .get_string(JString::from(value))
-                .context("create rust string for header value")?
-                .into();
-            trace!("    Request header_value: {:?}", header_value);
-
-            req_builder = req_builder.header(header_name.as_str(), header_value);
-        }
-    }
-
-    let request = req_builder.body(body).context("create request")?;
-
-    Ok(request)
-}
-
-/// Format an http::Response into a Java HttpResponse object
-fn format_response(env: JNIEnv, response: http::Response<Vec<u8>>) -> Result<JObject> {
-    let status: jint = response.status().as_u16().into();
-
-    let version = env
-        .new_string(format!("{:?}", response.version()))
-        .context("build http string version")?;
-
-    let headers = env
-        .new_object(
-            env.find_class("java/util/HashMap")
-                .context("find java.util.HashMap")?,
-            "()V",
-            &[],
-        )
-        .context("create HashMap")?;
-
-    for (key, value) in response.headers() {
-        trace!("Response header: {:?} → {:?}", key, value);
-
-        let mut entry = env
-            .new_object(
-                env.find_class("java/util/ArrayList")
-                    .context("find java.util.ArrayList")?,
-                "()V",
-                &[],
-            )
-            .context("create ArrayList")?;
-
-        match env
-            .call_method(
-                headers,
-                "putIfAbsent",
-                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                &[
-                    env.new_string(key.as_str())
-                        .context("create JString for key")?
-                        .into(),
-                    entry.into(),
-                ],
-            )
-            .context("call HashMap.put()")?
-        {
-            JValue::Object(o) => {
-                if o.into_inner() != std::ptr::null_mut() {
-                    trace!("Entry already existed -- appending");
-                    entry = o;
-                }
-            }
-            _ => (),
-        }
-
-        env.call_method(
-            entry,
-            "add",
-            "(Ljava/lang/Object;)Z",
-            &[env
-                .new_string(value.to_str().context("convert header value to string")?)
-                .context("create JString for value")?
-                .into()],
-        )
-        .context("call List.add()")?;
-    }
-
-    let body = env
-        .byte_array_from_slice(response.body())
-        .context("create byte array")?;
-
-    Ok(env
-        .new_object(
-            env.find_class("org/c4dt/artiwrapper/HttpResponse")
-                .context("find HttpResult class")?,
-            "(ILjava/lang/String;Ljava/util/Map;[B)V",
-            &[status.into(), version.into(), headers.into(), body.into()],
-        )
-        .context("create HttpResult")?)
-}
-
-/// Entry point to process an HTTP request via Arti
+/// Create a Client
 #[no_mangle]
-pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_torRequest(
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_Client_create(
     env: JNIEnv,
     _: JClass,
     cache_dir_j: JString,
+) -> jlong {
+    throw_on_err(env, 0, || {
+        // TODO avoid UTF-8 conversion?
+        let cache_dir_javastr = env
+            .get_string(cache_dir_j)
+            .context("create rust string for `cache_dir_j`")?;
+        let cache_dir = cache_dir_javastr
+            .deref()
+            .to_str()
+            .context("rust string from java")
+            .map(Path::new)?;
+
+        RuntimeAndClient::new(cache_dir)
+            .context("create runtime and client")
+            .map(Into::into)
+    })
+}
+
+/// Send a request with the given Client
+#[no_mangle]
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_Client_send(
+    env: JNIEnv,
+    _: JClass,
+    java_client: jlong,
     method_j: JString,
     url_j: JString,
     headers_j: JObject,
     body_j: jbyteArray,
 ) -> jobject {
-    panic::catch_unwind(|| {
-        || -> Result<JObject> {
-            let request =
-                make_request(env, method_j, url_j, headers_j, body_j).context("make request")?;
-            trace!("Request: {:?}", request);
+    throw_on_err(env, ptr::null_mut(), || {
+        let rt_and_client = RuntimeAndClient::from(java_client);
+        let request = Request::from_java(env, method_j, url_j, headers_j, body_j)
+            .context("request from java")?;
 
-            let cache_dir = get_cache_dir(env, cache_dir_j).context("get cache dir")?;
-            let client = Client::new(PathBuf::from(cache_dir));
+        let response = rt_and_client
+            .runtime()
+            .block_on(async { rt_and_client.client().send(request.0).await })
+            .context("send request")
+            .map(Response)?;
 
-            let response = client.send(request).context("send request")?;
-            trace!("Response: {:?}", response);
-
-            format_response(env, response).context("format response")
-        }()
+        response
+            .into_java(env)
+            .context("response to java")
+            .map(JObject::into_inner)
     })
-    .unwrap_or_else(|e| Err(anyhow!("caught panic: {:?}", e)))
-    .unwrap_or_else(|e| {
-        let _ = env.throw((TOR_LIB_EXCEPTION, format!("{:?}", e)));
-        JObject::null()
+}
+
+/// Free the given Client
+#[no_mangle]
+pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_Client_free(
+    _: JNIEnv,
+    _: JClass,
+    java_client: jlong,
+) {
+    ManuallyDrop::into_inner(RuntimeAndClient::from(java_client).0);
+}
+
+fn throw_on_err<T>(env: JNIEnv, default: T, act: impl FnOnce() -> Result<T>) -> T {
+    act().unwrap_or_else(|e| {
+        let _ = env.throw((TOR_LIB_EXCEPTION, format!("{:#}", e)));
+        default
     })
-    .into_inner()
 }
