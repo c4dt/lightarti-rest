@@ -1,24 +1,28 @@
 //! Simple flat-file implementation of the DirProvider trait.
 //! Used for 'lightarti'.
 
+use arti_client::builder::DirProviderBuilder;
 use tor_checkable::{ExternallySigned, SelfSigned, Timebound};
 use tor_circmgr::CircMgr;
 use tor_dirmgr::config::DirMgrConfig;
 use tor_dirmgr::err::Error;
-use tor_dirmgr::event::{DirBootstrapEvents, DirEvent, FlagListener, FlagPublisher};
+use tor_dirmgr::event::DirEvent;
 use tor_dirmgr::shared_ref::SharedMutArc;
-use tor_dirmgr::{DirProvider, DocSource, Result};
+use tor_dirmgr::{DirBootstrapStatus, DirProvider, Result};
 use tor_llcrypto::pk::rsa::RsaIdentity;
 use tor_netdir::MdReceiver;
 use tor_netdir::{NetDir, PartialNetDir};
 use tor_netdoc::doc::authcert::AuthCert;
-use tor_netdoc::doc::microdesc::Microdesc;
-use tor_netdoc::doc::microdesc::MicrodescReader;
-use tor_netdoc::doc::netstatus::{MdConsensus, MdConsensusRouterStatus, UnvalidatedConsensus};
+use tor_netdoc::doc::microdesc::{Microdesc, MicrodescReader};
+use tor_netdoc::doc::netstatus::{
+    MdConsensus, MdConsensusRouterStatus, RouterStatus, UnvalidatedConsensus,
+};
 use tor_netdoc::AllowAnnotations;
+use tor_rtcompat::Runtime;
 
 use async_trait::async_trait;
-use tor_rtcompat::Runtime;
+use futures::stream::BoxStream;
+use postage::{broadcast, sink::Sink, watch};
 use tracing::{debug, info, warn};
 
 use rand::seq::SliceRandom;
@@ -40,15 +44,13 @@ pub struct FlatFileDirMgr<R: Runtime> {
     /// The directory as read from the files in the cache directory.
     netdir: SharedMutArc<NetDir>,
 
-    /// A publisher handle that we notify whenever the consensus changes.
-    events: FlagPublisher<DirEvent>,
+    /// A sender handle that we notify whenever the consensus changes.
+    tx_events: broadcast::Sender<DirEvent>,
 
-    /// A receiver handle that gets notified whenever our bootstrapping status
-    /// changes.
+    /// A receiver handle that gets notified whenever our bootstrapping status changes.
     ///
-    /// We don't need to keep this drained, since `postage::watch` already knows
-    /// to discard unread events.
-    receive_status: DirBootstrapEvents,
+    /// Unused for now.
+    bootstrap_rx_events: watch::Receiver<DirBootstrapStatus>,
 
     /// A circuit manager.
     circmgr: Option<Arc<CircMgr<R>>>,
@@ -58,19 +60,15 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// Create a new FlatFileDirMgr from a given configuration.
     pub fn from_config(config: DirMgrConfig, circmgr: Arc<CircMgr<R>>) -> Result<Arc<Self>> {
         let netdir = SharedMutArc::new();
-        let events = FlagPublisher::new();
+        let (tx_events, _) = broadcast::channel(1);
+        let (_, bootstrap_rx_events) = watch::channel();
         let circmgr = Some(circmgr);
-
-        let (_, receive_status) = postage::watch::channel();
-        let receive_status = DirBootstrapEvents {
-            inner: receive_status,
-        };
 
         Ok(Arc::new(FlatFileDirMgr {
             config: config.into(),
             netdir,
-            events,
-            receive_status,
+            tx_events,
+            bootstrap_rx_events,
             circmgr,
         }))
     }
@@ -106,7 +104,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         let certificate = self.load_certificate(cache_path)?;
         let consensus = unvalidated
             .check_signature(&[certificate])
-            .map_err(|e| Error::from_netdoc(DocSource::LocalCache, e))?;
+            .map_err(|_| Error::CacheCorruption("Failed to validate consensus signature"))?;
 
         // Microdescriptors
         let udesc = self.load_microdesc(cache_path)?;
@@ -130,7 +128,21 @@ impl<R: Runtime> FlatFileDirMgr<R> {
             }
         }
 
-        Ok(self.netdir.get().is_some())
+        Ok(match self.netdir.get() {
+            Some(_) => {
+                let mut tx = self.tx_events.clone();
+
+                tx.send(DirEvent::NewConsensus)
+                    .await
+                    .map_err(|_| Error::DirectoryNotPresent)?;
+                tx.send(DirEvent::NewDescriptors)
+                    .await
+                    .map_err(|_| Error::DirectoryNotPresent)?;
+
+                true
+            }
+            None => false,
+        })
     }
 
     /// Load the consensus from a flat file.
@@ -147,7 +159,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         debug!("churn.txt loaded");
 
         let (_, _, parsed) = MdConsensus::parse(&consensus_text)
-            .map_err(|e| Error::from_netdoc(DocSource::LocalCache, e))?;
+            .map_err(|_| Error::CacheCorruption("Failed to parse consensus"))?;
         let mut unvalidated = parsed
             .check_valid_now()
             .map_err(|_| Error::BadNetworkConfig("The consensus file is no longer valid"))?;
@@ -176,7 +188,8 @@ impl<R: Runtime> FlatFileDirMgr<R> {
                 "Removing {} router(s) from custom consensus as their info is no longer valid.",
                 churn_set.len()
             );
-            unvalidated.remove_relays(&churn_set);
+            unvalidated
+                .modify_relays(|relays| relays.retain(|r| !churn_set.contains(r.rsa_identity())));
         }
 
         Ok(unvalidated)
@@ -189,7 +202,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         debug!("certificate.txt loaded");
 
         let parsed = AuthCert::parse(certificate.as_str())
-            .map_err(|e| Error::from_netdoc(DocSource::LocalCache, e))?
+            .map_err(|_| Error::CacheCorruption("Failed to parse certificate"))?
             .check_signature()?;
         let cert = parsed
             .check_valid_now()
@@ -220,8 +233,10 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         self.netdir.get()
     }
 
-    fn bootstrap_events(&self) -> DirBootstrapEvents {
-        self.receive_status.clone()
+    /// Return a stream of [`DirBootstrapStatus`] events to tell us about changes in the latest
+    /// directory's bootstrap status.
+    fn bootstrap_events(&self) -> watch::Receiver<DirBootstrapStatus> {
+        self.bootstrap_rx_events.clone()
     }
 }
 
@@ -241,15 +256,13 @@ fn parse_churn(text: &str) -> Result<Vec<RsaIdentity>> {
 }
 
 #[async_trait]
-impl<R: Runtime> DirProvider<R> for FlatFileDirMgr<R> {
-    type EventStream = FlagListener<DirEvent>;
-
+impl<R: Runtime> DirProvider for FlatFileDirMgr<R> {
     fn latest_netdir(&self) -> Option<Arc<NetDir>> {
         self.opt_netdir()
     }
 
-    fn events(&self) -> Self::EventStream {
-        self.events.subscribe()
+    fn events(&self) -> BoxStream<'static, DirEvent> {
+        Box::pin(self.tx_events.subscribe())
     }
 
     fn reconfigure(
@@ -258,7 +271,9 @@ impl<R: Runtime> DirProvider<R> for FlatFileDirMgr<R> {
         _how: tor_config::Reconfigure,
     ) -> std::result::Result<(), tor_config::ReconfigureError> {
         // Not implemented
-        Ok(())
+        Err(tor_config::ReconfigureError::CannotChange {
+            field: "all".to_string(),
+        })
     }
 
     async fn bootstrap(&self) -> Result<()> {
@@ -267,7 +282,22 @@ impl<R: Runtime> DirProvider<R> for FlatFileDirMgr<R> {
         Ok(())
     }
 
-    fn bootstrap_events(&self) -> DirBootstrapEvents {
-        self.bootstrap_events()
+    fn bootstrap_events(&self) -> BoxStream<'static, DirBootstrapStatus> {
+        Box::pin(self.bootstrap_events())
+    }
+}
+
+pub struct FlatFileDirMgrBuilder {}
+
+impl<R: Runtime> DirProviderBuilder<R> for FlatFileDirMgrBuilder {
+    fn build(
+        &self,
+        _runtime: R,
+        circmgr: Arc<tor_circmgr::CircMgr<R>>,
+        config: DirMgrConfig,
+    ) -> arti_client::Result<Arc<dyn tor_dirmgr::DirProvider + Send + Sync + 'static>> {
+        let dm =
+            FlatFileDirMgr::from_config(config, circmgr).map_err(arti_client::ErrorDetail::from)?;
+        Ok(dm)
     }
 }
