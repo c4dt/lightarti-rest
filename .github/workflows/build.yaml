@@ -7,7 +7,16 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-linux-android
+          - os: macos-latest
+            target: x86_64-apple-ios
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
 
@@ -17,17 +26,19 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+          target: ${{ matrix.target }}
+          default: true
           components: rustfmt, clippy
 
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --all --check
 
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --all-targets -- -D warnings
 
   build-android:
     needs: check
