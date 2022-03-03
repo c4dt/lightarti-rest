@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{fs, path::Path, sync::Arc};
 
 use anyhow::{anyhow, Context, Result};
 use arti_client::{TorClient, TorClientConfig};
@@ -36,9 +36,9 @@ pub fn tls_send(host: &str, request: &str, cache: &Path) -> Result<String> {
     let runtime = tor_rtcompat::tokio::PreferredRuntime::create().context("create runtime")?;
 
     runtime.clone().block_on(async {
-        let tor_client = TorClient::builder(runtime)
+        let tor_client = TorClient::with_runtime(runtime)
             .config(cfg)
-            .dirmgr_builder(FlatFileDirMgrBuilder {})
+            .dirmgr_builder::<FlatFileDirMgrBuilder>(Arc::new(FlatFileDirMgrBuilder {}))
             .create_unbootstrapped()?;
         send_request(&tor_client, host, request).await
     })
