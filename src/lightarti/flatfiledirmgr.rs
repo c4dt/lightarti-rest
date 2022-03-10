@@ -1,17 +1,13 @@
 //! Simple flat-file implementation of the DirProvider trait.
 //! Used for 'lightarti'.
 
-use arti_client::builder::DirProviderBuilder;
+use arti_client::DirProviderBuilder;
 use tor_checkable::{ExternallySigned, SelfSigned, Timebound};
 use tor_circmgr::CircMgr;
 use tor_dirmgr::config::DirMgrConfig;
-use tor_dirmgr::err::Error;
-use tor_dirmgr::event::DirEvent;
-use tor_dirmgr::shared_ref::SharedMutArc;
-use tor_dirmgr::{DirBootstrapStatus, DirProvider, Result};
+use tor_dirmgr::{DirBootstrapStatus, DirEvent, DirProvider, Error, Result, SharedMutArc};
 use tor_llcrypto::pk::rsa::RsaIdentity;
-use tor_netdir::MdReceiver;
-use tor_netdir::{NetDir, PartialNetDir};
+use tor_netdir::{MdReceiver, NetDir, PartialNetDir};
 use tor_netdoc::doc::authcert::AuthCert;
 use tor_netdoc::doc::microdesc::{Microdesc, MicrodescReader};
 use tor_netdoc::doc::netstatus::{
