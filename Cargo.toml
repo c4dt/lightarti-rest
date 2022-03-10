@@ -17,11 +17,11 @@ tor-bytes = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-d
 tor-chanmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
 tor-circmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
 tor-config = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-dirmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+tor-dirmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = [ "experimental-api" ] }
 tor-llcrypto = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
 tor-checkable = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
 tor-netdir = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-netdoc = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
+tor-netdoc = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = [ "experimental-api" ] }
 tor-proto = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
 tor-rtcompat = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = ["tokio"] }
 
