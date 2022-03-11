@@ -6,6 +6,11 @@ LATEST_DIRCACHE_URL=https://github.com/c4dt/lightarti-directory/releases/latest/
 .PHONY: build-ios
 build-ios: $(arxcz)
 
+$(HOME)/.cargo/bin/cbindgen:
+	cargo install cbindgen
+ios/lightarti-rest.h: $(HOME)/.cargo/bin/cbindgen cbindgen.toml
+	$< > $@
+
 ios/$(arxc): $(wildcard src/*) ios/lightarti-rest.h ios/build_xcf.sh
 	( cd ios; ./build_xcf.sh )
 

@@ -1,0 +1,8 @@
+language = "C"
+
+sys_includes = [
+	"CoreFoundation/CFBase.h",
+	"CoreFoundation/CFDictionary.h",
+	"CoreFoundation/CFString.h",
+	"CoreFoundation/CFURL.h",
+]
