@@ -16,7 +16,8 @@ fn build_config(cache_path: &Path) -> Result<TorClientConfig> {
     let mut cfg_builder = TorClientConfig::builder();
     cfg_builder
         .storage()
-        .cache_dir(CfgPath::from_path(cache_path));
+        .cache_dir(CfgPath::from_path(cache_path))
+        .state_dir(CfgPath::from_path(cache_path));
 
     let auth_path = cache_path.join("authority.json");
     let auth_raw = fs::read_to_string(auth_path).context("Failed to read authority")?;
