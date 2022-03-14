@@ -12,18 +12,18 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-arti-client = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = [ "error_detail", "experimental-api" ] }
-tor-bytes = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-chanmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-circmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-config = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-dirmgr = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = [ "experimental-api" ] }
-tor-llcrypto = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-checkable = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-netdir = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-netdoc = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = [ "experimental-api" ] }
-tor-proto = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr" }
-tor-rtcompat = { git = "https://github.com/c4dt/arti.git", branch = "add-flatfile-dirmgr", features = ["tokio"] }
+arti-client = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = [ "error_detail", "experimental-api" ] }
+tor-bytes = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-chanmgr = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-circmgr = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-config = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-dirmgr = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = [ "experimental-api" ] }
+tor-llcrypto = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-checkable = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-netdir = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-netdoc = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = [ "experimental-api" ] }
+tor-proto = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
+tor-rtcompat = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = ["tokio"] }
 
 anyhow = "1"
 async-trait = "0.1.2"
@@ -64,3 +64,7 @@ url = "2.2.2"
 [profile.release]
 opt-level = "s" # reduce library size
 lto = "fat" # use system linker (needed for iOS)
+
+[patch.crates-io.derive_builder_core]
+git = "https://github.com/ijackson/rust-derive-builder"
+rev = "dccbbb8ad75717c8bc0070b6f0364b2c3a54abb7"
