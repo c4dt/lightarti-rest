@@ -12,18 +12,18 @@ name = "core"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-arti-client = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = [ "error_detail", "experimental-api" ] }
-tor-bytes = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-chanmgr = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-circmgr = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-config = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-dirmgr = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = [ "experimental-api" ] }
-tor-llcrypto = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-checkable = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-netdir = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-netdoc = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = [ "experimental-api" ] }
-tor-proto = { git = "https://github.com/c4dt/arti.git", branch = "arti-main" }
-tor-rtcompat = { git = "https://github.com/c4dt/arti.git", branch = "arti-main", features = ["tokio"] }
+arti-client = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "error_detail", "experimental-api" ] }
+tor-bytes = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-chanmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-config = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "experimental-api" ] }
+tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-netdir = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-netdoc = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "experimental-api" ] }
+tor-proto = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = ["tokio"] }
 
 anyhow = "1"
 async-trait = "0.1.2"
