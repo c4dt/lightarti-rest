@@ -1,12 +1,12 @@
-use std::{fs, path::Path, sync::Arc};
+use std::{convert::TryFrom, fs, path::Path, sync::Arc};
 
 use anyhow::{bail, Context, Result};
 use arti_client::{TorClient, TorClientConfig};
 use http::{Request, Response};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio_native_tls::{native_tls, TlsConnector};
+use tokio_rustls::{rustls, TlsConnector};
 use tor_config::CfgPath;
-use tor_rtcompat::tokio::TokioNativeTlsRuntime;
+use tor_rtcompat::tokio::TokioRustlsRuntime as Runtime;
 use tracing::trace;
 
 use crate::{
@@ -14,13 +14,11 @@ use crate::{
     http::{raw_to_response, request_to_raw},
 };
 
-type Runtime = TokioNativeTlsRuntime;
-
 pub struct Client(TorClient<Runtime>);
 
 impl Client {
     pub async fn new(cache: &Path) -> Result<Self> {
-        let runtime = TokioNativeTlsRuntime::current().context("get runtime")?;
+        let runtime = Runtime::current().context("get runtime")?;
 
         let tor_client = TorClient::with_runtime(runtime)
             .config(Self::tor_config(cache).context("load config")?)
@@ -75,11 +73,27 @@ impl Client {
     async fn send_raw(&self, host: &str, request: &[u8]) -> Result<Vec<u8>> {
         let stream = self.0.connect((host, 443)).await.context("tor connect")?;
 
-        let mut tls_stream =
-            TlsConnector::from(native_tls::TlsConnector::new().context("create tls connector")?)
-                .connect(host, stream)
-                .await
-                .context("tls connect")?;
+        let mut root_store = rustls::RootCertStore::empty();
+        root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+            rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
+                ta.subject,
+                ta.spki,
+                ta.name_constraints,
+            )
+        }));
+
+        let tls_config = rustls::ClientConfig::builder()
+            .with_safe_defaults()
+            .with_root_certificates(root_store)
+            .with_no_client_auth();
+
+        let mut tls_stream = TlsConnector::from(Arc::new(tls_config))
+            .connect(
+                rustls::ServerName::try_from(host).context("invalid host")?,
+                stream,
+            )
+            .await
+            .context("tls connect")?;
 
         tls_stream
             .write_all(request)
