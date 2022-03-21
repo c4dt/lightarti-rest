@@ -47,9 +47,6 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_initLogger(_: 
             .with_min_level(Level::Trace)
             .with_tag(ANDROID_LOG_TAG),
     );
-    // Log panics rather than printing them.
-    // Without this, Logcat doesn't show panic message.
-    log_panics::init();
     info!("init log system - done");
 }
 
