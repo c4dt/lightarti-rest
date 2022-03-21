@@ -1,69 +1,74 @@
 [package]
 name = "lightarti-rest"
 version = "0.3.2"
-authors = ["Linus Gasser <linus.gasser@epfl.ch>",
-    "Laurent Girod <laurent.girod@epfl.ch>",
-    "Christian Grigis <christian.grigis@epfl.ch>",
-    "Valérian Rousset <valerian.rousset@epfl.ch>"]
+authors = [
+  "Linus Gasser <linus.gasser@epfl.ch>",
+  "Laurent Girod <laurent.girod@epfl.ch>",
+  "Christian Grigis <christian.grigis@epfl.ch>",
+  "Valérian Rousset <valerian.rousset@epfl.ch>",
+]
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib", "staticlib"]
 
 [dependencies]
-arti-client = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "error_detail", "experimental-api" ] }
-tor-bytes = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-chanmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
+arti-client = { git = "https://gitlab.torproject.org/tpo/core/arti.git", default-features = false, features = [
+  "error_detail",
+  "experimental-api",
+  "rustls",
+  "tokio",
+] }
+tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
 tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
 tor-config = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "experimental-api" ] }
+tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [
+  "experimental-api",
+  "static",
+] }
 tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
 tor-netdir = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-netdoc = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "experimental-api" ] }
-tor-proto = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "rustls", "tokio" ] }
+tor-netdoc = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [
+  "experimental-api",
+] }
+tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [
+  "rustls",
+  "tokio",
+] }
 
 anyhow = "1"
-async-trait = "0.1.2"
-config = "0.11"
+async-trait = "0.1"
 futures = "0.3"
 hex = "0.4"
 http = "0.2"
 httparse = "1"
-log = "0.4"
-log-panics = "2"
-postage = { version = "0.4", default-features = false, features = [ "futures-traits" ] }
+postage = { version = "0.4", default-features = false, features = [
+  "futures-traits",
+] }
 rand = "0.8"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1.0.64"
+serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 tokio-rustls = "0.23"
 tracing = "0.1"
-tracing-fmt = "0.1"
-tracing-log = "0.1"
 webpki-roots = "0.22"
 
 [dev-dependencies]
 tempdir = "0.3"
+tracing-fmt = "0.1"
+tracing-log = "0.1"
 
 [target.'cfg(target_os="android")'.dependencies]
 jni = "0.19"
-android_logger = "0.10"
+android_logger = "0.11"
 tracing = { version = "0.1", features = ["log"] }
-
-# needed to correctly link
-openssl-sys = { version = "0.9", features = ["vendored"] }
-rusqlite = { version = "0.26.3", features = ["bundled"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 core-foundation = "0.9"
-libc = "0.2"
-url = "2.2.2"
+tracing-fmt = "0.1"
 
 [profile.release]
 opt-level = "s" # reduce library size
-lto = "fat" # use system linker (needed for iOS)
+lto = "fat"     # use system linker (needed for iOS)
 
 [patch.crates-io.derive_builder_core]
 git = "https://github.com/ijackson/rust-derive-builder"
