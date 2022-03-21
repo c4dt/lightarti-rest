@@ -1,10 +1,14 @@
 use std::{convert::TryFrom, fs, path::Path, sync::Arc};
 
 use anyhow::{bail, Context, Result};
-use arti_client::{TorClient, TorClientConfig};
+use arti_client::{DataStream, TorClient, TorClientConfig};
 use http::{Request, Response};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio_rustls::{rustls, TlsConnector};
+use tokio_rustls::{
+    client::TlsStream,
+    rustls::{self, ServerName},
+    TlsConnector,
+};
 use tor_config::CfgPath;
 use tor_rtcompat::tokio::TokioRustlsRuntime as Runtime;
 use tracing::trace;
@@ -48,31 +52,53 @@ impl Client {
         cfg_builder.build().context("build config")
     }
 
-    /// Sends the request to the given URL. It returns the response.
-    pub async fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>> {
-        trace!("request: {:?}", req);
+    /// Sends the request over Tor
+    pub async fn send(&self, request: Request<Vec<u8>>) -> Result<Response<Vec<u8>>> {
+        trace!(?request, "request");
 
-        if req.version() != http::Version::HTTP_10 {
+        // TODO drop check
+        if request.version() != http::Version::HTTP_10 {
             bail!("only supports HTTP version 1.0")
         }
 
-        let uri = req.uri().clone();
-        let host = uri.host().context("no host found")?;
+        let raw_host = request.uri().host().context("no host found")?;
+        let tls_host = rustls::ServerName::try_from(raw_host).context("invalid host")?;
 
-        let raw_req = request_to_raw(req).context("serialize request")?;
-        let raw_resp = self.send_raw(host, &raw_req).await.context("tls send")?;
-        let resp = raw_to_response(raw_resp);
+        let tor_stream = self
+            .0
+            .connect((raw_host, 443))
+            .await
+            .context("tor connect")?;
 
-        trace!("response: {:?}", resp);
+        let mut tls_stream = Self::with_tls_stream(tls_host, tor_stream)
+            .await
+            .context("wrap in TLS")?;
 
-        resp
+        let raw_request = request_to_raw(request).context("serialize request")?;
+
+        tls_stream
+            .write_all(&raw_request)
+            .await
+            .context("write request")?;
+        tls_stream.flush().await.context("stream flush")?;
+
+        let mut raw_response = Vec::new();
+        tls_stream
+            .read_to_end(&mut raw_response)
+            .await
+            .context("read response")?;
+
+        let response = raw_to_response(raw_response);
+
+        trace!(?response, "response");
+
+        response
     }
 
-    /// Sends a request over a TLS connection and returns the result.
-    // TODO use Request directly
-    async fn send_raw(&self, host: &str, request: &[u8]) -> Result<Vec<u8>> {
-        let stream = self.0.connect((host, 443)).await.context("tor connect")?;
-
+    async fn with_tls_stream(
+        host: ServerName,
+        tor_stream: DataStream,
+    ) -> Result<TlsStream<DataStream>> {
         let mut root_store = rustls::RootCertStore::empty();
         root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
             rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
@@ -87,28 +113,9 @@ impl Client {
             .with_root_certificates(root_store)
             .with_no_client_auth();
 
-        let mut tls_stream = TlsConnector::from(Arc::new(tls_config))
-            .connect(
-                rustls::ServerName::try_from(host).context("invalid host")?,
-                stream,
-            )
+        TlsConnector::from(Arc::new(tls_config))
+            .connect(host, tor_stream)
             .await
-            .context("tls connect")?;
-
-        tls_stream
-            .write_all(request)
-            .await
-            .context("write request")?;
-        tls_stream.flush().await.context("stream flush")?;
-
-        let mut response = Vec::new();
-        tls_stream
-            .read_to_end(&mut response)
-            .await
-            .context("read response")?;
-
-        trace!(?response, "received stream");
-
-        Ok(response)
+            .context("tls connect")
     }
 }
