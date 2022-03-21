@@ -22,7 +22,7 @@ tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
 tor-netdir = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
 tor-netdoc = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "experimental-api" ] }
 tor-proto = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = ["tokio"] }
+tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [ "rustls", "tokio" ] }
 
 anyhow = "1"
 async-trait = "0.1.2"
@@ -36,12 +36,13 @@ log-panics = "2"
 postage = { version = "0.4", default-features = false, features = [ "futures-traits" ] }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
-tokio-native-tls = "0.3"
 serde_json = "1.0.64"
 tokio = { version = "1", features = ["full"] }
+tokio-rustls = "0.23"
 tracing = "0.1"
 tracing-fmt = "0.1"
 tracing-log = "0.1"
+webpki-roots = "0.22"
 
 [dev-dependencies]
 tempdir = "0.3"
@@ -67,3 +68,7 @@ lto = "fat" # use system linker (needed for iOS)
 [patch.crates-io.derive_builder_core]
 git = "https://github.com/ijackson/rust-derive-builder"
 rev = "dccbbb8ad75717c8bc0070b6f0364b2c3a54abb7"
+
+# until tokio-rs/tls#98 is released
+[patch.crates-io.tokio-rustls]
+git = "https://github.com/tokio-rs/tls"
