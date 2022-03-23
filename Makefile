@@ -1,7 +1,9 @@
 arxc := lightarti-rest.xcframework
 arxcz := $(arxc).zip
 
-LATEST_DIRCACHE_URL=https://github.com/c4dt/lightarti-directory/releases/latest/download/directory-cache.tgz
+LATEST_DIRCACHE_URL := https://github.com/c4dt/lightarti-directory/releases/latest/download/directory-cache.tgz
+
+SRCS := $(shell find src -name '*.rs')
 
 .PHONY: build-ios
 build-ios: $(arxcz)
@@ -11,7 +13,7 @@ $(HOME)/.cargo/bin/cbindgen:
 ios/lightarti-rest.h: $(HOME)/.cargo/bin/cbindgen cbindgen.toml
 	$< > $@
 
-ios/$(arxc): $(wildcard src/*) ios/lightarti-rest.h ios/build_xcf.sh
+ios/$(arxc): $(SRCS) ios/lightarti-rest.h ios/build_xcf.sh
 	( cd ios; ./build_xcf.sh )
 
 $(arxcz): ios/$(arxc)
