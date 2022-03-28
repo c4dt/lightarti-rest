@@ -28,6 +28,7 @@ impl From<RuntimeAndClient> for jlong {
 }
 
 impl Request {
+    /// Deserialize a request coming from Java
     pub fn from_java(
         env: JNIEnv,
         method_j: JString,
@@ -88,6 +89,7 @@ impl Request {
 }
 
 impl Response {
+    /// Serialize a request suitable for Java
     pub fn into_java(self, env: JNIEnv) -> Result<JObject> {
         let status: jint = self.0.status().as_u16().into();
 

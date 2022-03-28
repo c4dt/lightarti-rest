@@ -3,6 +3,7 @@ use std::io::Write;
 use anyhow::{bail, Context, Result};
 use http::{Request, Response};
 
+/// Serialize a [`Request`] as an raw HTTP request
 pub fn request_to_raw(req: Request<Vec<u8>>) -> Result<Vec<u8>> {
     const EOL: &str = "\n";
 
@@ -41,6 +42,7 @@ pub fn request_to_raw(req: Request<Vec<u8>>) -> Result<Vec<u8>> {
     Ok(ret)
 }
 
+/// Deserialize an raw HTTP response to an [`Response`]
 pub fn raw_to_response(mut raw_resp: Vec<u8>) -> Result<Response<Vec<u8>>> {
     const MAX_HEADERS: usize = 16;
 

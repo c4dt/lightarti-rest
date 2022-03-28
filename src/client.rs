@@ -18,9 +18,11 @@ use crate::{
     http::{raw_to_response, request_to_raw},
 };
 
+/// Client using the Tor network
 pub struct Client(TorClient<Runtime>);
 
 impl Client {
+    /// Create a new client with the given cache directory
     pub async fn new(cache: &Path) -> Result<Self> {
         let runtime = Runtime::current().context("get runtime")?;
 
@@ -52,7 +54,7 @@ impl Client {
         cfg_builder.build().context("build config")
     }
 
-    /// Sends the request over Tor
+    /// Send the request over Tor
     pub async fn send(&self, request: Request<Vec<u8>>) -> Result<Response<Vec<u8>>> {
         trace!(?request, "request");
 

@@ -19,6 +19,7 @@ use http::{
     Uri,
 };
 
+/// HTTP methods available
 #[repr(C)]
 pub enum Method {
     Get,
@@ -47,12 +48,18 @@ impl From<Method> for http::Method {
     }
 }
 
+/// C-serializable HTTP request
 #[repr(C)]
 pub struct Request {
+    /// HTTP Method
     method: Method,
+    /// URL to connect to
     url: CFURLRef,
-    /// CFDictionary<CFString, CFArray<CFData>>,
+    /// HTTP headers
+    ///
+    /// Underlying type is CFDictionary<CFString, CFArray<CFData>>,
     headers: CFDictionaryRef,
+    /// HTTP body
     body: CFDataRef,
 }
 
@@ -102,11 +109,16 @@ impl TryFrom<Request> for super::Request {
     }
 }
 
+/// C-serializable HTTP response
 #[repr(C)]
 pub struct Response {
+    /// HTTP code
     status: u16,
-    /// CFDictionary<CFString, CFArray<CFData>>,
+    /// HTTP headers
+    ///
+    /// Underlying type is CFDictionary<CFString, CFArray<CFData>>,
     headers: CFDictionaryRef,
+    /// HTTP body
     body: CFDataRef,
 }
 
@@ -160,15 +172,21 @@ impl TryFrom<super::Response> for Response {
     }
 }
 
+/// C-serializable `Result<T, String>` value
 #[repr(C)]
 pub union ResultUnion<T> {
+    /// Success value
     ok: ManuallyDrop<T>,
+    /// String error value
     err: CFStringRef,
 }
 
+/// C-serializable [`Result`]
 #[repr(C)]
 pub struct Result<T> {
+    /// Is `value.ok` field valid?
     is_ok: bool,
+    /// Contained value
     value: ResultUnion<T>,
 }
 
