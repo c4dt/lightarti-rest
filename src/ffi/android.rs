@@ -58,7 +58,6 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_Client_create(
     cache_dir_j: JString,
 ) -> jlong {
     throw_on_err(env, 0, || {
-        // TODO avoid UTF-8 conversion?
         let cache_dir_javastr = env
             .get_string(cache_dir_j)
             .context("create rust string for `cache_dir_j`")?;

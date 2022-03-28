@@ -128,7 +128,6 @@ impl TryFrom<super::Response> for Response {
             headers_with_vec.entry(k).or_insert_with(Vec::new).push(v);
         }
 
-        // TODO avoid copies
         let headers = CFDictionary::from_CFType_pairs(
             &headers_with_vec
                 .into_iter()
