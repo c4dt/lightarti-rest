@@ -11,6 +11,7 @@ mod structs;
 
 use super::{Request, Response, RuntimeAndClient};
 
+/// Setup the logger
 #[no_mangle]
 pub unsafe extern "C" fn logger_init() {
     let subscriber = tracing_fmt::FmtSubscriber::builder()
@@ -21,6 +22,7 @@ pub unsafe extern "C" fn logger_init() {
     tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
 }
 
+/// Create a new [`RuntimeAndClient`], returns its address
 #[no_mangle]
 pub unsafe extern "C" fn client_new(cache_dir_ref: CFStringRef) -> structs::Result<isize> {
     {
@@ -35,6 +37,7 @@ pub unsafe extern "C" fn client_new(cache_dir_ref: CFStringRef) -> structs::Resu
     .into()
 }
 
+/// Send a request using the given [`RuntimeAndClient`]
 #[no_mangle]
 pub unsafe extern "C" fn client_send(
     ios_client: isize,
@@ -58,6 +61,7 @@ pub unsafe extern "C" fn client_send(
     .into()
 }
 
+/// Free a [`RuntimeAndClient`]
 #[no_mangle]
 pub unsafe extern "C" fn client_free(ios_client: isize) {
     ManuallyDrop::into_inner(RuntimeAndClient::from(ios_client).0);
