@@ -21,14 +21,28 @@ use http::{
 
 #[repr(C)]
 pub enum Method {
-    // TODO more methods!
     Get,
+    Head,
+    Post,
+    Put,
+    Delete,
+    // Connect, TODO doesn't close stream
+    Options,
+    Trace,
+    Patch,
 }
 
 impl From<Method> for http::Method {
     fn from(method: Method) -> Self {
         match method {
             Method::Get => http::Method::GET,
+            Method::Head => http::Method::HEAD,
+            Method::Post => http::Method::POST,
+            Method::Put => http::Method::PUT,
+            Method::Delete => http::Method::DELETE,
+            Method::Options => http::Method::OPTIONS,
+            Method::Trace => http::Method::TRACE,
+            Method::Patch => http::Method::PATCH,
         }
     }
 }
