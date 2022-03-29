@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, fs, path::Path, sync::Arc};
+use std::{convert::TryFrom, fs, io, path::Path, sync::Arc};
 
 use anyhow::{bail, Context, Result};
 use arti_client::{DataStream, TorClient, TorClientConfig};
@@ -11,7 +11,7 @@ use tokio_rustls::{
 };
 use tor_config::CfgPath;
 use tor_rtcompat::tokio::TokioRustlsRuntime as Runtime;
-use tracing::trace;
+use tracing::{trace, warn};
 
 use crate::{
     flatfiledirmgr::FlatFileDirMgrBuilder,
@@ -82,19 +82,24 @@ impl Client {
             .write_all(&raw_request)
             .await
             .context("write request")?;
-        tls_stream.flush().await.context("stream flush")?;
+        tls_stream.shutdown().await.context("stream shutdown")?;
 
         let mut raw_response = Vec::new();
-        tls_stream
-            .read_to_end(&mut raw_response)
-            .await
-            .context("read response")?;
+        let read_response = tls_stream.read_to_end(&mut raw_response).await;
 
-        let response = raw_to_response(raw_response);
+        if let Err(ref err) = read_response {
+            if err.kind() == io::ErrorKind::UnexpectedEof {
+                // see rustls/rustls#b84721ef0d72e7f2747105f6b76a6bcbb8aa0ea4
+                warn!("server didn't close TLS stream")
+            } else {
+                read_response.context("read response")?;
+            }
+        }
+        let response = raw_to_response(raw_response)?;
 
         trace!(?response, "response");
 
-        response
+        Ok(response)
     }
 
     async fn with_tls_stream(
