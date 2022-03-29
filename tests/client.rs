@@ -23,3 +23,24 @@ pub async fn test_get() {
 
     assert_eq!(resp.status(), 200);
 }
+
+#[tokio::test]
+pub async fn test_post() {
+    utils::setup_tracing();
+    let cache = utils::setup_cache();
+
+    let resp = Client::new(cache.path())
+        .await
+        .expect("create client")
+        .send(
+            Request::post("https://httpbin.org/post")
+                .header("Host", "httpbin.org")
+                .version(http::Version::HTTP_10)
+                .body(Vec::from("key1=val1&key2=val2"))
+                .expect("create post request"),
+        )
+        .await
+        .expect("send request");
+
+    assert_eq!(resp.status(), 200);
+}
