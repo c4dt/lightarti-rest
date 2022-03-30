@@ -68,7 +68,7 @@ impl Client {
 
         let tor_stream = self
             .0
-            .connect((raw_host, 443))
+            .connect((raw_host, request.uri().port_u16().unwrap_or(443)))
             .await
             .context("tor connect")?;
 
