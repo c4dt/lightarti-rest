@@ -7,7 +7,7 @@ authors = [
   "Christian Grigis <christian.grigis@epfl.ch>",
   "Valérian Rousset <valerian.rousset@epfl.ch>",
 ]
-edition = "2018"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib", "staticlib"]
