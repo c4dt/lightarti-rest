@@ -1,3 +1,10 @@
+0.4.0 - 2022/03/31
+	* Expose a full Client
+	* Android: split TorLibApi_torRequest in Client_{create,send,free}
+	* iOS: split call_arti in client_{new,send,free}
+	* Rename library to lightarti-rest
+	* Use rustls, see tokio-rs/tls#96
+
 0.3.3 - 2021/08/06
 	* More renaming
 
