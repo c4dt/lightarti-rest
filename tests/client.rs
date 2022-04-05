@@ -25,6 +25,27 @@ pub async fn test_get() {
 }
 
 #[tokio::test]
+pub async fn test_get_long_response() {
+    utils::setup_tracing();
+    let cache = utils::setup_cache();
+
+    let resp = Client::new(cache.path())
+        .await
+        .expect("create client")
+        .send(
+            Request::get("https://www.admin.ch/gov/de/start.html")
+                .header("Host", "www.admin.ch")
+                .version(http::Version::HTTP_10)
+                .body(vec![])
+                .expect("create get request"),
+        )
+        .await
+        .expect("send request");
+
+    assert_eq!(resp.status(), 200);
+}
+
+#[tokio::test]
 pub async fn test_post() {
     utils::setup_tracing();
     let cache = utils::setup_cache();

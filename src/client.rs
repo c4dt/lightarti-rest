@@ -82,7 +82,7 @@ impl Client {
             .write_all(&raw_request)
             .await
             .context("write request")?;
-        tls_stream.shutdown().await.context("stream shutdown")?;
+        tls_stream.flush().await.context("flush")?;
 
         let mut raw_response = Vec::new();
         let read_response = tls_stream.read_to_end(&mut raw_response).await;
