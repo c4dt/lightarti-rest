@@ -44,7 +44,7 @@ pub fn request_to_raw(req: Request<Vec<u8>>) -> Result<Vec<u8>> {
 
 /// Deserialize an raw HTTP response to an [`Response`]
 pub fn raw_to_response(mut raw_resp: Vec<u8>) -> Result<Response<Vec<u8>>> {
-    const MAX_HEADERS: usize = 16;
+    const MAX_HEADERS: usize = 64;
 
     let mut headers = [httparse::EMPTY_HEADER; MAX_HEADERS];
 

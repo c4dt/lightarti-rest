@@ -46,6 +46,27 @@ pub async fn test_get_long_response() {
 }
 
 #[tokio::test]
+pub async fn test_get_many_headers() {
+    utils::setup_tracing();
+    let cache = utils::setup_cache();
+
+    let resp = Client::new(cache.path())
+        .await
+        .expect("create client")
+        .send(
+            Request::get("https://www.sunrise.ch/en/home")
+                .header("Host", "www.sunrise.ch")
+                .version(http::Version::HTTP_10)
+                .body(vec![])
+                .expect("create get request"),
+        )
+        .await
+        .expect("send request");
+
+    assert_eq!(resp.status(), 200);
+}
+
+#[tokio::test]
 pub async fn test_post() {
     utils::setup_tracing();
     let cache = utils::setup_cache();
