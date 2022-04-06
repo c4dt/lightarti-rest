@@ -5,9 +5,9 @@ use arti_client::DirProviderBuilder;
 use tor_checkable::{ExternallySigned, SelfSigned, Timebound};
 use tor_circmgr::CircMgr;
 use tor_dirmgr::config::DirMgrConfig;
-use tor_dirmgr::{DirBootstrapStatus, DirEvent, DirProvider, Error, Result, SharedMutArc};
+use tor_dirmgr::{DirBootstrapStatus, DirProvider, Error, Result, SharedMutArc};
 use tor_llcrypto::pk::rsa::RsaIdentity;
-use tor_netdir::{MdReceiver, NetDir, PartialNetDir};
+use tor_netdir::{DirEvent, MdReceiver, NetDir, NetDirProvider, PartialNetDir};
 use tor_netdoc::doc::authcert::AuthCert;
 use tor_netdoc::doc::microdesc::{Microdesc, MicrodescReader};
 use tor_netdoc::doc::netstatus::{
@@ -251,8 +251,7 @@ fn parse_churn(text: &str) -> Result<Vec<RsaIdentity>> {
     Ok(churn)
 }
 
-#[async_trait]
-impl<R: Runtime> DirProvider for FlatFileDirMgr<R> {
+impl<R: Runtime> NetDirProvider for FlatFileDirMgr<R> {
     fn latest_netdir(&self) -> Option<Arc<NetDir>> {
         self.opt_netdir()
     }
@@ -260,7 +259,10 @@ impl<R: Runtime> DirProvider for FlatFileDirMgr<R> {
     fn events(&self) -> BoxStream<'static, DirEvent> {
         Box::pin(self.tx_events.subscribe())
     }
+}
 
+#[async_trait]
+impl<R: Runtime> DirProvider for FlatFileDirMgr<R> {
     fn reconfigure(
         &self,
         _new_config: &DirMgrConfig,

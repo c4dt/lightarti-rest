@@ -13,25 +13,25 @@ edition = "2021"
 crate-type = ["cdylib", "lib", "staticlib"]
 
 [dependencies]
-arti-client = { git = "https://gitlab.torproject.org/tpo/core/arti.git", default-features = false, features = [
+arti-client = { version = "0.2", default-features = false, features = [
   "error_detail",
   "experimental-api",
   "rustls",
   "tokio",
 ] }
-tor-checkable = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-circmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-config = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-dirmgr = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [
+tor-checkable = "0.2"
+tor-circmgr = "0.2"
+tor-config = "0.2"
+tor-dirmgr = { version = "0.2", features = [
   "experimental-api",
   "static",
 ] }
-tor-llcrypto = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-netdir = { git = "https://gitlab.torproject.org/tpo/core/arti.git" }
-tor-netdoc = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [
+tor-llcrypto = "0.2"
+tor-netdir = "0.2"
+tor-netdoc = { version = "0.2", features = [
   "experimental-api",
 ] }
-tor-rtcompat = { git = "https://gitlab.torproject.org/tpo/core/arti.git", features = [
+tor-rtcompat = { version = "0.2", features = [
   "rustls",
   "tokio",
 ] }
@@ -69,10 +69,6 @@ tracing-fmt = "0.1"
 [profile.release]
 opt-level = "s" # reduce library size
 lto = "fat"     # use system linker (needed for iOS)
-
-[patch.crates-io.derive_builder_core]
-git = "https://github.com/ijackson/rust-derive-builder"
-rev = "dccbbb8ad75717c8bc0070b6f0364b2c3a54abb7"
 
 # until tokio-rs/tls#98 is released
 [patch.crates-io.tokio-rustls]
