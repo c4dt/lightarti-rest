@@ -73,3 +73,7 @@ lto = "fat"     # use system linker (needed for iOS)
 # until tokio-rs/tls#98 is released
 [patch.crates-io.tokio-rustls]
 git = "https://github.com/tokio-rs/tls"
+
+[patch.crates-io.tor-dirmgr]
+git = "https://github.com/c4dt/arti"
+branch = "make-v3ident-public"

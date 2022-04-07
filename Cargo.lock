@@ -2391,8 +2391,7 @@ dependencies = [
 [[package]]
 name = "tor-dirmgr"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43b1aadfb53061bf99fd1e8f8b083b1e41ff67e8f1974f4b7d12b5f76974bedb"
+source = "git+https://github.com/c4dt/arti?branch=make-v3ident-public#f14d7dce3051d8f3e25ea3baf7a935173e9133ed"
 dependencies = [
  "async-trait",
  "base64",

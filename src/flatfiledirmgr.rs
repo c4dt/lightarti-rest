@@ -83,7 +83,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         let authority_ids: Vec<RsaIdentity> = config
             .authorities()
             .iter()
-            .map(|auth| *auth.v3ident())
+            .map(|auth| auth.v3ident)
             .collect();
 
         // Check out what authorities we believe in, and see if enough
