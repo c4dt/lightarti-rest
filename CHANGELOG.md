@@ -1,3 +1,7 @@
+0.4.1 - 2022/04/12
+	* Fix a couple of issues preventing loading some sites (#92)
+	* Move to upstream arti 0.2
+
 0.4.0 - 2022/03/31
 	* Expose a full Client
 	* Android: split TorLibApi_torRequest in Client_{create,send,free}
