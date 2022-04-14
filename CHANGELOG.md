@@ -1,3 +1,6 @@
+0.4.2 - 2022/04/14
+	* Update roadmap in README
+
 0.4.1 - 2022/04/12
 	* Fix a couple of issues preventing loading some sites (#92)
 	* Move to upstream arti 0.2
