@@ -2,7 +2,7 @@
 //! Used for 'lightarti'.
 
 use arti_client::DirProviderBuilder;
-use tor_checkable::{ExternallySigned, SelfSigned, Timebound, TimeValidityError};
+use tor_checkable::{ExternallySigned, SelfSigned, TimeValidityError, Timebound};
 use tor_circmgr::CircMgr;
 use tor_dirmgr::config::DirMgrConfig;
 use tor_dirmgr::{DirBootstrapStatus, DirProvider, Error, Result, SharedMutArc};
