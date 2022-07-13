@@ -2,12 +2,12 @@
 //! Used for 'lightarti'.
 
 use arti_client::DirProviderBuilder;
-use tor_checkable::{ExternallySigned, SelfSigned, Timebound};
+use tor_checkable::{ExternallySigned, SelfSigned, Timebound, TimeValidityError};
 use tor_circmgr::CircMgr;
 use tor_dirmgr::config::DirMgrConfig;
 use tor_dirmgr::{DirBootstrapStatus, DirProvider, Error, Result, SharedMutArc};
 use tor_llcrypto::pk::rsa::RsaIdentity;
-use tor_netdir::{DirEvent, MdReceiver, NetDir, NetDirProvider, PartialNetDir};
+use tor_netdir::{DirEvent, MdReceiver, NetDir, NetDirProvider, PartialNetDir, Timeliness};
 use tor_netdoc::doc::authcert::AuthCert;
 use tor_netdoc::doc::microdesc::{Microdesc, MicrodescReader};
 use tor_netdoc::doc::netstatus::{
@@ -75,7 +75,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// DirMgr, combined and simplified to directly use the data from the loaded files.
     pub async fn load_directory(&self) -> Result<bool> {
         let config = self.config.get();
-        let cache_path = config.cache_path();
+        let cache_path = &config.cache_path;
 
         // Consensus
         let unvalidated = self.load_consensus(cache_path)?;
@@ -106,7 +106,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         let udesc = self.load_microdesc(cache_path)?;
 
         // Build directory
-        let params = config.override_net_params();
+        let params = &config.override_net_params;
         let mut partial = PartialNetDir::new(consensus, Some(params));
 
         for md in udesc {
@@ -147,7 +147,8 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         cache_path: &Path,
     ) -> Result<UnvalidatedConsensus<MdConsensusRouterStatus>> {
         let path = cache_path.join("consensus.txt");
-        let consensus_text = fs::read_to_string(path)?;
+        let consensus_text =
+            fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("consensus.txt loaded");
 
         let path = cache_path.join("churn.txt");
@@ -158,7 +159,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
             .map_err(|_| Error::CacheCorruption("Failed to parse consensus"))?;
         let mut unvalidated = parsed
             .check_valid_now()
-            .map_err(|_| Error::BadNetworkConfig("The consensus file is no longer valid"))?;
+            .map_err(|_| Error::UntimelyObject(TimeValidityError::Unspecified))?;
 
         let churn = parse_churn(&churn_text)?;
 
@@ -194,7 +195,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// Load the certificate from a flat file.
     fn load_certificate(&self, cache_path: &Path) -> Result<AuthCert> {
         let path = cache_path.join("certificate.txt");
-        let certificate = fs::read_to_string(path)?;
+        let certificate = fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("certificate.txt loaded");
 
         let parsed = AuthCert::parse(certificate.as_str())
@@ -202,7 +203,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
             .check_signature()?;
         let cert = parsed
             .check_valid_now()
-            .map_err(|_| Error::BadNetworkConfig("The certificate file is no longer valid"))?;
+            .map_err(|_| Error::UntimelyObject(TimeValidityError::Unspecified))?;
 
         Ok(cert)
     }
@@ -210,7 +211,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// Load the list of microdescriptors from a flat file.
     fn load_microdesc(&self, cache_path: &Path) -> Result<Vec<Microdesc>> {
         let path = cache_path.join("microdescriptors.txt");
-        let udesc_text = fs::read_to_string(path)?;
+        let udesc_text = fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("microdescriptors.txt loaded");
 
         let udesc = MicrodescReader::new(
@@ -252,8 +253,8 @@ fn parse_churn(text: &str) -> Result<Vec<RsaIdentity>> {
 }
 
 impl<R: Runtime> NetDirProvider for FlatFileDirMgr<R> {
-    fn latest_netdir(&self) -> Option<Arc<NetDir>> {
-        self.opt_netdir()
+    fn netdir(&self, _: Timeliness) -> tor_netdir::Result<Arc<NetDir>> {
+        self.opt_netdir().ok_or(tor_netdir::Error::NoInfo)
     }
 
     fn events(&self) -> BoxStream<'static, DirEvent> {
@@ -293,9 +294,9 @@ impl<R: Runtime> DirProviderBuilder<R> for FlatFileDirMgrBuilder {
         _runtime: R,
         circmgr: Arc<tor_circmgr::CircMgr<R>>,
         config: DirMgrConfig,
-    ) -> arti_client::Result<Arc<dyn tor_dirmgr::DirProvider + Send + Sync + 'static>> {
-        let dm =
-            FlatFileDirMgr::from_config(config, circmgr).map_err(arti_client::ErrorDetail::from)?;
+    ) -> arti_client::Result<Arc<dyn tor_dirmgr::DirProvider + 'static>> {
+        let dm = FlatFileDirMgr::from_config(config, circmgr)
+            .map_err(arti_client::ErrorDetail::DirMgrSetup)?;
         Ok(dm)
     }
 }

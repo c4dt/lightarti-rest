@@ -1,6 +1,6 @@
 [package]
 name = "lightarti-rest"
-version = "0.4.2"
+version = "0.5.0"
 authors = [
   "Linus Gasser <linus.gasser@epfl.ch>",
   "Laurent Girod <laurent.girod@epfl.ch>",
@@ -25,25 +25,25 @@ categories = [
 crate-type = ["cdylib", "lib", "staticlib"]
 
 [dependencies]
-arti-client = { version = "0.2", default-features = false, features = [
-  "error_detail",
-  "experimental-api",
-  "rustls",
-  "tokio",
+arti-client = { version = "0.5", default-features = false, features = [
+    "error_detail",
+    "experimental-api",
+    "rustls",
+    "tokio",
 ] }
-tor-checkable = "0.2"
-tor-circmgr = "0.2"
-tor-config = "0.2"
-tor-dirmgr = { version = "0.2", features = [
-  "experimental-api",
-  "static",
+tor-checkable = "0.3"
+tor-circmgr = "0.4"
+tor-config = "0.5"
+tor-dirmgr = { version = "0.6", features = [
+    "experimental-api",
+    "static",
 ] }
-tor-llcrypto = "0.2"
-tor-netdir = "0.2"
-tor-netdoc = { version = "0.2", features = [
-  "experimental-api",
+tor-llcrypto = "0.3"
+tor-netdir = "0.5"
+tor-netdoc = { version = "0.5", features = [
+    "experimental-api",
 ] }
-tor-rtcompat = { version = "0.2", features = [
+tor-rtcompat = { version = "0.5", features = [
   "rustls",
   "tokio",
 ] }
@@ -81,7 +81,3 @@ tracing-fmt = "0.1"
 [profile.release]
 opt-level = "s" # reduce library size
 lto = "fat"     # use system linker (needed for iOS)
-
-[patch.crates-io.tor-dirmgr]
-git = "https://github.com/c4dt/arti"
-branch = "make-v3ident-public"
