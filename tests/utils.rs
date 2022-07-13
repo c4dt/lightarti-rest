@@ -5,7 +5,7 @@ pub fn setup_tracing() {
     // dropping error as many tests can setup_tracing
 
     let _ = tracing::subscriber::set_global_default(
-        tracing_fmt::FmtSubscriber::builder()
+        tracing_subscriber::fmt::Subscriber::builder()
             .with_max_level(tracing::Level::DEBUG)
             .finish(),
     );
