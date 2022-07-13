@@ -40,16 +40,16 @@ impl Client {
         let mut cfg_builder = TorClientConfig::builder();
         cfg_builder
             .storage()
-            .cache_dir(CfgPath::from_path(cache_path))
-            .state_dir(CfgPath::from_path(cache_path));
+            .cache_dir(CfgPath::new_literal(cache_path))
+            .state_dir(CfgPath::new_literal(cache_path));
 
         let auth_path = cache_path.join("authority.json");
         let auth_raw = fs::read_to_string(auth_path).context("Failed to read authority")?;
         let auth = serde_json::from_str(auth_raw.as_str())?;
 
-        cfg_builder.tor_network().authorities(vec![auth]);
+        cfg_builder.tor_network().set_authorities(vec![auth]);
         // Overriding authorities requires also overriding fallback caches
-        cfg_builder.tor_network().fallback_caches(Vec::new());
+        cfg_builder.tor_network().set_fallback_caches(Vec::new());
 
         cfg_builder.build().context("build config")
     }

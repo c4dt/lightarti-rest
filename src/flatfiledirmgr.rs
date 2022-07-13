@@ -2,7 +2,7 @@
 //! Used for 'lightarti'.
 
 use arti_client::DirProviderBuilder;
-use tor_checkable::{ExternallySigned, SelfSigned, Timebound};
+use tor_checkable::{ExternallySigned, SelfSigned, Timebound, TimeValidityError};
 use tor_circmgr::CircMgr;
 use tor_dirmgr::config::DirMgrConfig;
 use tor_dirmgr::{DirBootstrapStatus, DirProvider, Error, Result, SharedMutArc};
@@ -75,7 +75,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// DirMgr, combined and simplified to directly use the data from the loaded files.
     pub async fn load_directory(&self) -> Result<bool> {
         let config = self.config.get();
-        let cache_path = config.cache_path();
+        let cache_path = &config.cache_path;
 
         // Consensus
         let unvalidated = self.load_consensus(cache_path)?;
@@ -106,7 +106,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         let udesc = self.load_microdesc(cache_path)?;
 
         // Build directory
-        let params = config.override_net_params();
+        let params = &config.override_net_params;
         let mut partial = PartialNetDir::new(consensus, Some(params));
 
         for md in udesc {
@@ -158,7 +158,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
             .map_err(|_| Error::CacheCorruption("Failed to parse consensus"))?;
         let mut unvalidated = parsed
             .check_valid_now()
-            .map_err(|_| Error::BadNetworkConfig("The consensus file is no longer valid"))?;
+            .map_err(|_| Error::UntimelyObject(TimeValidityError::Unspecified))?;
 
         let churn = parse_churn(&churn_text)?;
 
@@ -202,7 +202,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
             .check_signature()?;
         let cert = parsed
             .check_valid_now()
-            .map_err(|_| Error::BadNetworkConfig("The certificate file is no longer valid"))?;
+            .map_err(|_| Error::UntimelyObject(TimeValidityError::Unspecified))?;
 
         Ok(cert)
     }
@@ -293,7 +293,7 @@ impl<R: Runtime> DirProviderBuilder<R> for FlatFileDirMgrBuilder {
         _runtime: R,
         circmgr: Arc<tor_circmgr::CircMgr<R>>,
         config: DirMgrConfig,
-    ) -> arti_client::Result<Arc<dyn tor_dirmgr::DirProvider + Send + Sync + 'static>> {
+    ) -> arti_client::Result<Arc<dyn tor_dirmgr::DirProvider + 'static>> {
         let dm =
             FlatFileDirMgr::from_config(config, circmgr).map_err(arti_client::ErrorDetail::from)?;
         Ok(dm)
