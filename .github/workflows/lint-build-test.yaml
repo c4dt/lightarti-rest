@@ -75,11 +75,6 @@ jobs:
           command: install
           args: cargo-ndk
 
-      - name: patch bbqsrc/cargo-ndk#22
-        run: >
-          find -L /usr/local/lib/android/sdk/ndk-bundle -name libunwind.a
-          -execdir sh -c 'echo "INPUT(-lunwind)" > libgcc.a' \;
-
       - uses: actions-rs/cargo@v1
         with:
           command: ndk
