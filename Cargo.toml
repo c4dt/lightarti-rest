@@ -1,51 +1,51 @@
 [package]
 name = "lightarti-rest"
-version = "0.4.2"
+version = "0.5.0"
 authors = [
-  "Linus Gasser <linus.gasser@epfl.ch>",
-  "Laurent Girod <laurent.girod@epfl.ch>",
-  "Christian Grigis <christian.grigis@epfl.ch>",
-  "Valérian Rousset <valerian.rousset@epfl.ch>",
+    "Linus Gasser <linus.gasser@epfl.ch>",
+    "Laurent Girod <laurent.girod@epfl.ch>",
+    "Christian Grigis <christian.grigis@epfl.ch>",
+    "Valérian Rousset <valerian.rousset@epfl.ch>",
 ]
 edition = "2021"
 license-file = "LICENSE"
 description = "Simple wrapper around arti to enable mobile apps to make anonymous requests via Tor"
 repository = "https://github.com/c4dt/lightarti-rest"
 keywords = [
-  "anonymity",
-  "privacy",
-  "tor",
+    "anonymity",
+    "privacy",
+    "tor",
 ]
 categories = [
-  "cryptography",
-  "web-programming::http-client",
+    "cryptography",
+    "web-programming::http-client",
 ]
 
 [lib]
 crate-type = ["cdylib", "lib", "staticlib"]
 
 [dependencies]
-arti-client = { version = "0.2", default-features = false, features = [
-  "error_detail",
-  "experimental-api",
-  "rustls",
-  "tokio",
+arti-client = { version = "0.5", default-features = false, features = [
+    "error_detail",
+    "experimental-api",
+    "rustls",
+    "tokio",
 ] }
-tor-checkable = "0.2"
-tor-circmgr = "0.2"
-tor-config = "0.2"
-tor-dirmgr = { version = "0.2", features = [
-  "experimental-api",
-  "static",
+tor-checkable = "0.3"
+tor-circmgr = "0.4"
+tor-config = "0.5"
+tor-dirmgr = { version = "0.6", features = [
+    "experimental-api",
+    "static",
 ] }
-tor-llcrypto = "0.2"
-tor-netdir = "0.2"
-tor-netdoc = { version = "0.2", features = [
-  "experimental-api",
+tor-llcrypto = "0.3"
+tor-netdir = "0.5"
+tor-netdoc = { version = "0.5", features = [
+    "experimental-api",
 ] }
-tor-rtcompat = { version = "0.2", features = [
-  "rustls",
-  "tokio",
+tor-rtcompat = { version = "0.5", features = [
+    "rustls",
+    "tokio",
 ] }
 
 anyhow = "1"
@@ -55,7 +55,7 @@ hex = "0.4"
 http = "0.2"
 httparse = "1"
 postage = { version = "0.4", default-features = false, features = [
-  "futures-traits",
+    "futures-traits",
 ] }
 rand = "0.8"
 serde_json = "1"
@@ -66,7 +66,7 @@ webpki-roots = "0.22"
 
 [dev-dependencies]
 tempdir = "0.3"
-tracing-fmt = "0.1"
+tracing-subscriber = "0.3"
 tracing-log = "0.1"
 
 [target.'cfg(target_os="android")'.dependencies]
@@ -76,12 +76,8 @@ tracing = { version = "0.1", features = ["log"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 core-foundation = "0.9"
-tracing-fmt = "0.1"
+tracing-subscriber = "0.3"
 
 [profile.release]
 opt-level = "s" # reduce library size
 lto = "fat"     # use system linker (needed for iOS)
-
-[patch.crates-io.tor-dirmgr]
-git = "https://github.com/c4dt/arti"
-branch = "make-v3ident-public"

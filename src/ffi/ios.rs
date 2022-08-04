@@ -14,7 +14,7 @@ use super::{Request, Response, RuntimeAndClient};
 /// Setup the logger
 #[no_mangle]
 pub unsafe extern "C" fn logger_init() {
-    let subscriber = tracing_fmt::FmtSubscriber::builder()
+    let subscriber = tracing_subscriber::fmt::Subscriber::builder()
         .with_max_level(tracing::Level::DEBUG)
         .with_writer(std::io::stderr)
         .with_ansi(false)
