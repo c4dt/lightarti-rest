@@ -75,6 +75,18 @@ following constraints:
 This allows us to quickly verify that a given library version has at least some patches
 from the lightarti-rest code by simply looking at the version number.
 
+### Releasing a new version
+
+To release a new version, simply add a new tag to the repo and push it:
+
+```
+git tag 0.4.4
+git push --tag
+```
+
+The github-workflow will then create a new release.
+Please make sure that the version fits the above constraints.
+
 ## Directories
 
 - `./` is the rust library for the wrapper with arti

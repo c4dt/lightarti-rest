@@ -1,3 +1,10 @@
+0.4.4 - 2022/08/26
+	* Moving back version-# in Cargo.toml to 0.4.4
+
+0.4.3 - 2022/08/04
+	* Updating to arti 0.6
+	* Fixing iOS compilation errors
+
 0.4.2 - 2022/04/14
 	* Update roadmap in README
 

@@ -1,6 +1,6 @@
 [package]
 name = "lightarti-rest"
-version = "0.5.0"
+version = "0.4.4"
 authors = [
     "Linus Gasser <linus.gasser@epfl.ch>",
     "Laurent Girod <laurent.girod@epfl.ch>",
