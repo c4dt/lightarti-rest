@@ -1,5 +1,3 @@
-use std::future::Future;
-use std::pin::Pin;
 use std::{fs::copy, path::Path};
 use tempdir::TempDir;
 
@@ -46,21 +44,4 @@ pub fn setup_cache() -> TempDir {
     .expect("copy temp microdescriptors file");
 
     tempdir
-}
-
-pub async fn test_n(
-    n: u32,
-    p: impl Fn() -> Pin<Box<dyn Future<Output = anyhow::Result<()>>>>,
-) -> anyhow::Result<()> {
-    for i in 1..=n {
-        if let Err(e) = p().await {
-            tracing::warn!("Call failed in step {} / {}: {:?}", i, n, e)
-        } else {
-            return Ok(());
-        }
-    }
-    Err(anyhow::anyhow!(
-        "Couldn't find a working test in {} tests",
-        n
-    ))
 }

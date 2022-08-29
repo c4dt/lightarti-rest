@@ -57,32 +57,32 @@ async fn test_client(req: Request<Vec<u8>>) {
     let (header, body) = req.into_parts();
     let host = header.uri.clone();
 
-    utils::test_n(MAX_TRIES, move || {
+    for i in 1..=MAX_TRIES {
         let request = clone_request(&header, &body);
-        Box::pin(async move {
-            let cache = utils::setup_cache();
+        let cache = utils::setup_cache();
 
-            let resp = Client::new(cache.path())
-                .await
-                .expect("create client")
-                .send(request)
-                .await;
-
-            resp.and_then(|r| {
+        let res = Client::new(cache.path())
+            .await
+            .expect("create client")
+            .send(request)
+            .await
+            .and_then(|r| {
                 (r.status() == 200)
                     .then_some(())
-                    .ok_or(anyhow::anyhow!("wrong status"))
-            })
-            .context("send request")
-        })
-    })
-    .await
-    .unwrap_or_else(|_| {
-        panic!(
-            "Didn't manage to pass in {} steps for domain {}",
-            MAX_TRIES, host
-        )
-    });
+                    .ok_or_else(|| anyhow::anyhow!("wrong status"))
+            });
+
+        if let Err(e) = res {
+            tracing::warn!("Call failed in step {} / {}: {:?}", i, MAX_TRIES, e)
+        } else {
+            return;
+        }
+    }
+
+    panic!(
+        "Didn't manage to pass in {} steps for domain {}",
+        MAX_TRIES, host
+    )
 }
 
 fn clone_request(header: &Parts, body: &[u8]) -> Request<Vec<u8>> {
