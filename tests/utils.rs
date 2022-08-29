@@ -54,7 +54,7 @@ pub async fn test_n(
 ) -> anyhow::Result<()> {
     for i in 1..=n {
         if let Err(e) = p().await {
-            tracing_log::log::warn!("Call failed in step {} / {}: {:?}", i, n, e)
+            tracing::warn!("Call failed in step {} / {}: {:?}", i, n, e)
         } else {
             return Ok(());
         }

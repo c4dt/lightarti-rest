@@ -68,12 +68,12 @@ async fn test_client(req: Request<Vec<u8>>) {
                 .send(request)
                 .await;
 
-            match resp {
-                Ok(resp) => (resp.status() == 200)
+            resp.and_then(|r| {
+                (r.status() == 200)
                     .then_some(())
-                    .ok_or_else(|| anyhow::anyhow!("Wrong status")),
-                Err(e) => Err(anyhow::anyhow!("Couldn't get response: {}", e)),
-            }
+                    .ok_or(anyhow::anyhow!("wrong status"))
+            })
+            .context("send request")
         })
     })
     .await
