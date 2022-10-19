@@ -14,22 +14,55 @@ if [ "$MODE" = "release" ]; then
 fi
 
 XCFRAMEWORK_ARGS=""
-ARCHS="x86_64-apple-ios aarch64-apple-ios"
-if [ "$1" = dev ]; then
-  ARCHS=x86_64-apple-ios
-fi
 
-for arch in $ARCHS; do
-  cargo build --target $arch $MODEFLAG
-  tdir=../target/$arch/$MODE
+function build {
+  cargo build --target $1 $MODEFLAG
+}
+
+function create_universal {
+  tdir=../target/universal/$MODE
+
+  rm -rf $tdir
+  mkdir -p $tdir
+
+  lipo -create \
+    -arch x86_64 ../target/$1/$MODE/liblightarti_rest.a \
+    -arch arm64 ../target/$2/$MODE/liblightarti_rest.a \
+    -output $tdir/liblightarti_rest.a
+}
+
+function prepare_target {
+  tdir=../target/$1/$MODE
   hdir=$tdir/lightarti-rest
+
   rm -rf $hdir
   mkdir -p $hdir
+
   cp lightarti-rest.h module.modulemap $hdir
+
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -library $tdir/liblightarti_rest.a"
   XCFRAMEWORK_ARGS="${XCFRAMEWORK_ARGS} -headers $hdir"
-done
+}
 
+# Build x86 simulator target (for Intel Macs).
+build x86_64-apple-ios
+
+# Build ARM simulator target (for ARM Macs).
+build aarch64-apple-ios-sim
+
+# Create universal binary library for simulators.
+create_universal x86_64-apple-ios aarch64-apple-ios-sim
+
+# Copy headers and configure xcodebuild.
+prepare_target universal
+
+# Build iOS target.
+build aarch64-apple-ios
+
+# Copy headers and configure xcodebuild.
+prepare_target aarch64-apple-ios
+
+# Build xcframework package.
 XCFFILE=lightarti-rest.xcframework
 rm -rf $XCFFILE
 xcodebuild -create-xcframework $XCFRAMEWORK_ARGS -output $XCFFILE
