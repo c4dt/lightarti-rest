@@ -1,5 +1,5 @@
-0.4.5 - 2022/10/19
-    * Support ARM Macs
+0.4.5 - 2022/11/09
+	* Support ARM Macs
 
 0.4.4 - 2022/08/26
 	* Moving back version-# in Cargo.toml to 0.4.4
