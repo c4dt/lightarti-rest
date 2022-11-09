@@ -6,7 +6,7 @@ LATEST_DIRCACHE_URL := https://github.com/c4dt/lightarti-directory/releases/late
 SRCS := $(shell find src -name '*.rs')
 
 .PHONY: build-ios
-build-ios: check-targets $(arxcz)
+build-ios: $(arxcz)
 
 $(HOME)/.cargo/bin/cbindgen:
 	cargo install cbindgen
@@ -21,7 +21,7 @@ $(arxcz): ios/$(arxc)
 	zip -r ../$(arxcz) $(arxc) && \
 	swift package compute-checksum ../$(arxcz)
 
-dev: check-targets
+dev:
 	perl -pi -e 's/lto = "fat"/lto = "thin"/' Cargo.toml
 	perl -pi -e 's/.*opt-level = "s"/#opt-level = "s"/' Cargo.toml
 	rm -rf ../lightarti-rest-ios/lightarti-rest.xcframework
@@ -36,10 +36,3 @@ dev: check-targets
 dircache:
 	mkdir -p directory-cache
 	wget --output-document - --quiet '$(LATEST_DIRCACHE_URL)' | tar -C directory-cache -zxf -
-
-check-targets:
-	for target in x86_64-apple-ios aarch64-apple-ios-sim aarch64-apple-ios; do \
-		if ! rustup target list | grep installed | grep $$target; then \
-			rustup target add $$target; \
-		fi \
-	done
