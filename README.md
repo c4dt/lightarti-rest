@@ -131,6 +131,9 @@ The code is licensed under the MIT license.
 - Christian Grigis, C4DT
 - Laurent Girod, SPRING Lab, EPFL
 
+External contributors:
+- Benjamin Erhart, https://github.com/tladesignz
+
 Analysis and design by:
 
 - Wouter Lueks, SPRING Lab, EPFL

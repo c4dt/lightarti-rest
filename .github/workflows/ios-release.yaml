@@ -30,6 +30,12 @@ jobs:
           toolchain: stable
           target: aarch64-apple-ios
 
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: aarch64-apple-ios-sim
+
       - name: Build XCFramework
         run: |
           make build-ios
