@@ -1,3 +1,7 @@
+0.4.6 - 2022/11/11
+	* Updating to arti-client 0.7 from arti 1.0.1
+	* Also updating all other tor-* crates
+
 0.4.5 - 2022/11/09
 	* Support ARM Macs
 
