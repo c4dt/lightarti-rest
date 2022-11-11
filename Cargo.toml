@@ -54,7 +54,7 @@ futures = "0.3"
 hex = "0.4"
 http = "0.2"
 httparse = "1"
-postage = { version = "0.4", default-features = false, features = [
+postage = { version = "0.5", default-features = false, features = [
     "futures-traits",
 ] }
 rand = "0.8"
@@ -71,7 +71,7 @@ tracing-subscriber = "0.3"
 tracing-log = "0.1"
 
 [target.'cfg(target_os="android")'.dependencies]
-jni = "0.19"
+jni = "0.20"
 android_logger = "0.11"
 tracing = { version = "0.1", features = ["log"] }
 

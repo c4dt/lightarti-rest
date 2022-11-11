@@ -20,7 +20,6 @@ pub unsafe extern "C" fn logger_init() {
         .with_ansi(false)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("to be the only logger");
-    tracing::info!("Version 0.4.6");
 }
 
 /// Create a new [`RuntimeAndClient`], returns its address

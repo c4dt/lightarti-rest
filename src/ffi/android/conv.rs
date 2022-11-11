@@ -90,7 +90,7 @@ impl Request {
 
 impl Response {
     /// Serialize a request suitable for Java
-    pub fn into_java(self, env: JNIEnv) -> Result<JObject> {
+    pub unsafe fn into_java(self, env: JNIEnv) -> Result<JObject> {
         let status: jint = self.0.status().as_u16().into();
 
         let version = env
@@ -132,7 +132,7 @@ impl Response {
                 )
                 .context("call HashMap.put()")?
             {
-                if !o.into_inner().is_null() {
+                if !o.into_raw().is_null() {
                     trace!("Entry already existed -- appending");
                     entry = o;
                 }
@@ -158,7 +158,12 @@ impl Response {
             env.find_class("org/c4dt/artiwrapper/HttpResponse")
                 .context("find HttpResult class")?,
             "(ILjava/lang/String;Ljava/util/Map;[B)V",
-            &[status.into(), version.into(), headers.into(), body.into()],
+            &[
+                status.into(),
+                version.into(),
+                headers.into(),
+                JObject::from_raw(body).into(),
+            ],
         )
         .context("create HttpResult")
     }

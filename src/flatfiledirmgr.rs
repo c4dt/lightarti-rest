@@ -262,7 +262,7 @@ impl<R: Runtime> NetDirProvider for FlatFileDirMgr<R> {
         Box::pin(self.tx_events.subscribe())
     }
 
-    fn params(&self) -> Arc<(dyn AsRef<NetParameters> + 'static)> {
+    fn params(&self) -> Arc<dyn AsRef<NetParameters>> {
         Arc::new(NetParameters::default())
     }
 }

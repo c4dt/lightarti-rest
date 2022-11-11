@@ -95,7 +95,7 @@ dependencies = [
  "humantime-serde",
  "libc",
  "pin-project",
- "postage 0.5.0",
+ "postage",
  "safelog",
  "serde",
  "thiserror",
@@ -1111,9 +1111,9 @@ checksum = "4217ad341ebadf8d8e724e264f13e593e0648f5b3e94b3896a5df283be015ecc"
 
 [[package]]
 name = "jni"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6df18c2e3db7e453d3c6ac5b3e9d5182664d28788126d39b91f2d1e22b017ec"
+checksum = "039022cdf4d7b1cf548d31f60ae783138e5fd42013f6271049d7df7afadef96c"
 dependencies = [
  "cesu8",
  "combine",
@@ -1199,7 +1199,7 @@ dependencies = [
  "http",
  "httparse",
  "jni",
- "postage 0.4.1",
+ "postage",
  "rand 0.8.5",
  "serde_json",
  "tempdir",
@@ -1579,20 +1579,6 @@ name = "pkg-config"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
-
-[[package]]
-name = "postage"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a63d25391d04a097954b76aba742b6b5b74f213dfe3dbaeeb36e8ddc1c657f0b"
-dependencies = [
- "atomic",
- "crossbeam-queue",
- "futures",
- "pin-project",
- "static_assertions",
- "thiserror",
-]
 
 [[package]]
 name = "postage"
@@ -2396,7 +2382,7 @@ dependencies = [
  "hex",
  "libc",
  "pin-project",
- "postage 0.5.0",
+ "postage",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "thiserror",
@@ -2470,7 +2456,7 @@ dependencies = [
  "derive_more",
  "educe",
  "futures",
- "postage 0.5.0",
+ "postage",
  "rand 0.8.5",
  "safelog",
  "serde",
@@ -2626,7 +2612,7 @@ dependencies = [
  "itertools",
  "memmap2",
  "once_cell",
- "postage 0.5.0",
+ "postage",
  "rand 0.8.5",
  "retry-error",
  "rusqlite",
@@ -2679,7 +2665,7 @@ dependencies = [
  "humantime-serde",
  "itertools",
  "pin-project",
- "postage 0.5.0",
+ "postage",
  "rand 0.8.5",
  "retain_mut",
  "serde",
