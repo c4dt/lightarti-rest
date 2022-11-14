@@ -26,6 +26,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+use tor_netdir::params::NetParameters;
 
 /// 1/CHURN_FRACTION is the threshold of the consensus relays that we can remove with the churn
 const CHURN_FRACTION: usize = 6;
@@ -259,6 +260,10 @@ impl<R: Runtime> NetDirProvider for FlatFileDirMgr<R> {
 
     fn events(&self) -> BoxStream<'static, DirEvent> {
         Box::pin(self.tx_events.subscribe())
+    }
+
+    fn params(&self) -> Arc<dyn AsRef<NetParameters>> {
+        Arc::new(NetParameters::default())
     }
 }
 

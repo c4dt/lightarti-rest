@@ -31,7 +31,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_TorLibApi_hello(
         env.new_string(format!("Hello {}!", str))
             .context("create java string")
             .map(Into::into)
-            .map(JObject::into_inner)
+            .map(JObject::into_raw)
     })
 }
 
@@ -98,7 +98,7 @@ pub unsafe extern "system" fn Java_org_c4dt_artiwrapper_Client_send(
         response
             .into_java(env)
             .context("response to java")
-            .map(JObject::into_inner)
+            .map(JObject::into_raw)
     })
 }
 
