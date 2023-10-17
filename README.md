@@ -53,6 +53,7 @@ For the iOS test app, see here:
 - v0.2 - Optimized setting up of the Tor circuit - first version done
 - v0.3 - Add certificate configurations to the tor-cache directory
 - v0.4 - Re-use existing tor connection for multiple requests
+- v0.4.7 - update to arti v1.0
 - v0.5 - Configure lightarti-rest to either use standard tor, or a pre-configured circuit
 - v1.0 - Once arti is deemed stable enough, and other people have looked and used this code
 
