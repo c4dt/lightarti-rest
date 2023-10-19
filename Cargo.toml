@@ -25,25 +25,25 @@ categories = [
 crate-type = ["cdylib", "lib", "staticlib"]
 
 [dependencies]
-arti-client = { version = "0.7", default-features = false, features = [
+arti-client = { version = "0.8", default-features = false, features = [
     "error_detail",
     "experimental-api",
     "rustls",
     "tokio",
 ] }
-tor-checkable = "0.3"
-tor-circmgr = "0.6"
-tor-config = "0.6"
-tor-dirmgr = { version = "0.8", features = [
+tor-checkable = "0.4"
+tor-circmgr = "0.7"
+tor-config = "0.8"
+tor-dirmgr = { version = "0.9.3", features = [
     "experimental-api",
     "static",
 ] }
-tor-llcrypto = "0.3"
-tor-netdir = "0.6"
-tor-netdoc = { version = "0.5", features = [
+tor-llcrypto = "0.4"
+tor-netdir = "0.8"
+tor-netdoc = { version = "0.6", features = [
     "experimental-api",
 ] }
-tor-rtcompat = { version = "0.7", features = [
+tor-rtcompat = { version = "0.8", features = [
     "rustls",
     "tokio",
 ] }
