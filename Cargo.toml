@@ -25,25 +25,25 @@ categories = [
 crate-type = ["cdylib", "lib", "staticlib"]
 
 [dependencies]
-arti-client = { version = "0.8", default-features = false, features = [
+arti-client = { version = "0.10.2", default-features = false, features = [
     "error_detail",
     "experimental-api",
     "rustls",
     "tokio",
 ] }
-tor-checkable = "0.4"
-tor-circmgr = "0.7"
-tor-config = "0.8"
-tor-dirmgr = { version = "0.9.3", features = [
+tor-checkable = "0.5.5"
+tor-circmgr = "0.11.0"
+tor-config = "0.9.5"
+tor-dirmgr = { version = "0.11.2", features = [
     "experimental-api",
     "static",
 ] }
-tor-llcrypto = "0.4"
-tor-netdir = "0.8"
-tor-netdoc = { version = "0.6", features = [
+tor-llcrypto = "0.5.5"
+tor-netdir = "0.9.5"
+tor-netdoc = { version = "0.9.0", features = [
     "experimental-api",
 ] }
-tor-rtcompat = { version = "0.8", features = [
+tor-rtcompat = { version = "0.9.5", features = [
     "rustls",
     "tokio",
 ] }
@@ -64,6 +64,7 @@ tokio-rustls = "0.23"
 tracing = "0.1"
 webpki-roots = "0.22"
 url = "2"
+signature = ">= 2.0, < 2.1" # https://github.com/dalek-cryptography/curve25519-dalek/blob/e6675c67ceadecc3e22b561296490f4b7de9ff39/ed25519-dalek/Cargo.toml#L31
 
 [dev-dependencies]
 tempdir = "0.3"
