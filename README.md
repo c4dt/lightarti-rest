@@ -118,6 +118,11 @@ make dircache
 cargo test
 ```
 
+# Notes on building the library for x86_64 devices
+
+To build this library for a x86_64 device, Android NDK version 25.2.9519653 must be installed at the
+default installation path (`$HOME/Android/Sdk/ndk`).
+
 # License
 
 The code is licensed under the MIT license.

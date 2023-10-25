@@ -1,5 +1,4 @@
 // inspired by https://github.com/p2panda/meli/pull/21/files
-// meli is licensed under GNU AFFERO GENERAL PUBLIC LICENSE
 
 use std::env;
 
