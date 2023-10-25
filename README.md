@@ -129,6 +129,7 @@ The code is licensed under the MIT license.
 - Linus Gasser, C4DT
 - Valérian Rousset, C4DT
 - Christian Grigis, C4DT
+- Carine Dengler, C4DT
 - Laurent Girod, SPRING Lab, EPFL
 
 Analysis and design by:
