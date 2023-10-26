@@ -1,3 +1,8 @@
+0.4.7 - 2023/10/25
+	* Updating arti-client to 0.10.2 from 0.7
+	* Also updating all other tor-* crates
+	* Also updating other dependenices
+
 0.4.6 - 2022/11/11
 	* Updating to arti-client 0.7 from arti 1.0.1
 	* Also updating all other tor-* crates

@@ -5,7 +5,7 @@ use arti_client::DirProviderBuilder;
 use tor_checkable::{ExternallySigned, SelfSigned, TimeValidityError, Timebound};
 use tor_circmgr::CircMgr;
 use tor_dirmgr::config::DirMgrConfig;
-use tor_dirmgr::{DirBootstrapStatus, DirProvider, Error, Result, SharedMutArc};
+use tor_dirmgr::{DirBootstrapStatus, DirMgrStore, DirProvider, Error, Result, SharedMutArc};
 use tor_llcrypto::pk::rsa::RsaIdentity;
 use tor_netdir::{DirEvent, MdReceiver, NetDir, NetDirProvider, PartialNetDir, Timeliness};
 use tor_netdoc::doc::authcert::AuthCert;
@@ -297,6 +297,7 @@ impl<R: Runtime> DirProviderBuilder<R> for FlatFileDirMgrBuilder {
     fn build(
         &self,
         _runtime: R,
+        _store: DirMgrStore<R>,
         circmgr: Arc<tor_circmgr::CircMgr<R>>,
         config: DirMgrConfig,
     ) -> arti_client::Result<Arc<dyn tor_dirmgr::DirProvider + 'static>> {
