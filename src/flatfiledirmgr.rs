@@ -79,14 +79,22 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// Check cache directory content.
     pub fn check_directory(&self, cache_path: &Path) -> Result<()> {
         let mut any_missing = false;
-        for filename in vec![Self::CONSENSUS_FILENAME, Self::MICRODESCRIPTORS_FILENAME, Self::CERTIFICATE_FILENAME, Self::CHURN_FILENAME, Self::AUTHORITY_FILENAME].iter() {
-            if !cache_path.join(filename).exists(){
+        for filename in [
+            Self::CONSENSUS_FILENAME,
+            Self::MICRODESCRIPTORS_FILENAME,
+            Self::CERTIFICATE_FILENAME,
+            Self::CHURN_FILENAME,
+            Self::AUTHORITY_FILENAME,
+        ]
+        .iter()
+        {
+            if !cache_path.join(filename).exists() {
                 any_missing = true;
                 debug!("required file missing: {filename}");
             }
         }
         if any_missing {
-            return Err(Error::CacheCorruption("required files missing in cache"))
+            return Err(Error::CacheCorruption("required files missing in cache"));
         }
         Ok(())
     }
@@ -218,7 +226,8 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// Load the certificate from a flat file.
     fn load_certificate(&self, cache_path: &Path) -> Result<AuthCert> {
         let path = cache_path.join(Self::CERTIFICATE_FILENAME);
-        let certificate = fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        let certificate =
+            fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("{} loaded", path.to_string_lossy());
 
         let parsed = AuthCert::parse(certificate.as_str())
@@ -234,7 +243,8 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     /// Load the list of microdescriptors from a flat file.
     fn load_microdesc(&self, cache_path: &Path) -> Result<Vec<Microdesc>> {
         let path = cache_path.join(Self::MICRODESCRIPTORS_FILENAME);
-        let udesc_text = fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        let udesc_text =
+            fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("{} loaded", path.to_string_lossy());
 
         let udesc = MicrodescReader::new(

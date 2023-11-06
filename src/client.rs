@@ -45,7 +45,8 @@ impl Client {
             .state_dir(CfgPath::new_literal(cache_path));
 
         let auth_path = cache_path.join(Self::AUTHORITY_FILENAME);
-        let auth_raw = fs::read_to_string(auth_path.clone()).context(format!("Failed to read {}", auth_path.to_string_lossy()))?;
+        let auth_raw = fs::read_to_string(auth_path.clone())
+            .context(format!("Failed to read {}", auth_path.to_string_lossy()))?;
         let auth = serde_json::from_str(auth_raw.as_str())?;
 
         cfg_builder.tor_network().set_authorities(vec![auth]);
