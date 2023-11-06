@@ -59,6 +59,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     const MICRODESCRIPTORS_FILENAME: &'static str = "microdescriptors.txt";
     const CERTIFICATE_FILENAME: &'static str = "certificate.txt";
     const CHURN_FILENAME: &'static str = "churn.txt";
+    const AUTHORITY_FILENAME: &'static str = "authority.json";
     /// Create a new FlatFileDirMgr from a given configuration.
     pub fn from_config(config: DirMgrConfig, circmgr: Arc<CircMgr<R>>) -> Result<Arc<Self>> {
         let netdir = SharedMutArc::new();
@@ -75,6 +76,21 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         }))
     }
 
+    /// Check cache directory content.
+    pub fn check_directory(&self, cache_path: &Path) -> Result<()> {
+        let mut any_missing = false;
+        for filename in vec![Self::CONSENSUS_FILENAME, Self::MICRODESCRIPTORS_FILENAME, Self::CERTIFICATE_FILENAME, Self::CHURN_FILENAME, Self::AUTHORITY_FILENAME].iter() {
+            if !cache_path.join(filename).exists(){
+                any_missing = true;
+                debug!("required file missing: {filename}");
+            }
+        }
+        if any_missing {
+            return Err(Error::CacheCorruption("required files missing in cache"))
+        }
+        Ok(())
+    }
+
     /// Try to load the directory from flat files.
     ///
     /// This is strongly inspired by the add_from_cache() methods from the various states in
@@ -82,6 +98,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     pub async fn load_directory(&self) -> Result<bool> {
         let config = self.config.get();
         let cache_path = &config.cache_path;
+        self.check_directory(cache_path)?;
 
         // Consensus
         let unvalidated = self.load_consensus(cache_path)?;
