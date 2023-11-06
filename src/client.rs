@@ -22,6 +22,7 @@ use crate::{
 pub struct Client(TorClient<Runtime>);
 
 impl Client {
+    const AUTHORITY_FILENAME: &'static str = "authority.json";
     /// Create a new client with the given cache directory
     pub async fn new(cache: &Path) -> Result<Self> {
         let runtime = Runtime::current().context("get runtime")?;
@@ -43,8 +44,8 @@ impl Client {
             .cache_dir(CfgPath::new_literal(cache_path))
             .state_dir(CfgPath::new_literal(cache_path));
 
-        let auth_path = cache_path.join("authority.json");
-        let auth_raw = fs::read_to_string(auth_path).context("Failed to read authority")?;
+        let auth_path = cache_path.join(Self::AUTHORITY_FILENAME);
+        let auth_raw = fs::read_to_string(auth_path.clone()).context(format!("Failed to read {}", auth_path.to_string_lossy()))?;
         let auth = serde_json::from_str(auth_raw.as_str())?;
 
         cfg_builder.tor_network().set_authorities(vec![auth]);

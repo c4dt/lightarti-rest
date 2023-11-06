@@ -54,6 +54,11 @@ pub struct FlatFileDirMgr<R: Runtime> {
 }
 
 impl<R: Runtime> FlatFileDirMgr<R> {
+    /// Contents of the directory cache.
+    const CONSENSUS_FILENAME: &'static str = "consensus.txt";
+    const MICRODESCRIPTORS_FILENAME: &'static str = "microdescriptors.txt";
+    const CERTIFICATE_FILENAME: &'static str = "certificate.txt";
+    const CHURN_FILENAME: &'static str = "churn.txt";
     /// Create a new FlatFileDirMgr from a given configuration.
     pub fn from_config(config: DirMgrConfig, circmgr: Arc<CircMgr<R>>) -> Result<Arc<Self>> {
         let netdir = SharedMutArc::new();
@@ -147,14 +152,14 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         &self,
         cache_path: &Path,
     ) -> Result<UnvalidatedConsensus<MdConsensusRouterStatus>> {
-        let path = cache_path.join("consensus.txt");
+        let path = cache_path.join(Self::CONSENSUS_FILENAME);
         let consensus_text =
-            fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
-        debug!("consensus.txt loaded");
+            fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        debug!("{} loaded", path.to_string_lossy());
 
-        let path = cache_path.join("churn.txt");
-        let churn_text = fs::read_to_string(path).unwrap_or_else(|_| "".to_string());
-        debug!("churn.txt loaded");
+        let path = cache_path.join(Self::CHURN_FILENAME);
+        let churn_text = fs::read_to_string(path.clone()).unwrap_or_else(|_| "".to_string());
+        debug!("{} loaded", path.to_string_lossy());
 
         let (_, _, parsed) = MdConsensus::parse(&consensus_text)
             .map_err(|_| Error::CacheCorruption("Failed to parse consensus"))?;
@@ -195,9 +200,9 @@ impl<R: Runtime> FlatFileDirMgr<R> {
 
     /// Load the certificate from a flat file.
     fn load_certificate(&self, cache_path: &Path) -> Result<AuthCert> {
-        let path = cache_path.join("certificate.txt");
-        let certificate = fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
-        debug!("certificate.txt loaded");
+        let path = cache_path.join(Self::CERTIFICATE_FILENAME);
+        let certificate = fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        debug!("{} loaded", path.to_string_lossy());
 
         let parsed = AuthCert::parse(certificate.as_str())
             .map_err(|_| Error::CacheCorruption("Failed to parse certificate"))?
@@ -211,9 +216,9 @@ impl<R: Runtime> FlatFileDirMgr<R> {
 
     /// Load the list of microdescriptors from a flat file.
     fn load_microdesc(&self, cache_path: &Path) -> Result<Vec<Microdesc>> {
-        let path = cache_path.join("microdescriptors.txt");
-        let udesc_text = fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
-        debug!("microdescriptors.txt loaded");
+        let path = cache_path.join(Self::MICRODESCRIPTORS_FILENAME);
+        let udesc_text = fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        debug!("{} loaded", path.to_string_lossy());
 
         let udesc = MicrodescReader::new(
             udesc_text.as_str(),
