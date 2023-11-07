@@ -33,13 +33,13 @@ const CHURN_FRACTION: usize = 6;
 
 /// Contents of the directory cache.
 /// CONSENSUS_FILENAME is the name of the file containing the consensus.
-pub const CONSENSUS_FILENAME: &'static str = "consensus.txt";
+pub const CONSENSUS_FILENAME: &str = "consensus.txt";
 /// MICRODESCRIPTORS_FILENAME is the name of the file containing the microdescriptors.
-pub const MICRODESCRIPTORS_FILENAME: &'static str = "microdescriptors.txt";
+pub const MICRODESCRIPTORS_FILENAME: &str = "microdescriptors.txt";
 /// CERTIFICATE_FILENAME is the name of the certificate.
-pub const CERTIFICATE_FILENAME: &'static str = "certificate.txt";
+pub const CERTIFICATE_FILENAME: &str = "certificate.txt";
 /// CHURN_FILENAME is the name of the churn info file.
-pub const CHURN_FILENAME: &'static str = "churn.txt";
+pub const CHURN_FILENAME: &str = "churn.txt";
 
 /// A directory manager that loads the directory information from flat files read from the cache
 /// directory.
