@@ -77,7 +77,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     }
 
     /// Check cache directory content.
-    pub fn check_directory(&self, cache_path: &Path) -> Result<()> {
+    fn check_directory(cache_path: &Path) -> Result<()> {
         let mut any_missing = false;
         for filename in [
             Self::CONSENSUS_FILENAME,
@@ -106,7 +106,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     pub async fn load_directory(&self) -> Result<bool> {
         let config = self.config.get();
         let cache_path = &config.cache_path;
-        self.check_directory(cache_path)?;
+        Self::check_directory(cache_path)?;
 
         // Consensus
         let unvalidated = self.load_consensus(cache_path)?;
