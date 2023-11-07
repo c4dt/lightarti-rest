@@ -1,6 +1,7 @@
 use http::request::{Builder, Parts};
 use http::Request;
 use lightarti_rest::Client;
+use lightarti_rest::AUTHORITY_FILENAME;
 use lightarti_rest::CERTIFICATE_FILENAME;
 use lightarti_rest::CHURN_FILENAME;
 use lightarti_rest::CONSENSUS_FILENAME;
@@ -100,13 +101,15 @@ async fn test_required_files_ok() {
 
 #[tokio::test]
 // Tests that an error is raised by FlatFileDirMgr::check_directory if any of the required files
-// are missing. The authority.json file is checked for in Client::tor_config.
+// are missing. The authority.json file is checked for in Client::check_directory since it is used
+// before the other files are read in.
 async fn test_required_files_missing() {
     for filename in [
         CONSENSUS_FILENAME,
         MICRODESCRIPTORS_FILENAME,
         CERTIFICATE_FILENAME,
         CHURN_FILENAME,
+        AUTHORITY_FILENAME,
     ]
     .iter()
     {
@@ -120,6 +123,19 @@ async fn test_required_files_missing() {
             "Corrupt cache: required files missing in cache"
         );
     }
+}
+
+#[tokio::test]
+async fn test_directory_not_existing() {
+    let cache = utils::setup_cache();
+    let _ = std::fs::remove_dir_all(cache.path());
+    let res = Client::new(cache.path()).await;
+    let error = res.err().expect("");
+    let root_cause = error.root_cause();
+    assert_eq!(
+        format!("{}", root_cause),
+        "Corrupt cache: directory cache does not exist"
+    );
 }
 
 fn clone_request(header: &Parts, body: &[u8]) -> Request<Vec<u8>> {
