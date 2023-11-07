@@ -31,6 +31,16 @@ use tor_netdir::params::NetParameters;
 /// 1/CHURN_FRACTION is the threshold of the consensus relays that we can remove with the churn
 const CHURN_FRACTION: usize = 6;
 
+/// Contents of the directory cache.
+/// CONSENSUS_FILENAME is the name of the file containing the consensus.
+pub const CONSENSUS_FILENAME: &'static str = "consensus.txt";
+/// MICRODESCRIPTORS_FILENAME is the name of the file containing the microdescriptors.
+pub const MICRODESCRIPTORS_FILENAME: &'static str = "microdescriptors.txt";
+/// CERTIFICATE_FILENAME is the name of the certificate.
+pub const CERTIFICATE_FILENAME: &'static str = "certificate.txt";
+/// CHURN_FILENAME is the name of the churn info file.
+pub const CHURN_FILENAME: &'static str = "churn.txt";
+
 /// A directory manager that loads the directory information from flat files read from the cache
 /// directory.
 pub struct FlatFileDirMgr<R: Runtime> {
@@ -54,12 +64,6 @@ pub struct FlatFileDirMgr<R: Runtime> {
 }
 
 impl<R: Runtime> FlatFileDirMgr<R> {
-    /// Contents of the directory cache.
-    const CONSENSUS_FILENAME: &'static str = "consensus.txt";
-    const MICRODESCRIPTORS_FILENAME: &'static str = "microdescriptors.txt";
-    const CERTIFICATE_FILENAME: &'static str = "certificate.txt";
-    const CHURN_FILENAME: &'static str = "churn.txt";
-    const AUTHORITY_FILENAME: &'static str = "authority.json";
     /// Create a new FlatFileDirMgr from a given configuration.
     pub fn from_config(config: DirMgrConfig, circmgr: Arc<CircMgr<R>>) -> Result<Arc<Self>> {
         let netdir = SharedMutArc::new();
@@ -80,11 +84,10 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     fn check_directory(cache_path: &Path) -> Result<()> {
         let mut any_missing = false;
         for filename in [
-            Self::CONSENSUS_FILENAME,
-            Self::MICRODESCRIPTORS_FILENAME,
-            Self::CERTIFICATE_FILENAME,
-            Self::CHURN_FILENAME,
-            Self::AUTHORITY_FILENAME,
+            CONSENSUS_FILENAME,
+            MICRODESCRIPTORS_FILENAME,
+            CERTIFICATE_FILENAME,
+            CHURN_FILENAME,
         ]
         .iter()
         {
@@ -177,12 +180,12 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         &self,
         cache_path: &Path,
     ) -> Result<UnvalidatedConsensus<MdConsensusRouterStatus>> {
-        let path = cache_path.join(Self::CONSENSUS_FILENAME);
+        let path = cache_path.join(CONSENSUS_FILENAME);
         let consensus_text =
             fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("{} loaded", path.to_string_lossy());
 
-        let path = cache_path.join(Self::CHURN_FILENAME);
+        let path = cache_path.join(CHURN_FILENAME);
         let churn_text = fs::read_to_string(path.clone()).unwrap_or_else(|_| "".to_string());
         debug!("{} loaded", path.to_string_lossy());
 
@@ -225,7 +228,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
 
     /// Load the certificate from a flat file.
     fn load_certificate(&self, cache_path: &Path) -> Result<AuthCert> {
-        let path = cache_path.join(Self::CERTIFICATE_FILENAME);
+        let path = cache_path.join(CERTIFICATE_FILENAME);
         let certificate =
             fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("{} loaded", path.to_string_lossy());
@@ -242,7 +245,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
 
     /// Load the list of microdescriptors from a flat file.
     fn load_microdesc(&self, cache_path: &Path) -> Result<Vec<Microdesc>> {
-        let path = cache_path.join(Self::MICRODESCRIPTORS_FILENAME);
+        let path = cache_path.join(MICRODESCRIPTORS_FILENAME);
         let udesc_text =
             fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
         debug!("{} loaded", path.to_string_lossy());
