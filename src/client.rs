@@ -45,7 +45,7 @@ impl Client {
         }
         if !cache_path.join(AUTHORITY_FILENAME).exists() {
             debug!("required file missing: {}", AUTHORITY_FILENAME);
-            return Err(Error::CacheCorruption("required files missing in cache").into());
+            return Err(Error::CacheCorruption("required file(s) missing in cache").into());
         }
         Ok(())
     }

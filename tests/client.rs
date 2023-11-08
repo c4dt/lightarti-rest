@@ -120,7 +120,7 @@ async fn test_required_files_missing() {
         let root_cause = error.root_cause();
         assert_eq!(
             format!("{}", root_cause),
-            "Corrupt cache: required files missing in cache"
+            "Corrupt cache: required file(s) missing in cache"
         );
     }
 }

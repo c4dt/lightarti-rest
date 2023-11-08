@@ -82,22 +82,18 @@ impl<R: Runtime> FlatFileDirMgr<R> {
 
     /// Check cache directory content.
     fn check_directory(cache_path: &Path) -> Result<()> {
-        let mut any_missing = false;
-        for filename in [
+        let missing_files: Vec<&&str> = [
             CONSENSUS_FILENAME,
             MICRODESCRIPTORS_FILENAME,
             CERTIFICATE_FILENAME,
             CHURN_FILENAME,
         ]
         .iter()
-        {
-            if !cache_path.join(filename).exists() {
-                any_missing = true;
-                debug!("required file missing: {filename}");
-            }
-        }
-        if any_missing {
-            return Err(Error::CacheCorruption("required files missing in cache"));
+        .filter(|filename| !cache_path.join(filename).exists())
+        .collect();
+        if !missing_files.is_empty() {
+            debug!("required file(s) missing: {missing_files:?}");
+            return Err(Error::CacheCorruption("required file(s) missing in cache"));
         }
         Ok(())
     }
