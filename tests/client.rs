@@ -1,6 +1,11 @@
 use http::request::{Builder, Parts};
 use http::Request;
 use lightarti_rest::Client;
+use lightarti_rest::AUTHORITY_FILENAME;
+use lightarti_rest::CERTIFICATE_FILENAME;
+use lightarti_rest::CHURN_FILENAME;
+use lightarti_rest::CONSENSUS_FILENAME;
+use lightarti_rest::MICRODESCRIPTORS_FILENAME;
 use url::Url;
 
 mod utils;
@@ -83,6 +88,54 @@ async fn test_client(req: Request<Vec<u8>>) {
         "Didn't manage to pass in {} steps for domain {}",
         MAX_TRIES, host
     )
+}
+
+#[tokio::test]
+// Tests that no error is raised if directory is left intact.
+// If this tests raises an error, please check if your local copy of directory_cache is up to date.
+async fn test_required_files_ok() {
+    let cache = utils::setup_cache();
+    let res = Client::new(cache.path()).await;
+    assert!(res.is_ok());
+}
+
+#[tokio::test]
+// Tests that an error is raised by FlatFileDirMgr::check_directory if any of the required files
+// are missing. The authority.json file is checked for in Client::check_directory since it is used
+// before the other files are read in.
+async fn test_required_files_missing() {
+    for filename in [
+        CONSENSUS_FILENAME,
+        MICRODESCRIPTORS_FILENAME,
+        CERTIFICATE_FILENAME,
+        CHURN_FILENAME,
+        AUTHORITY_FILENAME,
+    ]
+    .iter()
+    {
+        let cache = utils::setup_cache();
+        let _ = std::fs::remove_file(cache.path().join(filename));
+        let res = Client::new(cache.path()).await;
+        let error = res.err().expect("");
+        let root_cause = error.root_cause();
+        assert_eq!(
+            format!("{}", root_cause),
+            "Corrupt cache: required file(s) missing in cache"
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_directory_not_existing() {
+    let cache = utils::setup_cache();
+    let _ = std::fs::remove_dir_all(cache.path());
+    let res = Client::new(cache.path()).await;
+    let error = res.err().expect("");
+    let root_cause = error.root_cause();
+    assert_eq!(
+        format!("{}", root_cause),
+        "Corrupt cache: directory cache does not exist"
+    );
 }
 
 fn clone_request(header: &Parts, body: &[u8]) -> Request<Vec<u8>> {

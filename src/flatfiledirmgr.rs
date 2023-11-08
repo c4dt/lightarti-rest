@@ -31,6 +31,16 @@ use tor_netdir::params::NetParameters;
 /// 1/CHURN_FRACTION is the threshold of the consensus relays that we can remove with the churn
 const CHURN_FRACTION: usize = 6;
 
+/// Contents of the directory cache.
+/// CONSENSUS_FILENAME is the name of the file containing the consensus.
+pub const CONSENSUS_FILENAME: &str = "consensus.txt";
+/// MICRODESCRIPTORS_FILENAME is the name of the file containing the microdescriptors.
+pub const MICRODESCRIPTORS_FILENAME: &str = "microdescriptors.txt";
+/// CERTIFICATE_FILENAME is the name of the certificate.
+pub const CERTIFICATE_FILENAME: &str = "certificate.txt";
+/// CHURN_FILENAME is the name of the churn info file.
+pub const CHURN_FILENAME: &str = "churn.txt";
+
 /// A directory manager that loads the directory information from flat files read from the cache
 /// directory.
 pub struct FlatFileDirMgr<R: Runtime> {
@@ -70,6 +80,24 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         }))
     }
 
+    /// Check cache directory content.
+    fn check_directory(cache_path: &Path) -> Result<()> {
+        let missing_files: Vec<&&str> = [
+            CONSENSUS_FILENAME,
+            MICRODESCRIPTORS_FILENAME,
+            CERTIFICATE_FILENAME,
+            CHURN_FILENAME,
+        ]
+        .iter()
+        .filter(|filename| !cache_path.join(filename).exists())
+        .collect();
+        if !missing_files.is_empty() {
+            debug!("required file(s) missing: {missing_files:?}");
+            return Err(Error::CacheCorruption("required file(s) missing in cache"));
+        }
+        Ok(())
+    }
+
     /// Try to load the directory from flat files.
     ///
     /// This is strongly inspired by the add_from_cache() methods from the various states in
@@ -77,6 +105,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     pub async fn load_directory(&self) -> Result<bool> {
         let config = self.config.get();
         let cache_path = &config.cache_path;
+        Self::check_directory(cache_path)?;
 
         // Consensus
         let unvalidated = self.load_consensus(cache_path)?;
@@ -147,14 +176,14 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         &self,
         cache_path: &Path,
     ) -> Result<UnvalidatedConsensus<MdConsensusRouterStatus>> {
-        let path = cache_path.join("consensus.txt");
+        let path = cache_path.join(CONSENSUS_FILENAME);
         let consensus_text =
-            fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
-        debug!("consensus.txt loaded");
+            fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        debug!("{} loaded", path.to_string_lossy());
 
-        let path = cache_path.join("churn.txt");
-        let churn_text = fs::read_to_string(path).unwrap_or_else(|_| "".to_string());
-        debug!("churn.txt loaded");
+        let path = cache_path.join(CHURN_FILENAME);
+        let churn_text = fs::read_to_string(path.clone()).unwrap_or_else(|_| "".to_string());
+        debug!("{} loaded", path.to_string_lossy());
 
         let (_, _, parsed) = MdConsensus::parse(&consensus_text)
             .map_err(|_| Error::CacheCorruption("Failed to parse consensus"))?;
@@ -195,9 +224,10 @@ impl<R: Runtime> FlatFileDirMgr<R> {
 
     /// Load the certificate from a flat file.
     fn load_certificate(&self, cache_path: &Path) -> Result<AuthCert> {
-        let path = cache_path.join("certificate.txt");
-        let certificate = fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
-        debug!("certificate.txt loaded");
+        let path = cache_path.join(CERTIFICATE_FILENAME);
+        let certificate =
+            fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        debug!("{} loaded", path.to_string_lossy());
 
         let parsed = AuthCert::parse(certificate.as_str())
             .map_err(|_| Error::CacheCorruption("Failed to parse certificate"))?
@@ -211,9 +241,10 @@ impl<R: Runtime> FlatFileDirMgr<R> {
 
     /// Load the list of microdescriptors from a flat file.
     fn load_microdesc(&self, cache_path: &Path) -> Result<Vec<Microdesc>> {
-        let path = cache_path.join("microdescriptors.txt");
-        let udesc_text = fs::read_to_string(path).map_err(|_| Error::UnrecognizedAuthorities)?;
-        debug!("microdescriptors.txt loaded");
+        let path = cache_path.join(MICRODESCRIPTORS_FILENAME);
+        let udesc_text =
+            fs::read_to_string(path.clone()).map_err(|_| Error::UnrecognizedAuthorities)?;
+        debug!("{} loaded", path.to_string_lossy());
 
         let udesc = MicrodescReader::new(
             udesc_text.as_str(),

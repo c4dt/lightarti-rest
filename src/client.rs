@@ -10,8 +10,9 @@ use tokio_rustls::{
     TlsConnector,
 };
 use tor_config::CfgPath;
+use tor_dirmgr::Error;
 use tor_rtcompat::tokio::TokioRustlsRuntime as Runtime;
-use tracing::{trace, warn};
+use tracing::{debug, trace, warn};
 
 use crate::{
     flatfiledirmgr::FlatFileDirMgrBuilder,
@@ -20,6 +21,8 @@ use crate::{
 
 /// Client using the Tor network
 pub struct Client(TorClient<Runtime>);
+/// AUTHORITY_FILENAME is the name of the file containing the authorities.
+pub const AUTHORITY_FILENAME: &str = "authority.json";
 
 impl Client {
     /// Create a new client with the given cache directory
@@ -36,15 +39,28 @@ impl Client {
         Ok(Self(tor_client))
     }
 
+    fn check_directory(cache_path: &Path) -> Result<()> {
+        if !cache_path.is_dir() {
+            return Err(Error::CacheCorruption("directory cache does not exist").into());
+        }
+        if !cache_path.join(AUTHORITY_FILENAME).exists() {
+            debug!("required file missing: {}", AUTHORITY_FILENAME);
+            return Err(Error::CacheCorruption("required file(s) missing in cache").into());
+        }
+        Ok(())
+    }
+
     fn tor_config(cache_path: &Path) -> Result<TorClientConfig> {
         let mut cfg_builder = TorClientConfig::builder();
+        Self::check_directory(cache_path)?;
         cfg_builder
             .storage()
             .cache_dir(CfgPath::new_literal(cache_path))
             .state_dir(CfgPath::new_literal(cache_path));
 
-        let auth_path = cache_path.join("authority.json");
-        let auth_raw = fs::read_to_string(auth_path).context("Failed to read authority")?;
+        let auth_path = cache_path.join(AUTHORITY_FILENAME);
+        let auth_raw = fs::read_to_string(auth_path.clone())
+            .context(format!("Failed to read {}", auth_path.to_string_lossy()))?;
         let auth = serde_json::from_str(auth_raw.as_str())?;
 
         cfg_builder.tor_network().set_authorities(vec![auth]);
