@@ -9,6 +9,7 @@ mod http;
 
 pub use client::Client;
 pub use client::AUTHORITY_FILENAME;
+pub use flatfiledirmgr::check_directory;
 pub use flatfiledirmgr::CERTIFICATE_FILENAME;
 pub use flatfiledirmgr::CHURN_FILENAME;
 pub use flatfiledirmgr::CONSENSUS_FILENAME;

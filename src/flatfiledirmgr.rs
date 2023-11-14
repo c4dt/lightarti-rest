@@ -21,6 +21,7 @@ use futures::stream::BoxStream;
 use postage::{broadcast, sink::Sink, watch};
 use tracing::{debug, info, warn};
 
+use crate::AUTHORITY_FILENAME;
 use rand::seq::SliceRandom;
 use std::collections::HashSet;
 use std::fs;
@@ -63,6 +64,25 @@ pub struct FlatFileDirMgr<R: Runtime> {
     circmgr: Option<Arc<CircMgr<R>>>,
 }
 
+/// Check cache directory content.
+pub fn check_directory(cache_path: &Path) -> Result<()> {
+    let missing_files: Vec<&&str> = [
+        AUTHORITY_FILENAME,
+        CONSENSUS_FILENAME,
+        MICRODESCRIPTORS_FILENAME,
+        CERTIFICATE_FILENAME,
+        CHURN_FILENAME,
+    ]
+    .iter()
+    .filter(|filename| !cache_path.join(filename).exists())
+    .collect();
+    if !missing_files.is_empty() {
+        debug!("required file(s) missing: {missing_files:?}");
+        return Err(Error::CacheCorruption("required file(s) missing in cache"));
+    }
+    Ok(())
+}
+
 impl<R: Runtime> FlatFileDirMgr<R> {
     /// Create a new FlatFileDirMgr from a given configuration.
     pub fn from_config(config: DirMgrConfig, circmgr: Arc<CircMgr<R>>) -> Result<Arc<Self>> {
@@ -80,24 +100,6 @@ impl<R: Runtime> FlatFileDirMgr<R> {
         }))
     }
 
-    /// Check cache directory content.
-    fn check_directory(cache_path: &Path) -> Result<()> {
-        let missing_files: Vec<&&str> = [
-            CONSENSUS_FILENAME,
-            MICRODESCRIPTORS_FILENAME,
-            CERTIFICATE_FILENAME,
-            CHURN_FILENAME,
-        ]
-        .iter()
-        .filter(|filename| !cache_path.join(filename).exists())
-        .collect();
-        if !missing_files.is_empty() {
-            debug!("required file(s) missing: {missing_files:?}");
-            return Err(Error::CacheCorruption("required file(s) missing in cache"));
-        }
-        Ok(())
-    }
-
     /// Try to load the directory from flat files.
     ///
     /// This is strongly inspired by the add_from_cache() methods from the various states in
@@ -105,7 +107,7 @@ impl<R: Runtime> FlatFileDirMgr<R> {
     pub async fn load_directory(&self) -> Result<bool> {
         let config = self.config.get();
         let cache_path = &config.cache_path;
-        Self::check_directory(cache_path)?;
+        check_directory(cache_path)?;
 
         // Consensus
         let unvalidated = self.load_consensus(cache_path)?;

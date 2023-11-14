@@ -49,6 +49,7 @@ tor-rtcompat = { version = "0.9.5", features = [
 ] }
 
 anyhow = "1"
+arkiv = { version = "0.7.0", features = ["tar", "gzip"] }
 async-trait = "0.1"
 futures = "0.3"
 hex = "0.4"
@@ -58,13 +59,16 @@ postage = { version = "0.5", default-features = false, features = [
     "futures-traits",
 ] }
 rand = "0.8"
+reqwest = { version = "0.11.22", default-features = false, features = ["rustls-tls"] }
 serde_json = "1"
+signature = ">= 2.0, < 2.1" # https://github.com/dalek-cryptography/curve25519-dalek/blob/e6675c67ceadecc3e22b561296490f4b7de9ff39/ed25519-dalek/Cargo.toml#L31
+tempfile = "3.8.1"
+time = { version = "0.3.30", features = ["std"] }
 tokio = { version = "1", features = ["full"] }
 tokio-rustls = "0.23"
 tracing = "0.1"
-webpki-roots = "0.22"
 url = "2"
-signature = ">= 2.0, < 2.1" # https://github.com/dalek-cryptography/curve25519-dalek/blob/e6675c67ceadecc3e22b561296490f4b7de9ff39/ed25519-dalek/Cargo.toml#L31
+webpki-roots = "0.22"
 
 [dev-dependencies]
 tempdir = "0.3"
