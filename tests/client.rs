@@ -131,7 +131,7 @@ async fn test_directory_not_existing() {
     let root_cause = error.root_cause();
     assert_eq!(
         format!("{}", root_cause),
-        "No such file or directory (os error 2)"
+        "Corrupt cache: cache-directory doesn't exist"
     );
 }
 

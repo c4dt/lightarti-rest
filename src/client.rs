@@ -3,7 +3,7 @@ use std::io::Write;
 use std::time::SystemTime;
 use std::{convert::TryFrom, fs, io, path::Path, sync::Arc};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use arti_client::{DataStream, TorClient, TorClientConfig};
 use http::{Request, Response};
 use time::OffsetDateTime;
@@ -126,6 +126,9 @@ impl Client {
     // This will probably fail for the first minutes of the day, when the churn is not yet
     // available in the new version.
     fn get_cache_state(cache_path: &Path) -> Result<UpdateNeeded> {
+        if !cache_path.is_dir() {
+            return Err(anyhow!("Corrupt cache: cache-directory doesn't exist"));
+        }
         if check_directory(cache_path).is_err() {
             return Ok(UpdateNeeded::All);
         }
