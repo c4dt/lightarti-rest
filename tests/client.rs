@@ -1,11 +1,11 @@
 use http::request::{Builder, Parts};
 use http::Request;
-use lightarti_rest::Client;
 use lightarti_rest::AUTHORITY_FILENAME;
 use lightarti_rest::CERTIFICATE_FILENAME;
 use lightarti_rest::CHURN_FILENAME;
 use lightarti_rest::CONSENSUS_FILENAME;
 use lightarti_rest::MICRODESCRIPTORS_FILENAME;
+use lightarti_rest::{check_directory, Client};
 use url::Url;
 
 mod utils;
@@ -110,16 +110,13 @@ async fn test_required_files_missing() {
         CERTIFICATE_FILENAME,
         CHURN_FILENAME,
         AUTHORITY_FILENAME,
-    ]
-    .iter()
-    {
+    ] {
         let cache = utils::setup_cache();
         let _ = std::fs::remove_file(cache.path().join(filename));
-        let res = Client::new(cache.path()).await;
-        let error = res.err().expect("");
-        let root_cause = error.root_cause();
+        let res = check_directory(cache.path());
+        let error = res.expect_err("");
         assert_eq!(
-            format!("{}", root_cause),
+            format!("{}", error),
             "Corrupt cache: required file(s) missing in cache"
         );
     }
@@ -134,7 +131,7 @@ async fn test_directory_not_existing() {
     let root_cause = error.root_cause();
     assert_eq!(
         format!("{}", root_cause),
-        "Corrupt cache: directory cache does not exist"
+        "Corrupt cache: cache-directory doesn't exist"
     );
 }
 

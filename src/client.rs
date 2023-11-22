@@ -1,8 +1,12 @@
+use std::fs::File;
+use std::io::Write;
+use std::time::SystemTime;
 use std::{convert::TryFrom, fs, io, path::Path, sync::Arc};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use arti_client::{DataStream, TorClient, TorClientConfig};
 use http::{Request, Response};
+use time::OffsetDateTime;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::{
     client::TlsStream,
@@ -14,23 +18,51 @@ use tor_dirmgr::Error;
 use tor_rtcompat::tokio::TokioRustlsRuntime as Runtime;
 use tracing::{debug, trace, warn};
 
+use crate::flatfiledirmgr::check_directory;
 use crate::{
     flatfiledirmgr::FlatFileDirMgrBuilder,
     http::{raw_to_response, request_to_raw},
+    CHURN_FILENAME, MICRODESCRIPTORS_FILENAME,
 };
 
 /// Client using the Tor network
 pub struct Client(TorClient<Runtime>);
+
 /// AUTHORITY_FILENAME is the name of the file containing the authorities.
 pub const AUTHORITY_FILENAME: &str = "authority.json";
 
+#[derive(PartialEq)]
+enum UpdateNeeded {
+    None,
+    Churn,
+    All,
+}
+
+/// Default directory cache download URL, provided by C4DT.
+pub const DIRECTORY_CACHE_C4DT: &str =
+    "https://github.com/c4dt/lightarti-directory/releases/latest/download/directory-cache.tgz";
+/// Default directory churn download URL, provided by C4DT.
+pub const DIRECTORY_CHURN_C4DT: &str =
+    "https://github.com/c4dt/lightarti-directory/releases/latest/download/churn.txt";
+
 impl Client {
-    /// Create a new client with the given cache directory
-    pub async fn new(cache: &Path) -> Result<Self> {
+    /// Create a new client with the given cache directory and the default URLs for the tor caches.
+    pub async fn new(cache_path: &Path) -> Result<Self> {
+        Self::new_with_url(cache_path, DIRECTORY_CACHE_C4DT, DIRECTORY_CHURN_C4DT).await
+    }
+
+    /// Create a new client with the given cache directory and URLs for the tor caches.
+    pub async fn new_with_url(
+        cache_path: &Path,
+        directory_cache: &str,
+        churn_cache: &str,
+    ) -> Result<Self> {
+        Self::update_cache(cache_path, directory_cache, churn_cache).await?;
+
         let runtime = Runtime::current().context("get runtime")?;
 
         let tor_client = TorClient::with_runtime(runtime)
-            .config(Self::tor_config(cache).context("load config")?)
+            .config(Self::tor_config(cache_path).context("load config")?)
             .dirmgr_builder::<FlatFileDirMgrBuilder>(Arc::new(FlatFileDirMgrBuilder {}))
             .create_bootstrapped()
             .await
@@ -39,6 +71,8 @@ impl Client {
         Ok(Self(tor_client))
     }
 
+    /// Checks whether the AUTHORITY_FILENAME is present, which is needed to verify the
+    /// signatures of the other files.
     fn check_directory(cache_path: &Path) -> Result<()> {
         if !cache_path.is_dir() {
             return Err(Error::CacheCorruption("directory cache does not exist").into());
@@ -48,6 +82,74 @@ impl Client {
             return Err(Error::CacheCorruption("required file(s) missing in cache").into());
         }
         Ok(())
+    }
+
+    /// Returns which cache files need to be updated.
+    async fn update_cache(
+        cache_path: &Path,
+        directory_cache: &str,
+        churn_cache: &str,
+    ) -> Result<()> {
+        match Self::get_cache_state(cache_path)? {
+            UpdateNeeded::None => Ok(()),
+            UpdateNeeded::Churn => Self::download_churn_file(cache_path, churn_cache).await,
+            UpdateNeeded::All => {
+                Self::download_churn_file(cache_path, churn_cache).await?;
+                Self::download_full_cache(cache_path, directory_cache)
+            }
+        }
+    }
+
+    /// Downloads the churn file from the given URL.
+    async fn download_churn_file(cache_path: &Path, churn_cache: &str) -> Result<()> {
+        let churn = reqwest::get(churn_cache).await?.bytes().await?;
+        let mut f = File::create(cache_path.join(CHURN_FILENAME))?;
+        Ok(f.write_all(churn.as_ref())?)
+    }
+
+    /// Downloads and extracts the cache files from the given URL, which should point to the
+    /// .tgz file.
+    fn download_full_cache(cache_path: &Path, directory_cache: &str) -> Result<()> {
+        Ok(arkiv::Archive::download(directory_cache)?.unpack(cache_path)?)
+    }
+
+    /// Returns the OffsetDateTime
+    fn get_offset_date_time(cache_path: &Path, file_name: &str) -> Result<OffsetDateTime> {
+        let sec = fs::metadata(cache_path.join(file_name))?
+            .modified()?
+            .duration_since(SystemTime::UNIX_EPOCH)?;
+        Ok(OffsetDateTime::from_unix_timestamp(sec.as_secs() as i64)?)
+    }
+
+    // Returns which files need to be updated by checking the dates of the files against
+    // the current date.
+    // This will probably fail for the first minutes of the day, when the churn is not yet
+    // available in the new version.
+    fn get_cache_state(cache_path: &Path) -> Result<UpdateNeeded> {
+        if !cache_path.is_dir() {
+            return Err(anyhow!("Corrupt cache: cache-directory doesn't exist"));
+        }
+        if check_directory(cache_path).is_err() {
+            return Ok(UpdateNeeded::All);
+        }
+
+        let now = OffsetDateTime::now_utc();
+        if Self::get_offset_date_time(cache_path, MICRODESCRIPTORS_FILENAME)?.monday_based_week()
+            != now.monday_based_week()
+        {
+            return Ok(UpdateNeeded::All);
+        }
+
+        let churn = Self::get_offset_date_time(cache_path, CHURN_FILENAME)?;
+        Ok(
+            if churn.monday_based_week() == now.monday_based_week()
+                && churn.weekday() == now.weekday()
+            {
+                UpdateNeeded::None
+            } else {
+                UpdateNeeded::Churn
+            },
+        )
     }
 
     fn tor_config(cache_path: &Path) -> Result<TorClientConfig> {
@@ -140,5 +242,39 @@ impl Client {
             .connect(host, tor_stream)
             .await
             .context("tls connect")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn setup_tracing() {
+        // dropping error as many tests can setup_tracing
+
+        let _ = tracing::subscriber::set_global_default(
+            tracing_subscriber::fmt::Subscriber::builder()
+                .with_max_level(tracing::Level::DEBUG)
+                .finish(),
+        );
+
+        let _ = tracing_log::LogTracer::init();
+    }
+
+    #[test]
+    fn test_empty() {
+        let tmp = tempfile::tempdir().expect("Creating tempdir");
+        assert!(check_directory(tmp.path()).is_err());
+    }
+
+    #[tokio::test]
+    async fn test_download() -> Result<()> {
+        setup_tracing();
+
+        let tmp = tempfile::tempdir().expect("Creating tempdir");
+        assert!(Client::get_cache_state(tmp.path())? == UpdateNeeded::All);
+        Client::update_cache(tmp.path(), DIRECTORY_CACHE_C4DT, DIRECTORY_CHURN_C4DT).await?;
+        assert!(Client::get_cache_state(tmp.path())? == UpdateNeeded::None);
+        Ok(())
     }
 }
